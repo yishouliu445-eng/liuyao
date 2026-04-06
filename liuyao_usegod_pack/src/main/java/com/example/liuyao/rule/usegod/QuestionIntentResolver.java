@@ -1,0 +1,103 @@
+package com.example.liuyao.rule.usegod;
+
+import org.springframework.stereotype.Component;
+
+import java.util.Locale;
+
+/**
+ * 第一阶段先用简单关键词 + 前端分类做意图识别。
+ * 后续你可以替换成更稳的分类器，但返回值接口不要变。
+ */
+@Component
+public class QuestionIntentResolver {
+
+    public QuestionIntent resolve(String questionText, String questionCategory) {
+        QuestionIntent byCategory = fromCategory(questionCategory);
+        if (byCategory != QuestionIntent.UNKNOWN) {
+            return byCategory;
+        }
+
+        return fromText(questionText);
+    }
+
+    private QuestionIntent fromCategory(String questionCategory) {
+        if (questionCategory == null || questionCategory.isBlank()) {
+            return QuestionIntent.UNKNOWN;
+        }
+
+        String category = questionCategory.trim().toLowerCase(Locale.ROOT);
+        return switch (category) {
+            case "求职", "工作机会", "面试", "录用", "offer", "job_opportunity" ->
+                    QuestionIntent.JOB_OPPORTUNITY;
+            case "工作稳定", "稳定性", "保工作", "job_stability" ->
+                    QuestionIntent.JOB_STABILITY;
+            case "收入", "工资", "奖金", "财运", "income" ->
+                    QuestionIntent.INCOME;
+            case "压力", "工作压力", "累不累", "pressure" ->
+                    QuestionIntent.PRESSURE;
+            case "关系", "人际", "同事", "上下级", "relation" ->
+                    QuestionIntent.RELATION;
+            case "成长", "学习", "提升", "growth" ->
+                    QuestionIntent.GROWTH;
+            case "考试", "考证", "exam" ->
+                    QuestionIntent.EXAM;
+            case "健康", "health" ->
+                    QuestionIntent.HEALTH;
+            case "感情", "emotion" ->
+                    QuestionIntent.EMOTION;
+            case "合作", "签约", "cooperation" ->
+                    QuestionIntent.COOPERATION;
+            default -> QuestionIntent.UNKNOWN;
+        };
+    }
+
+    private QuestionIntent fromText(String questionText) {
+        if (questionText == null || questionText.isBlank()) {
+            return QuestionIntent.UNKNOWN;
+        }
+
+        String text = questionText.trim();
+
+        if (containsAny(text, "面试", "录用", "入职", "offer", "找工作", "求职", "岗位", "应聘")) {
+            return QuestionIntent.JOB_OPPORTUNITY;
+        }
+        if (containsAny(text, "稳不稳定", "失业", "裁员", "保住工作", "会不会离职")) {
+            return QuestionIntent.JOB_STABILITY;
+        }
+        if (containsAny(text, "工资", "收入", "奖金", "提成", "赚多少钱", "薪资")) {
+            return QuestionIntent.INCOME;
+        }
+        if (containsAny(text, "压力", "累", "辛苦", "负担")) {
+            return QuestionIntent.PRESSURE;
+        }
+        if (containsAny(text, "同事", "领导", "上级", "关系", "相处")) {
+            return QuestionIntent.RELATION;
+        }
+        if (containsAny(text, "成长", "学习", "学到", "提升", "进步")) {
+            return QuestionIntent.GROWTH;
+        }
+        if (containsAny(text, "考试", "考证", "考核", "上岸")) {
+            return QuestionIntent.EXAM;
+        }
+        if (containsAny(text, "身体", "疾病", "康复", "健康")) {
+            return QuestionIntent.HEALTH;
+        }
+        if (containsAny(text, "感情", "对象", "恋爱", "复合", "婚姻")) {
+            return QuestionIntent.EMOTION;
+        }
+        if (containsAny(text, "合作", "签约", "合同", "项目")) {
+            return QuestionIntent.COOPERATION;
+        }
+
+        return QuestionIntent.UNKNOWN;
+    }
+
+    private boolean containsAny(String text, String... keywords) {
+        for (String keyword : keywords) {
+            if (text.contains(keyword)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

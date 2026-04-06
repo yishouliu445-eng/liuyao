@@ -1,0 +1,75 @@
+{
+  "version": "v1.0",
+  "rules": [
+    {
+      "intent": "JOB_OPPORTUNITY",
+      "useGod": "GUAN_GUI",
+      "priority": 1,
+      "scenario": "求职/面试/录用/岗位机会",
+      "note": "当前问题关注职位、组织、录用机会时，主看官鬼。"
+    },
+    {
+      "intent": "JOB_STABILITY",
+      "useGod": "GUAN_GUI",
+      "priority": 1,
+      "scenario": "岗位稳定性/是否会丢工作",
+      "note": "主看官鬼，同时参考世爻与应爻。"
+    },
+    {
+      "intent": "INCOME",
+      "useGod": "QI_CAI",
+      "priority": 1,
+      "scenario": "工资/收入/奖金/提成",
+      "note": "当前问题关注财务回报时，主看妻财。"
+    },
+    {
+      "intent": "PRESSURE",
+      "useGod": "GUAN_GUI",
+      "priority": 1,
+      "scenario": "工作压力/负担/被约束感",
+      "note": "主看官鬼，同时结合世爻强弱。"
+    },
+    {
+      "intent": "RELATION",
+      "useGod": "XIONG_DI",
+      "priority": 1,
+      "scenario": "同事关系/职场人际",
+      "note": "主看兄弟，涉及领导时可兼参官鬼。"
+    },
+    {
+      "intent": "GROWTH",
+      "useGod": "ZI_SUN",
+      "priority": 1,
+      "scenario": "学习成长/能力提升/产出",
+      "note": "主看子孙。"
+    },
+    {
+      "intent": "EXAM",
+      "useGod": "GUAN_GUI",
+      "priority": 1,
+      "scenario": "考试/考核/资格证",
+      "note": "考试、考编、考核一般先看官鬼，文书类可兼参父母。"
+    },
+    {
+      "intent": "HEALTH",
+      "useGod": "GUAN_GUI",
+      "priority": 1,
+      "scenario": "疾病/健康问题",
+      "note": "疾病类常以官鬼为病象，恢复与缓解可兼参子孙。"
+    },
+    {
+      "intent": "EMOTION",
+      "useGod": "YING",
+      "priority": 1,
+      "scenario": "感情/对方态度/关系走向",
+      "note": "感情问题先看世应，再按男女与问题细分观察财官。"
+    },
+    {
+      "intent": "COOPERATION",
+      "useGod": "YING",
+      "priority": 1,
+      "scenario": "合作/对方是否靠谱",
+      "note": "合作问题先看应爻，再参考父母（合同）与妻财（收益）。"
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+# liuyao-app
+
+当前工程是基于 `com.yishou.liuyao` 的 Spring Boot 六爻骨架项目。
+
+## 模块说明
+
+- `divination`: 起卦输入、排盘构建、分析主流程
+- `rule`: 用神与结构规则
+- `casecenter`: 卦例留痕、案例列表、案例详情
+- `analysis`: 当前为占位分析服务
+- `common / infrastructure`: 通用响应、异常、JSON、配置等基础设施
+
+## 启动说明
+
+本地开发默认使用 Spring Boot 配置。
+
+- JDK: `17+`
+- 构建: `mvn clean test`
+- 启动: `mvn spring-boot:run`
+
+如果你直接本地运行 PostgreSQL，可以先设置这些环境变量：
+
+```bash
+export DB_URL=jdbc:postgresql://localhost:5432/liuyao
+export DB_USERNAME=postgres
+export DB_PASSWORD=postgres
+export SERVER_PORT=8080
+```
+
+如果你希望直接用 Docker 启 PostgreSQL，可以在项目根目录执行：
+
+```bash
+docker compose up -d
+```
+
+对应文件：
+
+- [docker-compose.yml](/Users/liuyishou/wordspace/liuyao/liuyao-app/docker-compose.yml)
+
+## 数据库说明
+
+- 生产目标数据库为 PostgreSQL
+- 当前测试使用 H2 内存库
+- 数据库结构通过 Flyway 管理
+- 当前迁移版本：
+  - `V1__init_schema.sql`
+  - `V2__add_case_snapshot_index_fields.sql`
+
+推荐先在 PostgreSQL 中创建数据库：
+
+```sql
+CREATE DATABASE liuyao;
+```
+
+如果使用仓库自带 `docker-compose.yml`，数据库会自动创建为 `liuyao`。
+
+## 测试命令
+
+- 全量测试：`mvn test -q`
+- 指定接口测试：`mvn -q -Dtest=DivinationControllerTest,CaseCenterControllerTest test`
+- 指定规则测试：`mvn -q -Dtest=QuestionIntentResolverTest,RuleEngineScenarioRegressionTest test`
+
+## 当前已打通
+
+- 起卦分析最小闭环
+- 真实历法字段：`riChen / yueJian / kongWang`
+- 本卦/变卦、世应、六神、纳甲、六亲第一版
+- 用神规则与部分结构规则
+- 卦例留痕与最近案例查询
+
+## 分析接口示例
+
+`POST /api/divinations/analyze`
+
+请求示例：
+
+```json
+{
+  "questionText": "这次出行会不会顺利",
+  "questionCategory": "出行",
+  "divinationMethod": "手工起卦",
+  "divinationTime": "2026-04-06T10:00:00",
+  "rawLines": ["老阳", "少阴", "少阳", "少阴", "老阴", "少阳"],
+  "movingLines": [1, 5]
+}
+```
+
+返回体中的关键字段：
+
+- `chartSnapshot.mainHexagram`
+- `chartSnapshot.changedHexagram`
+- `chartSnapshot.mainHexagramCode`
+- `chartSnapshot.changedHexagramCode`
+- `chartSnapshot.palace`
+- `chartSnapshot.useGod`
+- `chartSnapshot.lines`
+- `ruleHits`
+- `analysis`
+
+成功响应片段示例：
+
+```json
+{
+  "success": true,
+  "code": "SUCCESS",
+  "message": "OK",
+  "data": {
+    "chartSnapshot": {
+      "questionCategory": "出行",
+      "mainHexagram": "火水未济",
+      "changedHexagram": "雷水解",
+      "mainHexagramCode": "101010",
+      "changedHexagramCode": "100010",
+      "palace": "离",
+      "useGod": "父母"
+    },
+    "ruleHits": [
+      {
+        "ruleCode": "USE_GOD_SELECTION",
+        "ruleName": "用神选择",
+        "impactLevel": "HIGH"
+      }
+    ],
+    "analysis": "当前为骨架版分析结果..."
+  }
+}
+```
+
+## 案例查询接口示例
+
+`GET /api/cases`
+
+返回每条记录的关键摘要字段：
+
+- `caseId`
+- `questionText`
+- `questionCategory`
+- `divinationTime`
+- `status`
+- `mainHexagram`
+- `changedHexagram`
+- `palace`
+- `useGod`
+
+## 案例详情接口示例
+
+`GET /api/cases/{caseId}`
+
+返回体中的关键字段：
+
+- `caseId`
+- `questionText`
+- `questionCategory`
+- `divinationTime`
+- `status`
+- `chartSnapshot`
+- `ruleHits`
+- `analysis`
+
+## API 草稿
+
+更完整的接口文档见：
+
+- [docs/api.md](/Users/liuyishou/wordspace/liuyao/liuyao-app/docs/api.md)
+
+当前第一版接口：
+
+- `POST /api/divinations/analyze`
+- `GET /api/cases`
+- `GET /api/cases/{caseId}`
+
+当前响应风格统一为：
+
+- `success`
+- `code`
+- `message`
+- `data`
+
+常见错误返回示例：
+
+```json
+{
+  "success": false,
+  "code": "NOT_FOUND",
+  "message": "案例不存在"
+}
+```
