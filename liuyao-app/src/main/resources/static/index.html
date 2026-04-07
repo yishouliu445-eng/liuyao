@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六爻排盘与规则联调台</title>
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="page-shell">
+    <header class="hero">
+        <div class="hero-copy">
+            <p class="eyebrow">Liuyao Console</p>
+            <h1>六爻排盘与规则联调台</h1>
+            <p class="hero-text">
+                用一个轻量前端把“起卦分析、规则命中、案例列表、案例详情”连起来，先服务联调和演示，再逐步演进成正式前端。
+            </p>
+        </div>
+        <div class="hero-card">
+            <p class="hero-card-label">当前联调链路</p>
+            <p class="hero-card-value">Analyze → Cases → Detail</p>
+            <p class="hero-card-meta">直接消费现有 Spring Boot 接口，不新增前端框架。</p>
+        </div>
+    </header>
+
+    <main class="grid">
+        <section class="panel panel-form">
+            <div class="panel-heading">
+                <p class="panel-kicker">Step 1</p>
+                <h2>起卦分析</h2>
+            </div>
+            <form id="analyze-form" class="form-stack">
+                <label>
+                    <span>问题</span>
+                    <textarea id="questionText" name="questionText" rows="2">这次出行会不会顺利</textarea>
+                </label>
+                <div class="form-row">
+                    <label>
+                        <span>分类</span>
+                        <select id="questionCategory" name="questionCategory">
+                            <option>出行</option>
+                            <option>收入</option>
+                            <option>感情</option>
+                            <option>工作</option>
+                            <option>健康</option>
+                            <option>合作</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>起卦方式</span>
+                        <input id="divinationMethod" name="divinationMethod" value="手工起卦">
+                    </label>
+                </div>
+                <label>
+                    <span>起卦时间</span>
+                    <input id="divinationTime" name="divinationTime" type="datetime-local" value="2026-04-06T10:00">
+                </label>
+                <label>
+                    <span>六爻输入（逗号分隔）</span>
+                    <input id="rawLines" name="rawLines" value="老阳,少阴,少阳,少阴,老阴,少阳">
+                </label>
+                <label>
+                    <span>动爻（逗号分隔）</span>
+                    <input id="movingLines" name="movingLines" value="1,5">
+                </label>
+                <div class="button-row">
+                    <button type="submit" class="primary-btn">运行固定盘</button>
+                    <button type="button" id="preset-income" class="ghost-btn">切换收入样例</button>
+                </div>
+            </form>
+            <p id="analyze-status" class="status-text">等待请求。</p>
+        </section>
+
+        <section class="panel panel-result">
+            <div class="panel-heading">
+                <p class="panel-kicker">Step 2</p>
+                <h2>分析结果</h2>
+            </div>
+            <div id="analysis-summary" class="summary-card empty-state">
+                运行一次分析后，这里会展示本卦、变卦、用神、世应和规则命中摘要。
+            </div>
+            <div id="analysis-rules" class="rule-list"></div>
+        </section>
+
+        <section class="panel panel-cases">
+            <div class="panel-heading">
+                <p class="panel-kicker">Step 3</p>
+                <h2>案例列表</h2>
+            </div>
+            <div class="toolbar">
+                <select id="search-category">
+                    <option value="">全部分类</option>
+                    <option value="出行">出行</option>
+                    <option value="收入">收入</option>
+                    <option value="感情">感情</option>
+                    <option value="工作">工作</option>
+                    <option value="健康">健康</option>
+                    <option value="合作">合作</option>
+                </select>
+                <button type="button" id="refresh-cases" class="ghost-btn">刷新案例</button>
+            </div>
+            <div id="case-list" class="case-list"></div>
+        </section>
+
+        <section class="panel panel-detail">
+            <div class="panel-heading">
+                <p class="panel-kicker">Step 4</p>
+                <h2>案例详情</h2>
+            </div>
+            <div id="case-detail" class="detail-card empty-state">
+                点击左侧案例卡片后，这里会展示归档盘面、规则命中和分析上下文。
+            </div>
+        </section>
+    </main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

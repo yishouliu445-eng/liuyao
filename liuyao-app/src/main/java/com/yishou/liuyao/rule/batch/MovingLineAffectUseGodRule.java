@@ -71,27 +71,27 @@ public class MovingLineAffectUseGodRule implements Rule {
             if (movingWuXing == null || movingWuXing.isBlank()) {
                 continue;
             }
-            String relation = null;
-            if (UseGodLineLocator.generates(movingWuXing, useGodWuXing)) {
-                relation = "动爻生用神";
-            } else if (UseGodLineLocator.controls(movingWuXing, useGodWuXing)) {
-                relation = "动爻克用神";
-            }
-            String changeRelation = null;
-            if (moving.getChangeWuXing() != null && !moving.getChangeWuXing().isBlank()) {
-                if (UseGodLineLocator.generates(moving.getChangeWuXing(), useGodWuXing)) {
-                    changeRelation = "变爻生用神";
-                } else if (UseGodLineLocator.controls(moving.getChangeWuXing(), useGodWuXing)) {
-                    changeRelation = "变爻克用神";
+            for (LineInfo target : useGodLines) {
+                String relation = relationLabel("动爻", movingWuXing, target.getWuXing());
+                String changeRelation = relationLabel("变爻", moving.getChangeWuXing(), target.getWuXing());
+                boolean sameLine = moving.getIndex() != null && moving.getIndex().equals(target.getIndex());
+                String selfTransform = "";
+                if (sameLine && moving.getChangeLiuQin() != null && !moving.getChangeLiuQin().isBlank()) {
+                    selfTransform = useGod.equals(moving.getChangeLiuQin()) ? "用神发动仍属同类六亲" : "用神发动后转出他亲";
                 }
-            }
-            if (relation != null || changeRelation != null) {
-                Map<String, Object> effect = UseGodLineLocator.summarizeLine(moving);
-                effect.put("movingWuXing", movingWuXing);
-                effect.put("useGodWuXing", useGodWuXing);
-                effect.put("relation", relation == null ? "" : relation);
-                effect.put("changeRelation", changeRelation == null ? "" : changeRelation);
-                effects.add(effect);
+                if (relation != null || changeRelation != null || !selfTransform.isBlank()) {
+                    Map<String, Object> effect = UseGodLineLocator.summarizeLine(moving);
+                    effect.put("movingWuXing", movingWuXing);
+                    effect.put("targetLineIndex", target.getIndex());
+                    effect.put("targetWuXing", target.getWuXing() == null ? "" : target.getWuXing());
+                    effect.put("targetSummary", UseGodLineLocator.summarizeLine(target));
+                    effect.put("useGodWuXing", useGodWuXing);
+                    effect.put("relation", relation == null ? "" : relation);
+                    effect.put("changeRelation", changeRelation == null ? "" : changeRelation);
+                    effect.put("sameLineAsUseGod", sameLine);
+                    effect.put("selfTransform", selfTransform);
+                    effects.add(effect);
+                }
             }
         }
 
@@ -106,12 +106,28 @@ public class MovingLineAffectUseGodRule implements Rule {
         hit.setHit(true);
         hit.setImpactLevel("MEDIUM");
         hit.setHitReason("已识别部分动爻对用神形成生克影响。");
-        hit.setEvidence(Map.of(
-                "useGod", useGod,
-                "useGodWuXing", useGodWuXing,
-                "useGodLines", useGodLines.stream().map(UseGodLineLocator::summarizeLine).toList(),
-                "effects", effects
-        ));
+        Map<String, Object> evidence = new java.util.LinkedHashMap<>(UseGodLineLocator.baseChartEvidence(chart, useGod));
+        evidence.put("useGodWuXing", useGodWuXing);
+        UseGodLineLocator.putTargets(evidence, useGodLines.stream().map(UseGodLineLocator::summarizeLine).toList());
+        evidence.put("useGodLines", useGodLines.stream().map(UseGodLineLocator::summarizeLine).toList());
+        evidence.put("effects", effects);
+        hit.setEvidence(evidence);
         return hit;
+    }
+
+    private String relationLabel(String prefix, String sourceWuXing, String targetWuXing) {
+        if (sourceWuXing == null || sourceWuXing.isBlank() || targetWuXing == null || targetWuXing.isBlank()) {
+            return null;
+        }
+        if (UseGodLineLocator.generates(sourceWuXing, targetWuXing)) {
+            return prefix + "生用神";
+        }
+        if (UseGodLineLocator.controls(sourceWuXing, targetWuXing)) {
+            return prefix + "克用神";
+        }
+        if (sourceWuXing.equals(targetWuXing)) {
+            return prefix + "同用神五行";
+        }
+        return null;
     }
 }

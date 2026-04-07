@@ -52,7 +52,9 @@ public class UseGodEmptyRule implements Rule {
             hit.setHit(false);
             hit.setImpactLevel("LOW");
             hit.setHitReason("盘面中未找到对应的用神爻。");
-            hit.setEvidence(Map.of("useGod", useGod, "kongWang", kongWang));
+            Map<String, Object> evidence = UseGodLineLocator.baseChartEvidence(chart, useGod);
+            evidence.put("kongWang", kongWang);
+            hit.setEvidence(evidence);
             return hit;
         }
 
@@ -60,6 +62,7 @@ public class UseGodEmptyRule implements Rule {
         for (LineInfo line : useGodLines) {
             String branch = line.getBranch();
             if (branch != null && kongWang.contains(branch)) {
+                // 目标爻证据保持统一摘要结构，避免接口层再做字段拼装。
                 emptyTargets.add(UseGodLineLocator.summarizeLine(line));
             }
         }
@@ -68,14 +71,20 @@ public class UseGodEmptyRule implements Rule {
             hit.setHit(false);
             hit.setImpactLevel("LOW");
             hit.setHitReason("当前用神未落空亡。");
-            hit.setEvidence(Map.of("useGod", useGod, "kongWang", kongWang));
+            Map<String, Object> evidence = UseGodLineLocator.baseChartEvidence(chart, useGod);
+            evidence.put("kongWang", kongWang);
+            UseGodLineLocator.putTargets(evidence, emptyTargets);
+            hit.setEvidence(evidence);
             return hit;
         }
 
         hit.setHit(true);
         hit.setImpactLevel("HIGH");
         hit.setHitReason("当前用神落空亡，后续应结合冲空、填实与动变继续分析。");
-        hit.setEvidence(Map.of("useGod", useGod, "kongWang", kongWang, "targets", emptyTargets));
+        Map<String, Object> evidence = UseGodLineLocator.baseChartEvidence(chart, useGod);
+        evidence.put("kongWang", kongWang);
+        UseGodLineLocator.putTargets(evidence, emptyTargets);
+        hit.setEvidence(evidence);
         return hit;
     }
 }

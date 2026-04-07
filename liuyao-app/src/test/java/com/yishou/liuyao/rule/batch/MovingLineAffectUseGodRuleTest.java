@@ -41,10 +41,43 @@ class MovingLineAffectUseGodRuleTest {
         RuleHit hit = new MovingLineAffectUseGodRule().evaluate(chartSnapshot);
 
         assertTrue(Boolean.TRUE.equals(hit.getHit()));
+        assertEquals(1, hit.getEvidence().get("targetCount"));
+        assertEquals(1, ((List<?>) hit.getEvidence().get("targetSummary")).size());
+        assertEquals(1, ((List<?>) hit.getEvidence().get("targets")).size());
         @SuppressWarnings("unchecked")
         Map<String, Object> effect = (Map<String, Object>) ((List<?>) hit.getEvidence().get("effects")).get(0);
         assertEquals("动爻克用神", effect.get("relation"));
         assertEquals("变爻生用神", effect.get("changeRelation"));
         assertEquals("寅", effect.get("changeBranch"));
+        assertEquals(false, effect.get("sameLineAsUseGod"));
+    }
+
+    @Test
+    void shouldExposeSelfTransformWhenUseGodLineIsMoving() {
+        LineInfo movingUseGod = new LineInfo();
+        movingUseGod.setIndex(2);
+        movingUseGod.setMoving(true);
+        movingUseGod.setLiuQin("妻财");
+        movingUseGod.setBranch("午");
+        movingUseGod.setWuXing("火");
+        movingUseGod.setChangeTo("阴");
+        movingUseGod.setChangeBranch("酉");
+        movingUseGod.setChangeWuXing("金");
+        movingUseGod.setChangeLiuQin("官鬼");
+
+        ChartSnapshot chartSnapshot = new ChartSnapshot();
+        chartSnapshot.setLines(List.of(movingUseGod));
+        chartSnapshot.setExt(new LinkedHashMap<>());
+        chartSnapshot.getExt().put("useGod", "妻财");
+
+        RuleHit hit = new MovingLineAffectUseGodRule().evaluate(chartSnapshot);
+
+        assertTrue(Boolean.TRUE.equals(hit.getHit()));
+        assertEquals(1, hit.getEvidence().get("targetCount"));
+        assertEquals(1, ((List<?>) hit.getEvidence().get("targetSummary")).size());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> effect = (Map<String, Object>) ((List<?>) hit.getEvidence().get("effects")).get(0);
+        assertEquals(true, effect.get("sameLineAsUseGod"));
+        assertEquals("用神发动后转出他亲", effect.get("selfTransform"));
     }
 }

@@ -53,6 +53,12 @@ class RuleEngineScenarioRegressionTest {
     void shouldKeepScenarioRuleChainStable(String question,
                                            String category,
                                            String expectedUseGod,
+                                           String expectedMainHexagram,
+                                           String expectedChangedHexagram,
+                                           String expectedPalace,
+                                           int expectedShi,
+                                           int expectedYing,
+                                           int expectedHitCount,
                                            boolean shouldHitUseGodSelection) {
         DivinationInput input = new DivinationInput();
         input.setQuestion(question);
@@ -65,6 +71,12 @@ class RuleEngineScenarioRegressionTest {
         List<RuleHit> hits = ruleEngineService.evaluate(chartSnapshot);
 
         assertEquals(expectedUseGod, chartSnapshot.getUseGod());
+        assertEquals(expectedMainHexagram, chartSnapshot.getMainHexagram());
+        assertEquals(expectedChangedHexagram, chartSnapshot.getChangedHexagram());
+        assertEquals(expectedPalace, chartSnapshot.getPalace());
+        assertEquals(expectedShi, chartSnapshot.getShi());
+        assertEquals(expectedYing, chartSnapshot.getYing());
+        assertEquals(expectedHitCount, hits.size());
         assertEquals(shouldHitUseGodSelection, hits.stream().anyMatch(hit -> "USE_GOD_SELECTION".equals(hit.getRuleCode())));
         assertTrue(hits.stream().anyMatch(hit -> "MOVING_LINE_EXISTS".equals(hit.getRuleCode())));
         assertTrue(hits.stream().anyMatch(hit -> "SHI_YING_RELATION".equals(hit.getRuleCode())));
@@ -72,12 +84,12 @@ class RuleEngineScenarioRegressionTest {
 
     private static Stream<Arguments> cases() {
         return Stream.of(
-                Arguments.of("我下个月工资会不会上涨", "收入", "妻财", true),
-                Arguments.of("我和她能不能结婚", "感情", "应爻", true),
-                Arguments.of("这次求职能不能拿到 offer", "工作", "官鬼", true),
-                Arguments.of("最近身体恢复得怎么样", "健康", "官鬼", true),
-                Arguments.of("这次合作签约能不能顺利推进", "合作", "应爻", true),
-                Arguments.of("这次出行会不会顺利", "出行", "父母", true)
+                Arguments.of("我下个月工资会不会上涨", "收入", "妻财", "山火贲", "风山渐", "艮", 1, 4, 3, true),
+                Arguments.of("我和她能不能结婚", "感情", "应爻", "山火贲", "风山渐", "艮", 1, 4, 3, true),
+                Arguments.of("这次求职能不能拿到 offer", "工作", "官鬼", "山火贲", "风山渐", "艮", 1, 4, 3, true),
+                Arguments.of("最近身体恢复得怎么样", "健康", "官鬼", "山火贲", "风山渐", "艮", 1, 4, 3, true),
+                Arguments.of("这次合作签约能不能顺利推进", "合作", "应爻", "山火贲", "风山渐", "艮", 1, 4, 3, true),
+                Arguments.of("这次出行会不会顺利", "出行", "父母", "山火贲", "风山渐", "艮", 1, 4, 3, true)
         );
     }
 

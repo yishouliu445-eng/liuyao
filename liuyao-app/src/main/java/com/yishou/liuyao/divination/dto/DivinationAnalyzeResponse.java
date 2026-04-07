@@ -1,5 +1,6 @@
 package com.yishou.liuyao.divination.dto;
 
+import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
 
 import java.util.List;
@@ -9,14 +10,19 @@ public class DivinationAnalyzeResponse {
     private ChartSnapshotDTO chartSnapshot;
     private List<RuleHitDTO> ruleHits;
     private String analysis;
+    private AnalysisContextDTO analysisContext;
 
     public DivinationAnalyzeResponse() {
     }
 
-    public DivinationAnalyzeResponse(ChartSnapshotDTO chartSnapshot, List<RuleHitDTO> ruleHits, String analysis) {
+    public DivinationAnalyzeResponse(ChartSnapshotDTO chartSnapshot,
+                                     List<RuleHitDTO> ruleHits,
+                                     String analysis,
+                                     AnalysisContextDTO analysisContext) {
         this.chartSnapshot = chartSnapshot;
         this.ruleHits = ruleHits;
         this.analysis = analysis;
+        this.analysisContext = analysisContext;
     }
 
     public ChartSnapshotDTO getChartSnapshot() {
@@ -41,5 +47,13 @@ public class DivinationAnalyzeResponse {
 
     public void setAnalysis(String analysis) {
         this.analysis = analysis;
+    }
+
+    public AnalysisContextDTO getAnalysisContext() {
+        return analysisContext;
+    }
+
+    public void setAnalysisContext(AnalysisContextDTO analysisContext) {
+        this.analysisContext = analysisContext;
     }
 }

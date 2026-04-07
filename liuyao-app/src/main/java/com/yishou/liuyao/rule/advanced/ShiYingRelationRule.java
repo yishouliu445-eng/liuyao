@@ -54,16 +54,19 @@ public class ShiYingRelationRule implements Rule {
             return hit;
         }
 
-        Map<String, Object> evidence = new LinkedHashMap<>();
+        Map<String, Object> evidence = new LinkedHashMap<>(UseGodLineLocator.baseChartEvidence(chart, null));
+        java.util.List<Map<String, Object>> targets = java.util.List.of(
+                UseGodLineLocator.summarizeLine(shi),
+                UseGodLineLocator.summarizeLine(ying)
+        );
         evidence.put("shiLine", UseGodLineLocator.summarizeLine(shi));
         evidence.put("yingLine", UseGodLineLocator.summarizeLine(ying));
+        UseGodLineLocator.putTargets(evidence, targets);
         evidence.put("shiIndex", shi.getIndex());
         evidence.put("yingIndex", ying.getIndex());
         evidence.put("shiWuXing", shiWuXing);
         evidence.put("yingWuXing", yingWuXing);
         evidence.put("relation", resolveRelation(shiWuXing, yingWuXing));
-        evidence.put("palace", chart.getPalace() == null ? "" : chart.getPalace());
-        evidence.put("palaceWuXing", chart.getPalaceWuXing() == null ? "" : chart.getPalaceWuXing());
 
         hit.setHit(true);
         hit.setImpactLevel("MEDIUM");

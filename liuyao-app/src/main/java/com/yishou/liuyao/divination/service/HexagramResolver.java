@@ -25,7 +25,7 @@ public class HexagramResolver {
 
     public HexagramResult resolve(List<String> rawLines) {
         if (rawLines == null || rawLines.size() != 6) {
-            return new HexagramResult("待定本卦", "待定变卦", "000000", "000000");
+            return new HexagramResult("待定本卦", "待定变卦", "000000", "000000", "坤", "坤", "坤", "坤");
         }
 
         // 本卦按当前六爻直接编码，变卦则把老阴老阳翻转后再编码。
@@ -35,7 +35,11 @@ public class HexagramResolver {
                 HEXAGRAM_NAMES.getOrDefault(mainCode, "未知卦"),
                 HEXAGRAM_NAMES.getOrDefault(changedCode, "未知卦"),
                 mainCode,
-                changedCode
+                changedCode,
+                trigramName(mainCode.substring(0, 3)),
+                trigramName(mainCode.substring(3, 6)),
+                trigramName(changedCode.substring(0, 3)),
+                trigramName(changedCode.substring(3, 6))
         );
     }
 
@@ -95,5 +99,9 @@ public class HexagramResolver {
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElse("000");
+    }
+
+    private String trigramName(String trigramCode) {
+        return TRIGRAM_CODE_TO_NAME.getOrDefault(trigramCode, "坤");
     }
 }

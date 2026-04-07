@@ -39,6 +39,9 @@ class ShiYingRelationRuleTest {
         assertTrue(Boolean.TRUE.equals(hit.getHit()));
         assertEquals("世生应", hit.getEvidence().get("relation"));
         assertEquals("乾", hit.getEvidence().get("palace"));
+        assertEquals(2, hit.getEvidence().get("targetCount"));
+        assertEquals(2, ((List<?>) hit.getEvidence().get("targetSummary")).size());
+        assertEquals(2, ((List<?>) hit.getEvidence().get("targets")).size());
         @SuppressWarnings("unchecked")
         Map<String, Object> shiLine = (Map<String, Object>) hit.getEvidence().get("shiLine");
         assertEquals("卯", shiLine.get("branch"));

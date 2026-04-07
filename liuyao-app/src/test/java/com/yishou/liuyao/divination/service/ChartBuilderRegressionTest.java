@@ -29,6 +29,10 @@ class ChartBuilderRegressionTest {
     void shouldKeepKeySnapshotFieldsStable(List<String> rawLines,
                                            String mainHexagram,
                                            String changedHexagram,
+                                           String mainUpperTrigram,
+                                           String mainLowerTrigram,
+                                           String changedUpperTrigram,
+                                           String changedLowerTrigram,
                                            String palace,
                                            String palaceWuXing,
                                            int shi,
@@ -47,10 +51,18 @@ class ChartBuilderRegressionTest {
 
         assertEquals(mainHexagram, chartSnapshot.getMainHexagram());
         assertEquals(changedHexagram, chartSnapshot.getChangedHexagram());
+        assertEquals(mainUpperTrigram, chartSnapshot.getMainUpperTrigram());
+        assertEquals(mainLowerTrigram, chartSnapshot.getMainLowerTrigram());
+        assertEquals(changedUpperTrigram, chartSnapshot.getChangedUpperTrigram());
+        assertEquals(changedLowerTrigram, chartSnapshot.getChangedLowerTrigram());
         assertEquals(palace, chartSnapshot.getPalace());
         assertEquals(palaceWuXing, chartSnapshot.getPalaceWuXing());
+        assertEquals("v1", chartSnapshot.getSnapshotVersion());
+        assertEquals("v1", chartSnapshot.getCalendarVersion());
         assertEquals(palace, chartSnapshot.getExt().get("palace"));
         assertEquals(palaceWuXing, chartSnapshot.getExt().get("palaceWuXing"));
+        assertEquals(mainUpperTrigram, chartSnapshot.getExt().get("mainUpperTrigram"));
+        assertEquals(mainLowerTrigram, chartSnapshot.getExt().get("mainLowerTrigram"));
         assertEquals(shi, chartSnapshot.getShi());
         assertEquals(ying, chartSnapshot.getYing());
         assertEquals(line1Branch, chartSnapshot.getLines().get(0).getBranch());
@@ -66,6 +78,10 @@ class ChartBuilderRegressionTest {
                         "乾为天",
                         "乾为天",
                         "乾",
+                        "乾",
+                        "乾",
+                        "乾",
+                        "乾",
                         "金",
                         6,
                         3,
@@ -78,6 +94,10 @@ class ChartBuilderRegressionTest {
                         List.of("老阳", "少阳", "少阳", "少阳", "少阳", "少阳"),
                         "乾为天",
                         "天风姤",
+                        "乾",
+                        "乾",
+                        "乾",
+                        "巽",
                         "乾",
                         "金",
                         6,
@@ -92,6 +112,10 @@ class ChartBuilderRegressionTest {
                         "坤为地",
                         "坤为地",
                         "坤",
+                        "坤",
+                        "坤",
+                        "坤",
+                        "坤",
                         "土",
                         6,
                         3,
@@ -104,6 +128,10 @@ class ChartBuilderRegressionTest {
                         List.of("少阳", "少阳", "少阳", "少阳", "少阴", "少阳"),
                         "火天大有",
                         "火天大有",
+                        "离",
+                        "乾",
+                        "离",
+                        "乾",
                         "乾",
                         "金",
                         3,

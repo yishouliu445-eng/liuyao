@@ -2,6 +2,7 @@ package com.yishou.liuyao.rule.batch;
 
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.domain.LineInfo;
+import com.yishou.liuyao.divination.service.WuXingSupport;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -60,33 +61,19 @@ public final class UseGodLineLocator {
     }
 
     public static String branchToWuXing(String branch) {
-        if (branch == null || branch.isBlank()) {
-            return null;
-        }
-        return switch (branch) {
-            case "寅", "卯" -> "木";
-            case "巳", "午" -> "火";
-            case "辰", "戌", "丑", "未" -> "土";
-            case "申", "酉" -> "金";
-            case "亥", "子" -> "水";
-            default -> null;
-        };
+        return WuXingSupport.branchToWuXing(branch);
     }
 
     public static boolean generates(String from, String to) {
-        return ("木".equals(from) && "火".equals(to))
-                || ("火".equals(from) && "土".equals(to))
-                || ("土".equals(from) && "金".equals(to))
-                || ("金".equals(from) && "水".equals(to))
-                || ("水".equals(from) && "木".equals(to));
+        return WuXingSupport.generates(from, to);
     }
 
     public static boolean controls(String from, String to) {
-        return ("木".equals(from) && "土".equals(to))
-                || ("土".equals(from) && "水".equals(to))
-                || ("水".equals(from) && "火".equals(to))
-                || ("火".equals(from) && "金".equals(to))
-                || ("金".equals(from) && "木".equals(to));
+        return WuXingSupport.controls(from, to);
+    }
+
+    public static String relationOf(String from, String to) {
+        return WuXingSupport.relationOf(from, to);
     }
 
     public static Map<String, Object> summarizeLine(LineInfo line) {
@@ -104,6 +91,31 @@ public final class UseGodLineLocator {
             summary.put("changeLiuQin", defaultValue(line.getChangeLiuQin()));
         }
         return summary;
+    }
+
+    public static Map<String, Object> baseChartEvidence(ChartSnapshot chart, String useGod) {
+        // 规则层先挂一层稳定的盘面上下文，后续各条规则只补自己特有的证据字段。
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("useGod", defaultValue(useGod));
+        if (chart == null) {
+            return evidence;
+        }
+        evidence.put("mainHexagram", defaultValue(chart.getMainHexagram()));
+        evidence.put("changedHexagram", defaultValue(chart.getChangedHexagram()));
+        evidence.put("palace", defaultValue(chart.getPalace()));
+        evidence.put("palaceWuXing", defaultValue(chart.getPalaceWuXing()));
+        evidence.put("mainUpperTrigram", defaultValue(chart.getMainUpperTrigram()));
+        evidence.put("mainLowerTrigram", defaultValue(chart.getMainLowerTrigram()));
+        evidence.put("changedUpperTrigram", defaultValue(chart.getChangedUpperTrigram()));
+        evidence.put("changedLowerTrigram", defaultValue(chart.getChangedLowerTrigram()));
+        return evidence;
+    }
+
+    public static void putTargets(Map<String, Object> evidence, List<Map<String, Object>> targets) {
+        List<Map<String, Object>> safeTargets = targets == null ? List.of() : targets;
+        evidence.put("targetCount", safeTargets.size());
+        evidence.put("targetSummary", safeTargets);
+        evidence.put("targets", safeTargets);
     }
 
     private static String defaultValue(String value) {

@@ -59,7 +59,10 @@ public class UseGodDayBreakRule implements Rule {
         List<Map<String, Object>> brokenTargets = new ArrayList<>();
         for (LineInfo line : useGodLines) {
             if (line.getBranch() != null && UseGodLineLocator.isChong(riBranch, line.getBranch())) {
-                brokenTargets.add(UseGodLineLocator.summarizeLine(line));
+                // 目标爻摘要统一保留行信息，再补本规则专属的日辰地支。
+                Map<String, Object> target = UseGodLineLocator.summarizeLine(line);
+                target.put("riBranch", riBranch);
+                brokenTargets.add(target);
             }
         }
 
@@ -67,14 +70,23 @@ public class UseGodDayBreakRule implements Rule {
             hit.setHit(false);
             hit.setImpactLevel("LOW");
             hit.setHitReason("当前用神未见日破。");
-            hit.setEvidence(Map.of("useGod", useGod, "riChen", riChen, "riBranch", riBranch));
+            Map<String, Object> evidence = UseGodLineLocator.baseChartEvidence(chart, useGod);
+            evidence.put("riChen", riChen);
+            evidence.put("riBranch", riBranch);
+            UseGodLineLocator.putTargets(evidence, brokenTargets);
+            hit.setEvidence(evidence);
             return hit;
         }
 
         hit.setHit(true);
         hit.setImpactLevel("HIGH");
         hit.setHitReason("当前用神受日辰相冲，存在日破信号。");
-        hit.setEvidence(Map.of("useGod", useGod, "riChen", riChen, "riBranch", riBranch, "targets", brokenTargets));
+        // 证据层保留整张盘的关键上下文，再叠加本规则特有的日辰信息。
+        Map<String, Object> evidence = UseGodLineLocator.baseChartEvidence(chart, useGod);
+        evidence.put("riChen", riChen);
+        evidence.put("riBranch", riBranch);
+        UseGodLineLocator.putTargets(evidence, brokenTargets);
+        hit.setEvidence(evidence);
         return hit;
     }
 

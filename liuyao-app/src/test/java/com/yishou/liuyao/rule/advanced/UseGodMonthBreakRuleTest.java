@@ -36,6 +36,9 @@ class UseGodMonthBreakRuleTest {
         RuleHit hit = new UseGodMonthBreakRule().evaluate(chartSnapshot);
 
         assertTrue(Boolean.TRUE.equals(hit.getHit()));
+        assertEquals("卯", hit.getEvidence().get("yueBranch"));
+        assertEquals(1, hit.getEvidence().get("targetCount"));
+        assertEquals(1, ((List<?>) hit.getEvidence().get("targetSummary")).size());
         @SuppressWarnings("unchecked")
         Map<String, Object> target = (Map<String, Object>) ((List<?>) hit.getEvidence().get("targets")).get(0);
         assertEquals("亥", target.get("changeBranch"));

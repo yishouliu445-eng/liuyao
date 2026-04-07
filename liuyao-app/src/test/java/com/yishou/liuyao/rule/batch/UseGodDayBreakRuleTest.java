@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,5 +31,10 @@ class UseGodDayBreakRuleTest {
 
         assertTrue(Boolean.TRUE.equals(hit.getHit()));
         assertEquals("子", hit.getEvidence().get("riBranch"));
+        assertEquals(1, hit.getEvidence().get("targetCount"));
+        assertEquals(1, ((List<?>) hit.getEvidence().get("targetSummary")).size());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> target = (Map<String, Object>) ((List<?>) hit.getEvidence().get("targets")).get(0);
+        assertEquals("子", target.get("riBranch"));
     }
 }

@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class RuleEngineRealChartRegressionTest {
 
@@ -59,7 +60,9 @@ class RuleEngineRealChartRegressionTest {
 
         assertEquals(3, hits.size());
         assertTrue(hits.stream().anyMatch(hit -> "MOVING_LINE_EXISTS".equals(hit.getRuleCode())));
-        assertTrue(hits.stream().anyMatch(hit -> "USE_GOD_STRENGTH".equals(hit.getRuleCode())));
+        RuleHit strengthHit = hits.stream().filter(hit -> "USE_GOD_STRENGTH".equals(hit.getRuleCode())).findFirst().orElseThrow();
         assertTrue(hits.stream().anyMatch(hit -> "MOVING_LINE_AFFECT_USE_GOD".equals(hit.getRuleCode())));
+        assertEquals(1, strengthHit.getEvidence().get("targetCount"));
+        assertNotNull(strengthHit.getEvidence().get("targetSummary"));
     }
 }

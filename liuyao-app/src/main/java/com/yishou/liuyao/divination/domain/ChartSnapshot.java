@@ -21,6 +21,11 @@ public class ChartSnapshot {
     // 六位阴阳编码，便于规则层和持久化层稳定识别卦象。
     private String mainHexagramCode;
     private String changedHexagramCode;
+    // 上下卦便于联调时核对本卦、变卦拆解过程。
+    private String mainUpperTrigram;
+    private String mainLowerTrigram;
+    private String changedUpperTrigram;
+    private String changedLowerTrigram;
     // 卦宫与宫五行会参与六亲判断和后续解释。
     private String palace;
     private String palaceWuXing;
@@ -99,6 +104,38 @@ public class ChartSnapshot {
 
     public void setChangedHexagramCode(String changedHexagramCode) {
         this.changedHexagramCode = changedHexagramCode;
+    }
+
+    public String getMainUpperTrigram() {
+        return mainUpperTrigram;
+    }
+
+    public void setMainUpperTrigram(String mainUpperTrigram) {
+        this.mainUpperTrigram = mainUpperTrigram;
+    }
+
+    public String getMainLowerTrigram() {
+        return mainLowerTrigram;
+    }
+
+    public void setMainLowerTrigram(String mainLowerTrigram) {
+        this.mainLowerTrigram = mainLowerTrigram;
+    }
+
+    public String getChangedUpperTrigram() {
+        return changedUpperTrigram;
+    }
+
+    public void setChangedUpperTrigram(String changedUpperTrigram) {
+        this.changedUpperTrigram = changedUpperTrigram;
+    }
+
+    public String getChangedLowerTrigram() {
+        return changedLowerTrigram;
+    }
+
+    public void setChangedLowerTrigram(String changedLowerTrigram) {
+        this.changedLowerTrigram = changedLowerTrigram;
     }
 
     public String getPalace() {

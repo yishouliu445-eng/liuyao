@@ -18,6 +18,10 @@ public class ChartSnapshotDTO {
     private String changedHexagram;
     private String mainHexagramCode;
     private String changedHexagramCode;
+    private String mainUpperTrigram;
+    private String mainLowerTrigram;
+    private String changedUpperTrigram;
+    private String changedLowerTrigram;
     private String palace;
     private String palaceWuXing;
     private Integer shi;
@@ -25,6 +29,8 @@ public class ChartSnapshotDTO {
     private String useGod;
     private String riChen;
     private String yueJian;
+    private String snapshotVersion;
+    private String calendarVersion;
     private List<String> kongWang = new ArrayList<>();
     private List<LineInfoDTO> lines = new ArrayList<>();
 
@@ -92,6 +98,38 @@ public class ChartSnapshotDTO {
         this.changedHexagramCode = changedHexagramCode;
     }
 
+    public String getMainUpperTrigram() {
+        return mainUpperTrigram;
+    }
+
+    public void setMainUpperTrigram(String mainUpperTrigram) {
+        this.mainUpperTrigram = mainUpperTrigram;
+    }
+
+    public String getMainLowerTrigram() {
+        return mainLowerTrigram;
+    }
+
+    public void setMainLowerTrigram(String mainLowerTrigram) {
+        this.mainLowerTrigram = mainLowerTrigram;
+    }
+
+    public String getChangedUpperTrigram() {
+        return changedUpperTrigram;
+    }
+
+    public void setChangedUpperTrigram(String changedUpperTrigram) {
+        this.changedUpperTrigram = changedUpperTrigram;
+    }
+
+    public String getChangedLowerTrigram() {
+        return changedLowerTrigram;
+    }
+
+    public void setChangedLowerTrigram(String changedLowerTrigram) {
+        this.changedLowerTrigram = changedLowerTrigram;
+    }
+
     public String getPalace() {
         return palace;
     }
@@ -146,6 +184,22 @@ public class ChartSnapshotDTO {
 
     public void setYueJian(String yueJian) {
         this.yueJian = yueJian;
+    }
+
+    public String getSnapshotVersion() {
+        return snapshotVersion;
+    }
+
+    public void setSnapshotVersion(String snapshotVersion) {
+        this.snapshotVersion = snapshotVersion;
+    }
+
+    public String getCalendarVersion() {
+        return calendarVersion;
+    }
+
+    public void setCalendarVersion(String calendarVersion) {
+        this.calendarVersion = calendarVersion;
     }
 
     public List<String> getKongWang() {

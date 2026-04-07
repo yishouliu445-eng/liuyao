@@ -20,6 +20,9 @@ public class CaseAnalysisResult extends BaseEntity {
     @Column(name = "analysis_text")
     private String analysisText;
 
+    @Column(name = "analysis_context_json")
+    private String analysisContextJson;
+
     public Long getCaseId() {
         return caseId;
     }
@@ -50,5 +53,13 @@ public class CaseAnalysisResult extends BaseEntity {
 
     public void setAnalysisText(String analysisText) {
         this.analysisText = analysisText;
+    }
+
+    public String getAnalysisContextJson() {
+        return analysisContextJson;
+    }
+
+    public void setAnalysisContextJson(String analysisContextJson) {
+        this.analysisContextJson = analysisContextJson;
     }
 }

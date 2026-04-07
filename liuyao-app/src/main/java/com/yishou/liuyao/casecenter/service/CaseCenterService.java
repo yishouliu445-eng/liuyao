@@ -1,11 +1,13 @@
 package com.yishou.liuyao.casecenter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.casecenter.domain.CaseAnalysisResult;
 import com.yishou.liuyao.casecenter.domain.CaseChartSnapshot;
 import com.yishou.liuyao.casecenter.domain.CaseRuleHit;
 import com.yishou.liuyao.casecenter.domain.DivinationCase;
 import com.yishou.liuyao.casecenter.dto.CaseDetailDTO;
+import com.yishou.liuyao.casecenter.dto.CaseListResponseDTO;
 import com.yishou.liuyao.casecenter.dto.CaseSummaryDTO;
 import com.yishou.liuyao.common.exception.BusinessException;
 import com.yishou.liuyao.common.exception.ErrorCode;
@@ -19,8 +21,12 @@ import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.infrastructure.util.JsonUtils;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +34,8 @@ import java.util.Map;
 
 @Service
 public class CaseCenterService {
+
+    private static final Logger log = LoggerFactory.getLogger(CaseCenterService.class);
 
     private final DivinationCaseRepository divinationCaseRepository;
     private final CaseChartSnapshotRepository caseChartSnapshotRepository;
@@ -51,6 +59,7 @@ public class CaseCenterService {
     public void recordAnalysis(DivinationAnalyzeRequest request,
                                ChartSnapshot chartSnapshot,
                                List<RuleHit> ruleHits,
+                               AnalysisContextDTO analysisContext,
                                String analysis) {
         // 一次分析会同时留下 case、快照、规则命中和分析结果四类留痕。
         DivinationCase divinationCase = new DivinationCase();
@@ -88,7 +97,14 @@ public class CaseCenterService {
         result.setProvider("stub");
         result.setModelName("skeleton");
         result.setAnalysisText(analysis);
+        result.setAnalysisContextJson(JsonUtils.toJson(objectMapper, analysisContext));
         caseAnalysisResultRepository.save(result);
+        log.info("案例留痕完成: caseId={}, category={}, mainHexagram={}, useGod={}, ruleHitCount={}",
+                divinationCase.getId(),
+                divinationCase.getQuestionCategory(),
+                snapshot.getMainHexagram(),
+                snapshot.getUseGod(),
+                ruleHits.size());
     }
 
     @Transactional(readOnly = true)
@@ -96,6 +112,34 @@ public class CaseCenterService {
         return divinationCaseRepository.findTop20ByOrderByDivinationTimeDescIdDesc().stream()
                 .map(this::toCaseSummary)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CaseListResponseDTO listCases(String questionCategory, int page, int size) {
+        int safePage = Math.max(page, 1);
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        // 统一使用 1-based 页码对外，内部转成 Spring Data 的 0-based。
+        PageRequest pageable = PageRequest.of(safePage - 1, safeSize);
+        Page<DivinationCase> cases = questionCategory == null || questionCategory.isBlank()
+                ? divinationCaseRepository.findAllByOrderByDivinationTimeDescIdDesc(pageable)
+                : divinationCaseRepository.findByQuestionCategoryOrderByDivinationTimeDescIdDesc(questionCategory, pageable);
+
+        CaseListResponseDTO response = new CaseListResponseDTO();
+        response.setPage(safePage);
+        response.setSize(safeSize);
+        response.setTotal(cases.getTotalElements());
+        response.setItems(cases.getContent().stream().map(this::toCaseSummary).toList());
+        log.info("案例分页查询完成: category={}, page={}, size={}, total={}, returned={}",
+                questionCategory,
+                safePage,
+                safeSize,
+                cases.getTotalElements(),
+                response.getItems().size());
+        if (log.isDebugEnabled()) {
+            log.debug("案例分页查询摘要: caseIds={}",
+                    response.getItems().stream().map(CaseSummaryDTO::getCaseId).toList());
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -118,7 +162,14 @@ public class CaseCenterService {
                 .toList());
 
         caseAnalysisResultRepository.findTopByCaseIdOrderByIdDesc(caseId)
-                .ifPresent(result -> dto.setAnalysis(result.getAnalysisText()));
+                .ifPresent(result -> {
+                    dto.setAnalysis(result.getAnalysisText());
+                    dto.setAnalysisContext(readJson(result.getAnalysisContextJson(), AnalysisContextDTO.class));
+                });
+        log.info("案例详情读取完成: caseId={}, category={}, status={}",
+                dto.getCaseId(),
+                dto.getQuestionCategory(),
+                dto.getStatus());
         return dto;
     }
 
@@ -157,6 +208,9 @@ public class CaseCenterService {
     }
 
     private <T> T readJson(String json, Class<T> clazz) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
         try {
             return objectMapper.readValue(json, clazz);
         } catch (Exception exception) {

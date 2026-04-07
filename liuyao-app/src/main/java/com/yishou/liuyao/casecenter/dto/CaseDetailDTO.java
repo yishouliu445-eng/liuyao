@@ -1,5 +1,6 @@
 package com.yishou.liuyao.casecenter.dto;
 
+import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
 
@@ -17,6 +18,7 @@ public class CaseDetailDTO {
     private ChartSnapshotDTO chartSnapshot;
     private List<RuleHitDTO> ruleHits = new ArrayList<>();
     private String analysis;
+    private AnalysisContextDTO analysisContext;
 
     public Long getCaseId() {
         return caseId;
@@ -80,5 +82,13 @@ public class CaseDetailDTO {
 
     public void setAnalysis(String analysis) {
         this.analysis = analysis;
+    }
+
+    public AnalysisContextDTO getAnalysisContext() {
+        return analysisContext;
+    }
+
+    public void setAnalysisContext(AnalysisContextDTO analysisContext) {
+        this.analysisContext = analysisContext;
     }
 }

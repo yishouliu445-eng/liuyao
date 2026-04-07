@@ -1,6 +1,7 @@
 package com.yishou.liuyao.casecenter.service;
 
 import com.yishou.liuyao.casecenter.dto.CaseDetailDTO;
+import com.yishou.liuyao.casecenter.dto.CaseListResponseDTO;
 import com.yishou.liuyao.casecenter.dto.CaseSummaryDTO;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.service.DivinationService;
@@ -62,14 +63,49 @@ class CaseCenterServiceIntegrationTest {
 
         divinationService.analyze(request);
 
-        CaseSummaryDTO summary = caseCenterService.listRecentCases().get(0);
+        CaseSummaryDTO summary = caseCenterService.listRecentCases().stream()
+                .filter(item -> "这次合作签约能不能顺利推进".equals(item.getQuestionText()))
+                .findFirst()
+                .orElseThrow();
         CaseDetailDTO detail = caseCenterService.getCaseDetail(summary.getCaseId());
 
         assertEquals(summary.getCaseId(), detail.getCaseId());
         assertEquals("合作", detail.getQuestionCategory());
         assertNotNull(detail.getChartSnapshot());
         assertEquals("应爻", detail.getChartSnapshot().getUseGod());
+        assertNotNull(detail.getChartSnapshot().getMainUpperTrigram());
+        assertNotNull(detail.getChartSnapshot().getMainLowerTrigram());
+        assertEquals("v1", detail.getChartSnapshot().getSnapshotVersion());
+        assertEquals("v1", detail.getChartSnapshot().getCalendarVersion());
+        assertEquals("卯", detail.getChartSnapshot().getLines().get(0).getBranch());
+        assertEquals("辰", detail.getChartSnapshot().getLines().get(0).getChangeBranch());
+        assertEquals("父母", detail.getChartSnapshot().getLines().get(4).getChangeLiuQin());
         assertFalse(detail.getRuleHits().isEmpty());
         assertNotNull(detail.getAnalysis());
+        assertNotNull(detail.getAnalysisContext());
+        assertEquals("v1", detail.getAnalysisContext().getContextVersion());
+        assertEquals("应爻", detail.getAnalysisContext().getUseGod());
+        assertEquals(detail.getChartSnapshot().getMainHexagram(), detail.getAnalysisContext().getMainHexagram());
+        assertEquals(detail.getChartSnapshot().getMainHexagram(), detail.getAnalysisContext().getChartSnapshot().getMainHexagram());
+    }
+
+    @Test
+    void shouldSupportPagedCategorySearchAtServiceLevel() {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次合作沟通是否顺利");
+        request.setQuestionCategory("合作");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(2026, 4, 13, 9, 0));
+        request.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        request.setMovingLines(List.of(1, 5));
+
+        divinationService.analyze(request);
+
+        CaseListResponseDTO response = caseCenterService.listCases("合作", 1, 5);
+
+        assertEquals(1, response.getPage());
+        assertEquals(5, response.getSize());
+        assertFalse(response.getItems().isEmpty());
+        assertEquals("合作", response.getItems().get(0).getQuestionCategory());
     }
 }

@@ -4,6 +4,8 @@ import com.yishou.liuyao.divination.domain.CalendarSnapshot;
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.domain.DivinationInput;
 import com.yishou.liuyao.divination.domain.LineInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.List;
 
 @Service
 public class ChartBuilderService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChartBuilderService.class);
 
     private final CalendarFacade calendarFacade;
     private final HexagramResolver hexagramResolver;
@@ -53,6 +57,10 @@ public class ChartBuilderService {
         chartSnapshot.setChangedHexagram(hexagramResult.getChangedHexagramName());
         chartSnapshot.setMainHexagramCode(hexagramResult.getMainHexagramCode());
         chartSnapshot.setChangedHexagramCode(hexagramResult.getChangedHexagramCode());
+        chartSnapshot.setMainUpperTrigram(hexagramResult.getMainUpperTrigram());
+        chartSnapshot.setMainLowerTrigram(hexagramResult.getMainLowerTrigram());
+        chartSnapshot.setChangedUpperTrigram(hexagramResult.getChangedUpperTrigram());
+        chartSnapshot.setChangedLowerTrigram(hexagramResult.getChangedLowerTrigram());
         chartSnapshot.setPalace(palaceInfo.getPalace());
         chartSnapshot.setPalaceWuXing(palaceInfo.getWuXing());
         chartSnapshot.setShi(shiYingPosition.getShiIndex());
@@ -76,6 +84,21 @@ public class ChartBuilderService {
         chartSnapshot.getExt().put("palaceWuXing", palaceInfo.getWuXing());
         chartSnapshot.getExt().put("mainHexagramCode", hexagramResult.getMainHexagramCode());
         chartSnapshot.getExt().put("changedHexagramCode", hexagramResult.getChangedHexagramCode());
+        chartSnapshot.getExt().put("mainUpperTrigram", hexagramResult.getMainUpperTrigram());
+        chartSnapshot.getExt().put("mainLowerTrigram", hexagramResult.getMainLowerTrigram());
+        chartSnapshot.getExt().put("changedUpperTrigram", hexagramResult.getChangedUpperTrigram());
+        chartSnapshot.getExt().put("changedLowerTrigram", hexagramResult.getChangedLowerTrigram());
+        log.info("排盘完成: category={}, mainHexagram={}({}/{}) changedHexagram={}({}/{}), shi={}, ying={}, movingLineCount={}",
+                input.getQuestionCategory(),
+                chartSnapshot.getMainHexagram(),
+                chartSnapshot.getMainUpperTrigram(),
+                chartSnapshot.getMainLowerTrigram(),
+                chartSnapshot.getChangedHexagram(),
+                chartSnapshot.getChangedUpperTrigram(),
+                chartSnapshot.getChangedLowerTrigram(),
+                chartSnapshot.getShi(),
+                chartSnapshot.getYing(),
+                chartSnapshot.getLines().stream().filter(line -> Boolean.TRUE.equals(line.getMoving())).count());
         return chartSnapshot;
     }
 
@@ -97,14 +120,14 @@ public class ChartBuilderService {
             lineInfo.setLiuShen(liuShenResolver.resolve(calendarSnapshot.getRiChen(), index));
             String branch = naJiaBranches.get(index - 1);
             lineInfo.setBranch(branch);
-            lineInfo.setWuXing(resolveWuXing(branch));
+            lineInfo.setWuXing(WuXingSupport.branchToWuXing(branch));
             // 六亲以卦宫五行为“我”，结合本爻地支五行推得。
             lineInfo.setLiuQin(liuQinResolver.resolve(palaceWuXing, branch));
             if (Boolean.TRUE.equals(lineInfo.getIsMoving())) {
                 // 动爻需要补齐变后地支、五行、六亲，方便规则直接读取。
                 String changeBranch = changedNaJiaBranches.get(index - 1);
                 lineInfo.setChangeBranch(changeBranch);
-                lineInfo.setChangeWuXing(resolveWuXing(changeBranch));
+                lineInfo.setChangeWuXing(WuXingSupport.branchToWuXing(changeBranch));
                 lineInfo.setChangeLiuQin(liuQinResolver.resolve(palaceWuXing, changeBranch));
             }
             lineInfo.setShi(index == shiYingPosition.getShiIndex());
@@ -140,14 +163,4 @@ public class ChartBuilderService {
         };
     }
 
-    private String resolveWuXing(String branch) {
-        return switch (branch) {
-            case "子", "亥" -> "水";
-            case "寅", "卯" -> "木";
-            case "巳", "午" -> "火";
-            case "申", "酉" -> "金";
-            case "辰", "戌", "丑", "未" -> "土";
-            default -> "土";
-        };
-    }
 }
