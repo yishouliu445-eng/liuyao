@@ -81,12 +81,18 @@ class CaseCenterServiceIntegrationTest {
         assertEquals("辰", detail.getChartSnapshot().getLines().get(0).getChangeBranch());
         assertEquals("父母", detail.getChartSnapshot().getLines().get(4).getChangeLiuQin());
         assertFalse(detail.getRuleHits().isEmpty());
+        assertNotNull(detail.getStructuredResult());
+        assertNotNull(detail.getStructuredResult().getScore());
+        assertNotNull(detail.getStructuredResult().getResultLevel());
         assertNotNull(detail.getAnalysis());
         assertNotNull(detail.getAnalysisContext());
         assertEquals("v1", detail.getAnalysisContext().getContextVersion());
         assertEquals("应爻", detail.getAnalysisContext().getUseGod());
         assertEquals(detail.getChartSnapshot().getMainHexagram(), detail.getAnalysisContext().getMainHexagram());
         assertEquals(detail.getChartSnapshot().getMainHexagram(), detail.getAnalysisContext().getChartSnapshot().getMainHexagram());
+        assertNotNull(detail.getRuleHits().get(0).getRuleId());
+        assertNotNull(detail.getRuleHits().get(0).getScoreDelta());
+        assertNotNull(detail.getRuleHits().get(0).getTags());
     }
 
     @Test

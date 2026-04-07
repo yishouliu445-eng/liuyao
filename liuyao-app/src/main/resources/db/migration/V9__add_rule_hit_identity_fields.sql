@@ -1,0 +1,5 @@
+ALTER TABLE case_rule_hit
+  ADD COLUMN IF NOT EXISTS rule_id VARCHAR(100);
+
+ALTER TABLE case_rule_hit
+  ADD COLUMN IF NOT EXISTS priority INT;

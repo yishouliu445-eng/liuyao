@@ -43,7 +43,7 @@
 
 ### A1. 把骨架分析文案升级成真正可读的解读文本
 
-- [ ] 将 [AnalysisService.java](/Users/liuyishou/wordspace/liuyao/liuyao-app/src/main/java/com/yishou/liuyao/analysis/service/AnalysisService.java) 从占位文案升级为结构化解读
+- [x] 将 [AnalysisService.java](/Users/liuyishou/wordspace/liuyao/liuyao-app/src/main/java/com/yishou/liuyao/analysis/service/AnalysisService.java) 从占位文案升级为结构化解读
 - [ ] 输出至少包含：
   - 卦象概览
   - 用神状态
@@ -65,15 +65,15 @@
 
 ### A3. 分析质量回归
 
-- [ ] 增加分析服务测试，验证分析文本包含关键结论
-- [ ] 增加 controller 级测试，验证 `analysis` 不是固定占位句
+- [x] 增加分析服务测试，验证分析文本包含关键结论
+- [x] 增加 controller 级测试，验证 `analysis` 不是固定占位句
 - [ ] 增加“无知识片段时的降级输出”测试
 
 ## 二、知识检索与引用
 
 ### B1. 优化知识召回
 
-- [ ] 提升 [KnowledgeSearchService.java](/Users/liuyishou/wordspace/liuyao/liuyao-app/src/main/java/com/yishou/liuyao/knowledge/service/KnowledgeSearchService.java) 的召回逻辑
+- [x] 提升 [KnowledgeSearchService.java](/Users/liuyishou/wordspace/liuyao/liuyao-app/src/main/java/com/yishou/liuyao/knowledge/service/KnowledgeSearchService.java) 的召回逻辑
 - [ ] 不只按 `focus_topic` 取片段，还要综合：
   - `questionCategory`
   - `ruleCode`
@@ -83,7 +83,7 @@
 
 ### B2. 优化知识引用展示
 
-- [ ] 为知识片段补来源信息：
+- [x] 为知识片段补来源信息：
   - 书名
   - 章节名
   - chunk 编号

@@ -2,6 +2,7 @@ package com.yishou.liuyao.casecenter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
+import com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO;
 import com.yishou.liuyao.casecenter.domain.CaseAnalysisResult;
 import com.yishou.liuyao.casecenter.domain.CaseChartSnapshot;
 import com.yishou.liuyao.casecenter.domain.CaseRuleHit;
@@ -60,6 +61,7 @@ public class CaseCenterService {
                                ChartSnapshot chartSnapshot,
                                List<RuleHit> ruleHits,
                                AnalysisContextDTO analysisContext,
+                               StructuredAnalysisResultDTO structuredResult,
                                String analysis) {
         // 一次分析会同时留下 case、快照、规则命中和分析结果四类留痕。
         DivinationCase divinationCase = new DivinationCase();
@@ -84,10 +86,15 @@ public class CaseCenterService {
         for (RuleHit ruleHit : ruleHits) {
             CaseRuleHit entity = new CaseRuleHit();
             entity.setCaseId(divinationCase.getId());
+            entity.setRuleId(ruleHit.getRuleId());
             entity.setRuleCode(ruleHit.getRuleCode());
             entity.setRuleName(ruleHit.getRuleName());
             entity.setHitReason(ruleHit.getHitReason());
             entity.setImpactLevel(ruleHit.getImpactLevel());
+            entity.setCategory(ruleHit.getCategory());
+            entity.setPriority(ruleHit.getPriority());
+            entity.setScoreDelta(ruleHit.getScoreDelta());
+            entity.setTagsJson(JsonUtils.toJson(objectMapper, ruleHit.getTags()));
             entity.setEvidenceJson(JsonUtils.toJson(objectMapper, ruleHit.getEvidence()));
             caseRuleHitRepository.save(entity);
         }
@@ -97,6 +104,9 @@ public class CaseCenterService {
         result.setProvider("stub");
         result.setModelName("skeleton");
         result.setAnalysisText(analysis);
+        result.setScore(structuredResult == null ? null : structuredResult.getScore());
+        result.setResultLevel(structuredResult == null ? null : structuredResult.getResultLevel());
+        result.setStructuredResultJson(JsonUtils.toJson(objectMapper, structuredResult));
         result.setAnalysisContextJson(JsonUtils.toJson(objectMapper, analysisContext));
         caseAnalysisResultRepository.save(result);
         log.info("案例留痕完成: caseId={}, category={}, mainHexagram={}, useGod={}, ruleHitCount={}",
@@ -164,6 +174,7 @@ public class CaseCenterService {
         caseAnalysisResultRepository.findTopByCaseIdOrderByIdDesc(caseId)
                 .ifPresent(result -> {
                     dto.setAnalysis(result.getAnalysisText());
+                    dto.setStructuredResult(readJson(result.getStructuredResultJson(), StructuredAnalysisResultDTO.class));
                     dto.setAnalysisContext(readJson(result.getAnalysisContextJson(), AnalysisContextDTO.class));
                 });
         log.info("案例详情读取完成: caseId={}, category={}, status={}",
@@ -192,10 +203,15 @@ public class CaseCenterService {
 
     private RuleHitDTO toRuleHitDto(CaseRuleHit entity) {
         RuleHitDTO dto = new RuleHitDTO();
+        dto.setRuleId(entity.getRuleId());
         dto.setRuleCode(entity.getRuleCode());
         dto.setRuleName(entity.getRuleName());
+        dto.setPriority(entity.getPriority());
         dto.setHitReason(entity.getHitReason());
         dto.setImpactLevel(entity.getImpactLevel());
+        dto.setCategory(entity.getCategory());
+        dto.setScoreDelta(entity.getScoreDelta());
+        dto.setTags(readJson(entity.getTagsJson(), List.class));
         dto.setEvidence(readEvidence(entity.getEvidenceJson()));
         return dto;
     }

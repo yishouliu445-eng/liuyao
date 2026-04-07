@@ -6,7 +6,9 @@ import com.yishou.liuyao.casecenter.repository.CaseRuleHitRepository;
 import com.yishou.liuyao.casecenter.repository.DivinationCaseRepository;
 import com.yishou.liuyao.book.domain.Book;
 import com.yishou.liuyao.book.repository.BookRepository;
+import com.yishou.liuyao.casecenter.domain.CaseAnalysisResult;
 import com.yishou.liuyao.casecenter.domain.CaseChartSnapshot;
+import com.yishou.liuyao.casecenter.domain.CaseRuleHit;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeResponse;
 import com.yishou.liuyao.knowledge.domain.BookChunk;
@@ -73,8 +75,19 @@ class DivinationServiceIntegrationTest {
         assertNotNull(response.getChartSnapshot().getMainLowerTrigram());
         assertNotNull(response.getChartSnapshot().getPalace());
         assertFalse(response.getRuleHits().isEmpty());
+        assertNotNull(response.getStructuredResult());
+        assertNotNull(response.getStructuredResult().getScore());
+        assertNotNull(response.getStructuredResult().getResultLevel());
+        assertNotNull(response.getStructuredResult().getEffectiveScore());
+        assertNotNull(response.getStructuredResult().getEffectiveResultLevel());
+        assertFalse(response.getStructuredResult().getCategorySummaries().isEmpty());
+        assertEquals("YONGSHEN_STATE", response.getStructuredResult().getCategorySummaries().get(0).getCategory());
+        assertNotNull(response.getStructuredResult().getConflictSummaries());
+        assertNotNull(response.getStructuredResult().getEffectiveRuleCodes());
+        assertNotNull(response.getStructuredResult().getSuppressedRuleCodes());
         assertEquals("妻财", response.getRuleHits().get(0).getEvidence().get("useGod"));
         assertEquals("HIGH", response.getRuleHits().get(0).getImpactLevel());
+        assertNotNull(response.getRuleHits().get(0).getRuleId());
         assertNotNull(response.getAnalysis());
         assertNotNull(response.getAnalysisContext());
         assertEquals("v1", response.getAnalysisContext().getContextVersion());
@@ -84,7 +97,7 @@ class DivinationServiceIntegrationTest {
         assertEquals(response.getChartSnapshot().getMainHexagram(), response.getAnalysisContext().getChartSnapshot().getMainHexagram());
         assertEquals("辰", response.getAnalysisContext().getChartSnapshot().getLines().get(0).getChangeBranch());
         org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("妻财"));
-        org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("结构化上下文"));
+        org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("有效评分"));
         assertEquals(initialCaseCount + 1, divinationCaseRepository.count());
         assertEquals(initialSnapshotCount + 1, caseChartSnapshotRepository.count());
         assertEquals(initialRuleHitCount + response.getRuleHits().size(), caseRuleHitRepository.count());
@@ -93,25 +106,47 @@ class DivinationServiceIntegrationTest {
         CaseChartSnapshot savedSnapshot = caseChartSnapshotRepository.findAll().stream()
                 .max((left, right) -> Long.compare(left.getId(), right.getId()))
                 .orElseThrow();
+        CaseAnalysisResult savedAnalysis = caseAnalysisResultRepository.findAll().stream()
+                .max((left, right) -> Long.compare(left.getId(), right.getId()))
+                .orElseThrow();
+        CaseRuleHit savedRuleHit = caseRuleHitRepository.findAll().stream()
+                .max((left, right) -> Long.compare(left.getId(), right.getId()))
+                .orElseThrow();
         assertEquals(response.getChartSnapshot().getMainHexagram(), savedSnapshot.getMainHexagram());
         assertEquals(response.getChartSnapshot().getChangedHexagram(), savedSnapshot.getChangedHexagram());
         assertEquals(response.getChartSnapshot().getPalace(), savedSnapshot.getPalace());
         assertEquals(response.getChartSnapshot().getUseGod(), savedSnapshot.getUseGod());
+        assertEquals(response.getStructuredResult().getScore(), savedAnalysis.getScore());
+        assertEquals(response.getStructuredResult().getResultLevel(), savedAnalysis.getResultLevel());
+        assertNotNull(savedAnalysis.getStructuredResultJson());
+        assertNotNull(savedRuleHit.getRuleId());
+        assertNotNull(savedRuleHit.getCategory());
+        assertNotNull(savedRuleHit.getScoreDelta());
+        assertNotNull(savedRuleHit.getTagsJson());
     }
 
     @Test
     void shouldAttachKnowledgeSnippetsIntoAnalysisContext() {
-        Book book = new Book();
-        book.setTitle("导入知识测试");
-        book.setAuthor("测试作者");
-        book.setSourceType("TXT");
-        book.setFilePath("/tmp/knowledge.txt");
-        book.setFileSize(128L);
-        book.setParseStatus("COMPLETED");
-        book = bookRepository.save(book);
+        Book txtBook = new Book();
+        txtBook.setTitle("增删卜易");
+        txtBook.setAuthor("测试作者");
+        txtBook.setSourceType("TXT");
+        txtBook.setFilePath("/tmp/knowledge.txt");
+        txtBook.setFileSize(128L);
+        txtBook.setParseStatus("COMPLETED");
+        txtBook = bookRepository.save(txtBook);
+
+        Book pdfBook = new Book();
+        pdfBook.setTitle("扫描版六爻资料");
+        pdfBook.setAuthor("测试作者");
+        pdfBook.setSourceType("PDF");
+        pdfBook.setFilePath("/tmp/knowledge.pdf");
+        pdfBook.setFileSize(256L);
+        pdfBook.setParseStatus("COMPLETED");
+        pdfBook = bookRepository.save(pdfBook);
 
         BookChunk useGodChunk = new BookChunk();
-        useGodChunk.setBookId(book.getId());
+        useGodChunk.setBookId(txtBook.getId());
         useGodChunk.setTaskId(1L);
         useGodChunk.setChunkIndex(1);
         useGodChunk.setChapterTitle("用神总论");
@@ -124,8 +159,22 @@ class DivinationServiceIntegrationTest {
         useGodChunk.setSentenceCount(1);
         bookChunkRepository.save(useGodChunk);
 
+        BookChunk pdfChunk = new BookChunk();
+        pdfChunk.setBookId(pdfBook.getId());
+        pdfChunk.setTaskId(2L);
+        pdfChunk.setChunkIndex(1);
+        pdfChunk.setChapterTitle("用神概述");
+        pdfChunk.setContent("扫描版资料中的用神说明。");
+        pdfChunk.setContentType("rule");
+        pdfChunk.setFocusTopic("用神");
+        pdfChunk.setTopicTagsJson("[\"用神\"]");
+        pdfChunk.setMetadataJson("{}");
+        pdfChunk.setCharCount(12);
+        pdfChunk.setSentenceCount(1);
+        bookChunkRepository.save(pdfChunk);
+
         BookChunk monthBreakChunk = new BookChunk();
-        monthBreakChunk.setBookId(book.getId());
+        monthBreakChunk.setBookId(txtBook.getId());
         monthBreakChunk.setTaskId(1L);
         monthBreakChunk.setChunkIndex(2);
         monthBreakChunk.setChapterTitle("月破");
@@ -153,6 +202,7 @@ class DivinationServiceIntegrationTest {
                 response.getAnalysisContext().getKnowledgeSnippets().stream()
                         .anyMatch(item -> item.contains("用神宜旺相"))
         );
+        org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysisContext().getKnowledgeSnippets().get(0).contains("《"));
         org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("用神宜旺相"));
     }
 }

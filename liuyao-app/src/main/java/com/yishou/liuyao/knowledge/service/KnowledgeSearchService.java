@@ -11,11 +11,13 @@ import com.yishou.liuyao.knowledge.dto.KnowledgeSearchResponse;
 import com.yishou.liuyao.knowledge.mapper.KnowledgeMapper;
 import com.yishou.liuyao.knowledge.repository.BookChunkRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRepository;
+import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRow;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -135,6 +137,7 @@ public class KnowledgeSearchService {
                                                  int limit) {
         Set<String> candidateTopics = new LinkedHashSet<>();
         candidateTopics.add("用神");
+        candidateTopics.addAll(mapUseGodToTopics(useGod));
         if ("出行".equals(questionCategory)) {
             candidateTopics.add("世应");
             candidateTopics.add("动爻");
@@ -153,10 +156,12 @@ public class KnowledgeSearchService {
             }
         }
         int resolvedLimit = Math.max(1, Math.min(limit, 8));
-        List<String> snippets = new java.util.ArrayList<>();
+        List<String> snippets = new ArrayList<>();
+        appendSemanticSnippets(snippets, resolvedLimit, questionCategory, useGod, ruleCodes);
+        Map<Long, Book> booksById = loadBooksByTopicCandidates(candidateTopics);
         for (String topic : candidateTopics) {
-            for (BookChunk chunk : bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(topic)) {
-                String snippet = buildKnowledgeSnippet(topic, chunk);
+            for (BookChunk chunk : sortChunks(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(topic), booksById)) {
+                String snippet = buildKnowledgeSnippet(topic, chunk, booksById.get(chunk.getBookId()));
                 if (!snippets.contains(snippet)) {
                     snippets.add(snippet);
                 }
@@ -166,6 +171,47 @@ public class KnowledgeSearchService {
             }
         }
         return snippets;
+    }
+
+    private void appendSemanticSnippets(List<String> snippets,
+                                        int resolvedLimit,
+                                        String questionCategory,
+                                        String useGod,
+                                        List<String> ruleCodes) {
+        if (!bookChunkVectorSearchRepository.supportsVectorSearch() || snippets.size() >= resolvedLimit) {
+            return;
+        }
+        try {
+            List<Double> queryEmbedding = knowledgeQueryEmbeddingService.embed(buildSemanticQueryText(questionCategory, useGod, ruleCodes));
+            if (queryEmbedding.isEmpty()) {
+                return;
+            }
+            List<BookChunkVectorSearchRow> rows = bookChunkVectorSearchRepository.search(
+                    null,
+                    null,
+                    toVectorLiteral(queryEmbedding),
+                    queryEmbedding.size(),
+                    resolvedLimit
+            );
+            if (rows.isEmpty()) {
+                return;
+            }
+            Map<Long, Book> booksById = new HashMap<>();
+            for (Book book : bookRepository.findAllById(rows.stream().map(BookChunkVectorSearchRow::bookId).distinct().toList())) {
+                booksById.put(book.getId(), book);
+            }
+            for (BookChunkVectorSearchRow row : rows) {
+                String snippet = buildKnowledgeSnippet(row.focusTopic(), row.content(), row.chapterTitle(), booksById.get(row.bookId()));
+                if (!snippets.contains(snippet)) {
+                    snippets.add(snippet);
+                }
+                if (snippets.size() >= resolvedLimit) {
+                    return;
+                }
+            }
+        } catch (RuntimeException exception) {
+            // 语义检索失败时回退到标签召回，不中断主流程。
+        }
     }
 
     private List<String> readTopicTags(String topicTagsJson) {
@@ -230,25 +276,95 @@ public class KnowledgeSearchService {
         return "[" + values.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(",")) + "]";
     }
 
+    private String buildSemanticQueryText(String questionCategory, String useGod, List<String> ruleCodes) {
+        List<String> parts = new ArrayList<>();
+        if (questionCategory != null && !questionCategory.isBlank()) {
+            parts.add("问类:" + questionCategory);
+        }
+        if (useGod != null && !useGod.isBlank()) {
+            parts.add("用神:" + useGod);
+        }
+        if (ruleCodes != null && !ruleCodes.isEmpty()) {
+            parts.add("规则:" + String.join(" ", ruleCodes));
+        }
+        return parts.isEmpty() ? "六爻知识" : String.join(" ", parts);
+    }
+
     private List<String> mapRuleCodeToTopics(String ruleCode) {
         if (ruleCode == null || ruleCode.isBlank()) {
             return List.of();
         }
         return switch (ruleCode) {
-            case "USE_GOD_SELECTION", "USE_GOD_STRENGTH" -> List.of("用神");
-            case "MOVING_LINE_EXISTS", "MOVING_LINE_AFFECT_USE_GOD" -> List.of("动爻");
-            case "SHI_YING_EXISTS", "SHI_YING_RELATION" -> List.of("世应");
+            case "USE_GOD_SELECTION", "USE_GOD_STRENGTH", "R003", "R004", "R018" -> List.of("用神");
+            case "MOVING_LINE_EXISTS", "MOVING_LINE_AFFECT_USE_GOD", "R010" -> List.of("动爻");
+            case "SHI_YING_EXISTS", "SHI_YING_RELATION", "R013", "R014", "R015" -> List.of("世应");
             case "USE_GOD_MONTH_BREAK" -> List.of("月破");
-            case "USE_GOD_DAY_BREAK" -> List.of("日破");
-            case "USE_GOD_EMPTY" -> List.of("空亡");
+            case "USE_GOD_DAY_BREAK", "R009" -> List.of("日破");
+            case "USE_GOD_EMPTY", "R011" -> List.of("空亡");
             default -> List.of();
         };
     }
 
-    private String buildKnowledgeSnippet(String topic, BookChunk chunk) {
-        String title = chunk.getChapterTitle() == null || chunk.getChapterTitle().isBlank()
-                ? topic
-                : chunk.getChapterTitle();
-        return "[" + title + "] " + chunk.getContent();
+    private List<String> mapUseGodToTopics(String useGod) {
+        if (useGod == null || useGod.isBlank()) {
+            return List.of();
+        }
+        return switch (useGod) {
+            case "妻财", "官鬼", "父母", "兄弟", "子孙" -> List.of("用神");
+            default -> List.of();
+        };
+    }
+
+    private Map<Long, Book> loadBooksByTopicCandidates(Set<String> candidateTopics) {
+        List<BookChunk> chunks = candidateTopics.stream()
+                .flatMap(topic -> bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(topic).stream())
+                .toList();
+        Map<Long, Book> booksById = new LinkedHashMap<>();
+        for (Book book : bookRepository.findAllById(chunks.stream().map(BookChunk::getBookId).distinct().toList())) {
+            booksById.put(book.getId(), book);
+        }
+        return booksById;
+    }
+
+    private List<BookChunk> sortChunks(List<BookChunk> chunks, Map<Long, Book> booksById) {
+        return chunks.stream()
+                .sorted((left, right) -> {
+                    int sourceRankDiff = Integer.compare(sourceRank(booksById.get(left.getBookId())), sourceRank(booksById.get(right.getBookId())));
+                    if (sourceRankDiff != 0) {
+                        return sourceRankDiff;
+                    }
+                    int charCountDiff = Integer.compare(
+                            right.getCharCount() == null ? 0 : right.getCharCount(),
+                            left.getCharCount() == null ? 0 : left.getCharCount());
+                    if (charCountDiff != 0) {
+                        return charCountDiff;
+                    }
+                    return Long.compare(right.getId(), left.getId());
+                })
+                .toList();
+    }
+
+    private int sourceRank(Book book) {
+        if (book == null || book.getSourceType() == null) {
+            return 9;
+        }
+        return switch (book.getSourceType()) {
+            case "TXT" -> 1;
+            case "MD" -> 2;
+            case "PDF" -> 3;
+            default -> 9;
+        };
+    }
+
+    private String buildKnowledgeSnippet(String topic, BookChunk chunk, Book book) {
+        return buildKnowledgeSnippet(topic, chunk.getContent(), chunk.getChapterTitle(), book);
+    }
+
+    private String buildKnowledgeSnippet(String topic, String content, String chapterTitle, Book book) {
+        String title = chapterTitle == null || chapterTitle.isBlank() ? topic : chapterTitle;
+        String sourceName = book == null || book.getTitle() == null || book.getTitle().isBlank()
+                ? "未命名资料"
+                : "《" + book.getTitle() + "》";
+        return "[" + sourceName + "·" + title + "] " + content;
     }
 }

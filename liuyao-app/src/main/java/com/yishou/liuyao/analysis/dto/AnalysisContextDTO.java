@@ -21,6 +21,7 @@ public class AnalysisContextDTO {
     private List<String> ruleCodes = new ArrayList<>();
     private List<String> knowledgeSnippets = new ArrayList<>();
     private List<RuleHitDTO> ruleHits = new ArrayList<>();
+    private StructuredAnalysisResultDTO structuredResult;
 
     public String getContextVersion() {
         return contextVersion;
@@ -108,5 +109,13 @@ public class AnalysisContextDTO {
 
     public void setRuleHits(List<RuleHitDTO> ruleHits) {
         this.ruleHits = ruleHits;
+    }
+
+    public StructuredAnalysisResultDTO getStructuredResult() {
+        return structuredResult;
+    }
+
+    public void setStructuredResult(StructuredAnalysisResultDTO structuredResult) {
+        this.structuredResult = structuredResult;
     }
 }

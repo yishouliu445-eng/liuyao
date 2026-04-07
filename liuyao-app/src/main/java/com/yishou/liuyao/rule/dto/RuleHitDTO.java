@@ -1,14 +1,28 @@
 package com.yishou.liuyao.rule.dto;
 
 import java.util.Map;
+import java.util.List;
 
 public class RuleHitDTO {
 
+    private String ruleId;
     private String ruleCode;
     private String ruleName;
+    private String category;
+    private Integer priority;
     private String hitReason;
     private String impactLevel;
+    private Integer scoreDelta;
+    private List<String> tags;
     private Map<String, Object> evidence;
+
+    public String getRuleId() {
+        return ruleId;
+    }
+
+    public void setRuleId(String ruleId) {
+        this.ruleId = ruleId;
+    }
 
     public String getRuleCode() {
         return ruleCode;
@@ -26,6 +40,22 @@ public class RuleHitDTO {
         this.ruleName = ruleName;
     }
 
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
     public String getHitReason() {
         return hitReason;
     }
@@ -40,6 +70,22 @@ public class RuleHitDTO {
 
     public void setImpactLevel(String impactLevel) {
         this.impactLevel = impactLevel;
+    }
+
+    public Integer getScoreDelta() {
+        return scoreDelta;
+    }
+
+    public void setScoreDelta(Integer scoreDelta) {
+        this.scoreDelta = scoreDelta;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 
     public Map<String, Object> getEvidence() {

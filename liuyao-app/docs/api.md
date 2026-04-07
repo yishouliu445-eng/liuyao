@@ -116,7 +116,7 @@
         }
       }
     ],
-    "analysis": "当前为骨架版分析结果：已基于山火贲、用神父母和4条规则命中生成结构化上下文，后续可接入受约束的 LLM 编排。",
+    "analysis": "卦象概览：问出行，本卦山火贲，变卦风山渐。 用神判断：本次以父母为用神。当前共命中7条规则。冲突裁剪后有效评分1，整体中性，存在反复。本卦山火贲，围绕用神父母共命中7条规则，当前评分1，整体中性，存在反复，当前标签：暂无明显标签。当前未见明显规则冲突。当前以原始评分为准。 关系判断：出行层面当前标签为暂无明显标签；当前主导规则为USE_GOD_SELECTION、R010、R011、SHI_YING_EXISTS、SHI_YING_RELATION、R013、MOVING_LINE_EXISTS。 动爻影响：世爻或关键爻有发动信号，事情不会完全静止。 结论建议：当前有效评分1，整体中性，存在反复；出行层面先看行程是否受阻。",
     "analysisContext": {
       "contextVersion": "v1",
       "question": "这次出行会不会顺利",
@@ -126,7 +126,7 @@
       "changedHexagram": "风山渐",
       "ruleCount": 4,
       "ruleCodes": ["USE_GOD_SELECTION", "MOVING_LINE_EXISTS", "SHI_YING_EXISTS", "SHI_YING_RELATION"],
-      "knowledgeSnippets": []
+      "knowledgeSnippets": ["[《增删卜易》·用神总论] 用神宜旺相，不宜休囚。"]
     }
   }
 }
@@ -185,11 +185,14 @@
 - `moving`: 是否动爻
 - `changeTo / changeBranch / changeWuXing / changeLiuQin`: 动变后的结构字段，静爻时通常为空
 
-`analysis` 当前仍是骨架版文本，但已经会反映：
+`analysis` 当前已升级为工程第一版可读解读，会尽量反映：
 
-- 本卦名
-- 当前用神
-- 当前命中的规则数量
+- 卦象概览
+- 用神判断
+- 关系判断
+- 动爻影响
+- 结论建议
+- 首条可参考资料
 
 `analysisContext` 当前是面向前端和后续分析模块的结构化输入快照：
 
@@ -198,8 +201,41 @@
 - `useGod`: 当前自动选出的用神
 - `mainHexagram / changedHexagram`: 盘面主卦信息
 - `ruleCount / ruleCodes`: 当前命中的规则数量和规则编码
-- `knowledgeSnippets`: 预留给后续知识检索结果的片段列表
+- `knowledgeSnippets`: 当前知识召回结果，格式会尽量带上资料来源和章节名
 - `chartSnapshot`: 当次分析使用的盘面快照副本，便于前端和后续分析模块直接复用
+
+`structuredResult` 当前包含：
+
+- `score`: 规则累加后的总分
+- `resultLevel`: 当前工程评级，`GOOD / NEUTRAL / BAD`
+- `effectiveScore`: 冲突裁剪后保留下来的有效评分
+- `effectiveResultLevel`: 基于有效评分重新计算的工程评级
+- `tags`: 汇总标签
+- `effectiveRuleCodes`: 当前裁剪后仍保留为有效信号的规则编码
+- `suppressedRuleCodes`: 当前被冲突裁剪压制掉的规则编码
+- `summary`: 结构化汇总摘要
+- `categorySummaries`: 按规则类别分组后的命中结果
+- `conflictSummaries`: 同类正负规则冲突的汇总结果
+
+`structuredResult.categorySummaries[*]`：
+
+- `category`: 规则类别，如 `YONGSHEN_STATE / SHI_YING / MOVING_CHANGE`
+- `hitCount`: 当前类别命中的规则数量
+- `score`: 当前类别贡献的分数
+- `effectiveHitCount`: 冲突裁剪后当前类别保留下来的有效规则数量
+- `effectiveScore`: 冲突裁剪后当前类别保留下来的有效分数
+- `stageOrder`: 当前类别在规则引擎中的执行阶段顺序
+
+`structuredResult.conflictSummaries[*]`：
+
+- `category`: 发生冲突的规则类别
+- `positiveCount / negativeCount`: 当前类别中正向、负向规则数量
+- `positiveScore / negativeScore`: 当前类别中正向、负向规则总分
+- `netScore`: 冲突抵消后的净分值
+- `decision`: 当前最小冲突决策，`POSITIVE_DOMINANT / NEGATIVE_DOMINANT / MIXED`
+- `positiveRules / negativeRules`: 分别参与冲突的正向、负向规则编码
+- `effectiveRules`: 当前决策下保留为主导信号的规则编码
+- `suppressedRules`: 当前决策下被压制的规则编码
 
 ## 2. 案例列表
 
@@ -235,6 +271,46 @@
 
 - 当前默认返回最近 20 条案例
 - 排序方式为 `divinationTime desc, id desc`
+
+## 2.1 规则定义列表
+
+### 请求
+
+- Method: `GET`
+- Path: `/api/rules/definitions`
+
+### 成功响应
+
+```json
+{
+  "success": true,
+  "code": "SUCCESS",
+  "message": "OK",
+  "data": {
+    "version": "v1",
+    "total": 23,
+    "rules": [
+      {
+        "ruleId": "R019",
+        "ruleCode": "R019",
+        "name": "用神旺且世旺",
+        "category": "COMPOSITE",
+        "priority": 60,
+        "enabled": true,
+        "version": "v1",
+        "conditionJson": "{\"allOf\":[...]}",
+        "effectJson": "{\"score\":3,\"tags\":[\"双强\"]}",
+        "description": "用神与世爻都旺，整体偏吉"
+      }
+    ]
+  }
+}
+```
+
+说明：
+
+- 当前接口返回的是已经同步到数据库的规则定义
+- 适合前端调试、规则回放、规则台账核对
 
 ## 3. 案例详情
 

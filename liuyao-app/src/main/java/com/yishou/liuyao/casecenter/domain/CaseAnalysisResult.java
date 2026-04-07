@@ -20,6 +20,14 @@ public class CaseAnalysisResult extends BaseEntity {
     @Column(name = "analysis_text")
     private String analysisText;
 
+    private Integer score;
+
+    @Column(name = "result_level")
+    private String resultLevel;
+
+    @Column(name = "structured_result_json")
+    private String structuredResultJson;
+
     @Column(name = "analysis_context_json")
     private String analysisContextJson;
 
@@ -53,6 +61,30 @@ public class CaseAnalysisResult extends BaseEntity {
 
     public void setAnalysisText(String analysisText) {
         this.analysisText = analysisText;
+    }
+
+    public Integer getScore() {
+        return score;
+    }
+
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+
+    public String getResultLevel() {
+        return resultLevel;
+    }
+
+    public void setResultLevel(String resultLevel) {
+        this.resultLevel = resultLevel;
+    }
+
+    public String getStructuredResultJson() {
+        return structuredResultJson;
+    }
+
+    public void setStructuredResultJson(String structuredResultJson) {
+        this.structuredResultJson = structuredResultJson;
     }
 
     public String getAnalysisContextJson() {

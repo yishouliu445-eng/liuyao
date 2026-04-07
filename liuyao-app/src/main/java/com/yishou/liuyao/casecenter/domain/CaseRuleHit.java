@@ -15,6 +15,9 @@ public class CaseRuleHit extends BaseEntity {
     @Column(name = "rule_code")
     private String ruleCode;
 
+    @Column(name = "rule_id")
+    private String ruleId;
+
     @Column(name = "rule_name")
     private String ruleName;
 
@@ -23,6 +26,16 @@ public class CaseRuleHit extends BaseEntity {
 
     @Column(name = "impact_level")
     private String impactLevel;
+
+    private String category;
+
+    private Integer priority;
+
+    @Column(name = "score_delta")
+    private Integer scoreDelta;
+
+    @Column(name = "tags_json")
+    private String tagsJson;
 
     @Column(name = "evidence_json")
     private String evidenceJson;
@@ -41,6 +54,14 @@ public class CaseRuleHit extends BaseEntity {
 
     public void setRuleCode(String ruleCode) {
         this.ruleCode = ruleCode;
+    }
+
+    public String getRuleId() {
+        return ruleId;
+    }
+
+    public void setRuleId(String ruleId) {
+        this.ruleId = ruleId;
     }
 
     public String getRuleName() {
@@ -65,6 +86,38 @@ public class CaseRuleHit extends BaseEntity {
 
     public void setImpactLevel(String impactLevel) {
         this.impactLevel = impactLevel;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Integer priority) {
+        this.priority = priority;
+    }
+
+    public Integer getScoreDelta() {
+        return scoreDelta;
+    }
+
+    public void setScoreDelta(Integer scoreDelta) {
+        this.scoreDelta = scoreDelta;
+    }
+
+    public String getTagsJson() {
+        return tagsJson;
+    }
+
+    public void setTagsJson(String tagsJson) {
+        this.tagsJson = tagsJson;
     }
 
     public String getEvidenceJson() {

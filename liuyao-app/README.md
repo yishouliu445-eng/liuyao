@@ -7,7 +7,7 @@
 - `divination`: 起卦输入、排盘构建、分析主流程
 - `rule`: 用神与结构规则
 - `casecenter`: 卦例留痕、案例列表、案例详情
-- `analysis`: 当前为占位分析服务
+- `analysis`: 当前为工程第一版分段式结构化解读服务
 - `common / infrastructure`: 通用响应、异常、JSON、配置等基础设施
 
 ## 启动说明
@@ -101,6 +101,7 @@ CREATE DATABASE liuyao;
 - `ruleHits`
 - `analysis`
 - `analysisContext`
+- `structuredResult`
 
 成功响应片段示例：
 
@@ -126,12 +127,45 @@ CREATE DATABASE liuyao;
         "impactLevel": "HIGH"
       }
     ],
-    "analysis": "当前为骨架版分析结果...",
+    "analysis": "卦象概览：问收入，本卦山火贲，变卦风山渐。 用神判断：本次以妻财为用神。当前共命中11条规则。",
     "analysisContext": {
       "contextVersion": "v1",
       "useGod": "父母",
       "mainHexagram": "山火贲",
       "changedHexagram": "风山渐"
+    },
+    "structuredResult": {
+      "score": 1,
+      "resultLevel": "NEUTRAL",
+      "effectiveScore": 3,
+      "effectiveResultLevel": "GOOD",
+      "effectiveRuleCodes": ["R003"],
+      "suppressedRuleCodes": ["R005"],
+      "categorySummaries": [
+        {
+          "category": "YONGSHEN_STATE",
+          "hitCount": 1,
+          "score": 0,
+          "effectiveHitCount": 1,
+          "effectiveScore": 2,
+          "stageOrder": 1
+        }
+      ],
+      "conflictSummaries": [
+        {
+          "category": "YONGSHEN_STATE",
+          "positiveCount": 1,
+          "negativeCount": 1,
+          "positiveScore": 3,
+          "negativeScore": -1,
+          "netScore": 2,
+          "decision": "POSITIVE_DOMINANT",
+          "positiveRules": ["R003"],
+          "negativeRules": ["R005"],
+          "effectiveRules": ["R003"],
+          "suppressedRules": ["R005"]
+        }
+      ]
     }
   }
 }
@@ -178,6 +212,7 @@ CREATE DATABASE liuyao;
 当前第一版接口：
 
 - `POST /api/divinations/analyze`
+- `GET /api/rules/definitions`
 - `GET /api/cases`
 - `GET /api/cases/search?questionCategory=出行&page=1&size=5`
 - `GET /api/cases/{caseId}`
@@ -208,6 +243,31 @@ CREATE DATABASE liuyao;
 - `palace / palaceWuXing`
 - `targetCount`
 - `targetSummary / targets`
+
+结构化分析结果当前还会额外返回：
+
+- `structuredResult.score`
+- `structuredResult.resultLevel`
+- `structuredResult.effectiveScore`
+- `structuredResult.effectiveResultLevel`
+- `structuredResult.tags`
+- `structuredResult.effectiveRuleCodes`
+- `structuredResult.suppressedRuleCodes`
+- `structuredResult.summary`
+- `structuredResult.categorySummaries`
+- `structuredResult.categorySummaries[*].effectiveHitCount / effectiveScore`
+- `structuredResult.conflictSummaries`
+
+知识片段当前会尽量带来源前缀，例如：
+
+- `[《增删卜易》·用神总论] 用神宜旺相，不宜休囚。`
+
+规则定义查询接口当前会返回：
+
+- `version`
+- `total`
+- `rules[*].ruleId / ruleCode / name`
+- `rules[*].conditionJson / effectJson`
 
 ## 前端联调台
 

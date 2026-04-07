@@ -75,16 +75,33 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.chartSnapshot.mainUpperTrigram").isNotEmpty())
                 .andExpect(jsonPath("$.data.chartSnapshot.changedLowerTrigram").isNotEmpty())
                 .andExpect(jsonPath("$.data.ruleHits[0].ruleCode").value("USE_GOD_SELECTION"))
-                .andExpect(jsonPath("$.data.ruleHits[3].evidence.mainUpperTrigram").isNotEmpty())
-                .andExpect(jsonPath("$.data.ruleHits[3].evidence.targetCount").value(2))
-                .andExpect(jsonPath("$.data.ruleHits[3].evidence.targetSummary").isArray())
+                .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='SHI_YING_RELATION')].evidence.mainUpperTrigram").isNotEmpty())
+                .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='SHI_YING_RELATION')].evidence.targetCount").value(org.hamcrest.Matchers.hasItem(2)))
+                .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='SHI_YING_RELATION')].evidence.targetSummary").isNotEmpty())
                 .andExpect(jsonPath("$.data.analysisContext.contextVersion").value("v1"))
                 .andExpect(jsonPath("$.data.analysisContext.useGod").value("父母"))
                 .andExpect(jsonPath("$.data.analysisContext.mainHexagram").value("山火贲"))
                 .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.mainHexagram").value("山火贲"))
                 .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.lines[0].changeBranch").value("辰"))
                 .andExpect(jsonPath("$.data.analysisContext.ruleCodes").isArray())
-                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("结构化上下文")));
+                .andExpect(jsonPath("$.data.analysisContext.structuredResult").exists())
+                .andExpect(jsonPath("$.data.structuredResult").exists())
+                .andExpect(jsonPath("$.data.structuredResult.score").isNumber())
+                .andExpect(jsonPath("$.data.structuredResult.resultLevel").isNotEmpty())
+                .andExpect(jsonPath("$.data.structuredResult.effectiveScore").isNumber())
+                .andExpect(jsonPath("$.data.structuredResult.effectiveResultLevel").isNotEmpty())
+                .andExpect(jsonPath("$.data.structuredResult.tags").isArray())
+                .andExpect(jsonPath("$.data.structuredResult.effectiveRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.structuredResult.suppressedRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.structuredResult.categorySummaries").isArray())
+                .andExpect(jsonPath("$.data.structuredResult.categorySummaries[0].category").value("YONGSHEN_STATE"))
+                .andExpect(jsonPath("$.data.structuredResult.categorySummaries[0].effectiveHitCount").isNumber())
+                .andExpect(jsonPath("$.data.structuredResult.categorySummaries[0].effectiveScore").isNumber())
+                .andExpect(jsonPath("$.data.structuredResult.conflictSummaries").isArray())
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("卦象概览")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("用神判断")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("问出行")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")));
     }
 
     @Test
@@ -107,7 +124,9 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='USE_GOD_STRENGTH')].evidence.targetSummary").isNotEmpty())
                 .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='USE_GOD_STRENGTH')].evidence.bestLevel").isNotEmpty())
                 .andExpect(jsonPath("$.data.analysisContext.useGod").value("妻财"))
-                .andExpect(jsonPath("$.data.analysisContext.ruleCount").value(6));
+                .andExpect(jsonPath("$.data.analysisContext.ruleCount").value(org.hamcrest.Matchers.greaterThanOrEqualTo(6)))
+                .andExpect(jsonPath("$.data.analysisContext.ruleCodes").value(org.hamcrest.Matchers.hasItems("USE_GOD_STRENGTH", "R010", "R011")))
+                .andExpect(jsonPath("$.data.structuredResult.conflictSummaries").isArray());
     }
 
     @Test
@@ -148,6 +167,7 @@ class DivinationControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets").isArray())
+                .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets[0]").value(org.hamcrest.Matchers.containsString("《")))
                 .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets[0]").value(org.hamcrest.Matchers.containsString("用神宜旺相")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("用神宜旺相")));
     }
