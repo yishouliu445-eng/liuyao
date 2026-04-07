@@ -1,0 +1,12 @@
+.DS_Store
+**/.DS_Store
+
+.codex/
+.playwright-cli/
+
+liuyao-app/.idea/
+liuyao-app/target/
+
+liuyao-worker/.tessdata/
+liuyao-worker/**/__pycache__/
+liuyao-worker/**/*.py[cod]
