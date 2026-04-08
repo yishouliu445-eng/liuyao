@@ -8,6 +8,7 @@ import com.yishou.liuyao.knowledge.mapper.KnowledgeMapper;
 import com.yishou.liuyao.knowledge.repository.BookChunkRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRow;
+import com.yishou.liuyao.rule.usegod.QuestionCategoryNormalizer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,8 +18,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,6 +51,7 @@ class KnowledgeSearchServiceTest {
                 new KnowledgeMapper(),
                 knowledgeQueryEmbeddingService,
                 bookChunkVectorSearchRepository,
+                new QuestionCategoryNormalizer(),
                 new ObjectMapper()
         );
         Book txtBook = new Book();
@@ -97,5 +101,53 @@ class KnowledgeSearchServiceTest {
         assertEquals(2, snippets.size());
         assertTrue(snippets.get(0).contains("《增删卜易》"));
         assertTrue(snippets.get(0).contains("用神宜旺相"));
+    }
+
+    @Test
+    void shouldMapSecondBatchCategoriesIntoExistingRecallTopics() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper()
+        );
+        when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(false);
+        when(bookRepository.findAllById(any())).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc("用神")).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc("动爻")).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc("月破")).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc("世应")).thenReturn(List.of());
+        List<String> snippets = knowledgeSearchService.suggestKnowledgeSnippets("投资", "妻财", List.of("R003"), 4);
+
+        assertTrue(snippets.isEmpty());
+    }
+
+    @Test
+    void shouldAddCategorySpecificHintsIntoSemanticQuery() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper()
+        );
+        when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(true);
+        when(knowledgeQueryEmbeddingService.embed(contains("房屋 手续 文书 成交"))).thenReturn(List.of(0.3D, 0.4D));
+        when(bookChunkVectorSearchRepository.search(eq(null), eq(null), eq("[0.3,0.4]"), eq(2), eq(3)))
+                .thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc("用神")).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc("世应")).thenReturn(List.of());
+
+        List<String> snippets = knowledgeSearchService.suggestKnowledgeSnippets("房产", "父母", List.of("R010"), 3);
+
+        assertTrue(snippets.isEmpty());
+        verify(knowledgeQueryEmbeddingService).embed(contains("房屋 手续 文书 成交"));
     }
 }

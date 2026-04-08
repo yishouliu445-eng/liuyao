@@ -95,6 +95,6 @@ class RuleEngineScenarioRegressionTest {
 
     private static Rule buildUseGodRule() {
         UseGodRuleConfigLoader loader = new UseGodRuleConfigLoader(new ObjectMapper());
-        return new UseGodRule(new UseGodSelector(new QuestionIntentResolver(), loader));
+        return new UseGodRule(new UseGodSelector(new QuestionIntentResolver(new com.yishou.liuyao.rule.usegod.QuestionCategoryNormalizer()), loader));
     }
 }

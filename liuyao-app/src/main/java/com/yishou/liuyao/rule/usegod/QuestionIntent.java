@@ -12,5 +12,9 @@ public enum QuestionIntent {
     TRAVEL,
     EMOTION,
     COOPERATION,
+    REAL_ESTATE,
+    RELOCATION,
+    LAWSUIT,
+    LOST_ITEM,
     UNKNOWN
 }

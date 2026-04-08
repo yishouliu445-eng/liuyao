@@ -205,4 +205,23 @@ class DivinationServiceIntegrationTest {
         org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysisContext().getKnowledgeSnippets().get(0).contains("《"));
         org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("用神宜旺相"));
     }
+
+    @Test
+    void shouldNormalizeRealEstateAliasAndSelectFuMu() {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次买房手续能办好吗");
+        request.setQuestionCategory("买房");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(2026, 4, 6, 10, 0));
+        request.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        request.setMovingLines(List.of(1, 5));
+
+        DivinationAnalyzeResponse response = divinationService.analyze(request);
+
+        assertEquals("房产", response.getChartSnapshot().getQuestionCategory());
+        assertEquals("父母", response.getChartSnapshot().getUseGod());
+        assertEquals("房产", response.getAnalysisContext().getQuestionCategory());
+        org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("问房产"));
+        org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("以父母为用神"));
+    }
 }

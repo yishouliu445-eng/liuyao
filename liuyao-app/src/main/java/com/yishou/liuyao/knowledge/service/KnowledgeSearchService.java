@@ -12,6 +12,7 @@ import com.yishou.liuyao.knowledge.mapper.KnowledgeMapper;
 import com.yishou.liuyao.knowledge.repository.BookChunkRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRow;
+import com.yishou.liuyao.rule.usegod.QuestionCategoryNormalizer;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -31,6 +32,7 @@ public class KnowledgeSearchService {
     private final KnowledgeMapper knowledgeMapper;
     private final KnowledgeQueryEmbeddingService knowledgeQueryEmbeddingService;
     private final BookChunkVectorSearchRepository bookChunkVectorSearchRepository;
+    private final QuestionCategoryNormalizer questionCategoryNormalizer;
     private final ObjectMapper objectMapper;
 
     public KnowledgeSearchService(BookChunkRepository bookChunkRepository,
@@ -39,6 +41,7 @@ public class KnowledgeSearchService {
                                   KnowledgeMapper knowledgeMapper,
                                   KnowledgeQueryEmbeddingService knowledgeQueryEmbeddingService,
                                   BookChunkVectorSearchRepository bookChunkVectorSearchRepository,
+                                  QuestionCategoryNormalizer questionCategoryNormalizer,
                                   ObjectMapper objectMapper) {
         this.bookChunkRepository = bookChunkRepository;
         this.bookRepository = bookRepository;
@@ -46,6 +49,7 @@ public class KnowledgeSearchService {
         this.knowledgeMapper = knowledgeMapper;
         this.knowledgeQueryEmbeddingService = knowledgeQueryEmbeddingService;
         this.bookChunkVectorSearchRepository = bookChunkVectorSearchRepository;
+        this.questionCategoryNormalizer = questionCategoryNormalizer;
         this.objectMapper = objectMapper;
     }
 
@@ -136,18 +140,33 @@ public class KnowledgeSearchService {
                                                  List<String> ruleCodes,
                                                  int limit) {
         Set<String> candidateTopics = new LinkedHashSet<>();
+        String normalizedCategory = questionCategoryNormalizer.normalize(questionCategory);
         candidateTopics.add("用神");
         candidateTopics.addAll(mapUseGodToTopics(useGod));
-        if ("出行".equals(questionCategory)) {
+        if ("出行".equals(normalizedCategory) || "搬家".equals(normalizedCategory)) {
             candidateTopics.add("世应");
             candidateTopics.add("动爻");
             candidateTopics.add("空亡");
-        } else if ("收入".equals(questionCategory)) {
+        } else if ("收入".equals(normalizedCategory) || "财运".equals(normalizedCategory)
+                || "求职".equals(normalizedCategory) || "工作".equals(normalizedCategory) || "升职".equals(normalizedCategory)) {
             candidateTopics.add("动爻");
             candidateTopics.add("月破");
             candidateTopics.add("世应");
-        } else if ("感情".equals(questionCategory) || "合作".equals(questionCategory)) {
+        } else if ("感情".equals(normalizedCategory) || "婚姻".equals(normalizedCategory) || "复合".equals(normalizedCategory)
+                || "合作".equals(normalizedCategory) || "人际".equals(normalizedCategory)) {
             candidateTopics.add("世应");
+            candidateTopics.add("动爻");
+        } else if ("考试".equals(normalizedCategory) || "成长".equals(normalizedCategory) || "调岗".equals(normalizedCategory)) {
+            candidateTopics.add("用神");
+            candidateTopics.add("世应");
+        } else if ("压力".equals(normalizedCategory) || "健康".equals(normalizedCategory) || "官司".equals(normalizedCategory)) {
+            candidateTopics.add("空亡");
+            candidateTopics.add("动爻");
+        } else if ("房产".equals(normalizedCategory)) {
+            candidateTopics.add("用神");
+            candidateTopics.add("世应");
+        } else if ("寻物".equals(normalizedCategory)) {
+            candidateTopics.add("用神");
             candidateTopics.add("动爻");
         }
         if (ruleCodes != null) {
@@ -157,7 +176,7 @@ public class KnowledgeSearchService {
         }
         int resolvedLimit = Math.max(1, Math.min(limit, 8));
         List<String> snippets = new ArrayList<>();
-        appendSemanticSnippets(snippets, resolvedLimit, questionCategory, useGod, ruleCodes);
+        appendSemanticSnippets(snippets, resolvedLimit, normalizedCategory, useGod, ruleCodes);
         Map<Long, Book> booksById = loadBooksByTopicCandidates(candidateTopics);
         for (String topic : candidateTopics) {
             for (BookChunk chunk : sortChunks(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(topic), booksById)) {
@@ -280,6 +299,10 @@ public class KnowledgeSearchService {
         List<String> parts = new ArrayList<>();
         if (questionCategory != null && !questionCategory.isBlank()) {
             parts.add("问类:" + questionCategory);
+            String categoryHint = renderCategorySemanticHint(questionCategory);
+            if (!categoryHint.isBlank()) {
+                parts.add("关注:" + categoryHint);
+            }
         }
         if (useGod != null && !useGod.isBlank()) {
             parts.add("用神:" + useGod);
@@ -288,6 +311,28 @@ public class KnowledgeSearchService {
             parts.add("规则:" + String.join(" ", ruleCodes));
         }
         return parts.isEmpty() ? "六爻知识" : String.join(" ", parts);
+    }
+
+    private String renderCategorySemanticHint(String questionCategory) {
+        return switch (questionCategory) {
+            case "收入" -> "工资 收益 回款";
+            case "财运" -> "投资 回报 资金回流";
+            case "求职" -> "面试 录用 岗位 机会";
+            case "工作" -> "岗位 稳定 外部反馈";
+            case "升职" -> "晋升 提拔 认可";
+            case "调岗" -> "岗位变动 调动 安排";
+            case "感情" -> "互动 态度 回应";
+            case "婚姻" -> "关系稳定 落定";
+            case "复合" -> "旧关系 重新连接";
+            case "健康" -> "病象 恢复 反复";
+            case "出行" -> "行程 路途 阻滞";
+            case "搬家" -> "迁移 住处 安排";
+            case "合作" -> "对方 配合 履约";
+            case "房产" -> "房屋 手续 文书 成交";
+            case "官司" -> "诉讼 证据 纠纷 主动权";
+            case "寻物" -> "失物 线索 定位 回找";
+            default -> "";
+        };
     }
 
     private List<String> mapRuleCodeToTopics(String ruleCode) {

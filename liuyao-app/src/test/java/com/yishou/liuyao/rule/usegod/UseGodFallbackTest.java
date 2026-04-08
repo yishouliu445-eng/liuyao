@@ -14,7 +14,7 @@ class UseGodFallbackTest {
     @Test
     void shouldNotAutoSelectUseGodWhenIntentUnknown() {
         UseGodRule rule = new UseGodRule(new UseGodSelector(
-                new QuestionIntentResolver(),
+                new QuestionIntentResolver(new QuestionCategoryNormalizer()),
                 new UseGodRuleConfigLoader(new ObjectMapper())
         ));
 

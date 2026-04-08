@@ -77,6 +77,34 @@
       "priority": 1,
       "scenario": "合作/对方是否靠谱",
       "note": "合作问题先看应爻，再参考父母（合同）与妻财（收益）。"
+    },
+    {
+      "intent": "REAL_ESTATE",
+      "useGod": "FU_MU",
+      "priority": 1,
+      "scenario": "房产/买卖房/手续进度",
+      "note": "房产、房屋、文书手续类问题先看父母，成交收益可兼参妻财。"
+    },
+    {
+      "intent": "RELOCATION",
+      "useGod": "FU_MU",
+      "priority": 1,
+      "scenario": "搬家/迁居/迁移安排",
+      "note": "搬家迁移先看父母与世应，父母主文书、住处和安排落实。"
+    },
+    {
+      "intent": "LAWSUIT",
+      "useGod": "GUAN_GUI",
+      "priority": 1,
+      "scenario": "官司/诉讼/纠纷",
+      "note": "官司纠纷先看官鬼，兼参世应判断压力来源与对方态势。"
+    },
+    {
+      "intent": "LOST_ITEM",
+      "useGod": "QI_CAI",
+      "priority": 1,
+      "scenario": "寻物/失物/找东西",
+      "note": "寻物先看妻财，证件文书类可兼参父母。"
     }
   ]
 }

@@ -7,9 +7,15 @@ import java.util.Locale;
 @Component
 public class QuestionIntentResolver {
 
+    private final QuestionCategoryNormalizer questionCategoryNormalizer;
+
+    public QuestionIntentResolver(QuestionCategoryNormalizer questionCategoryNormalizer) {
+        this.questionCategoryNormalizer = questionCategoryNormalizer;
+    }
+
     public QuestionIntent resolve(String questionText, String questionCategory) {
         // 先信任结构化分类，再退回到文本关键词，尽量让外部接入方有可控入口。
-        QuestionIntent byCategory = fromCategory(questionCategory);
+        QuestionIntent byCategory = fromCategory(questionCategoryNormalizer.normalize(questionCategory));
         if (byCategory != QuestionIntent.UNKNOWN) {
             return byCategory;
         }
@@ -24,16 +30,20 @@ public class QuestionIntentResolver {
         String category = questionCategory.trim().toLowerCase(Locale.ROOT);
         return switch (category) {
             case "求职", "工作机会", "面试", "录用", "offer", "job_opportunity" -> QuestionIntent.JOB_OPPORTUNITY;
-            case "工作稳定", "稳定性", "保工作", "job_stability" -> QuestionIntent.JOB_STABILITY;
-            case "收入", "工资", "奖金", "财运", "income" -> QuestionIntent.INCOME;
+            case "工作", "工作稳定", "稳定性", "保工作", "job_stability" -> QuestionIntent.JOB_STABILITY;
+            case "收入", "工资", "奖金", "财运", "income", "投资", "理财" -> QuestionIntent.INCOME;
             case "压力", "工作压力", "累不累", "pressure" -> QuestionIntent.PRESSURE;
             case "关系", "人际", "同事", "上下级", "relation" -> QuestionIntent.RELATION;
-            case "成长", "学习", "提升", "growth" -> QuestionIntent.GROWTH;
+            case "成长", "学习", "提升", "growth", "升职", "调岗" -> QuestionIntent.GROWTH;
             case "考试", "考证", "exam" -> QuestionIntent.EXAM;
             case "健康", "health" -> QuestionIntent.HEALTH;
             case "出行", "旅行", "差旅", "travel" -> QuestionIntent.TRAVEL;
-            case "感情", "emotion" -> QuestionIntent.EMOTION;
+            case "感情", "emotion", "婚姻", "复合" -> QuestionIntent.EMOTION;
             case "合作", "签约", "cooperation" -> QuestionIntent.COOPERATION;
+            case "房产", "买房", "卖房", "real_estate" -> QuestionIntent.REAL_ESTATE;
+            case "搬家", "迁居", "relocation" -> QuestionIntent.RELOCATION;
+            case "官司", "诉讼", "纠纷", "仲裁", "lawsuit" -> QuestionIntent.LAWSUIT;
+            case "寻物", "失物", "找东西", "lost_item" -> QuestionIntent.LOST_ITEM;
             default -> QuestionIntent.UNKNOWN;
         };
     }
@@ -77,6 +87,18 @@ public class QuestionIntentResolver {
         }
         if (containsAny(text, "合作", "签约", "合同", "项目")) {
             return QuestionIntent.COOPERATION;
+        }
+        if (containsAny(text, "买房", "卖房", "房产", "房子", "房屋", "过户")) {
+            return QuestionIntent.REAL_ESTATE;
+        }
+        if (containsAny(text, "搬家", "迁居", "迁移", "搬迁")) {
+            return QuestionIntent.RELOCATION;
+        }
+        if (containsAny(text, "官司", "诉讼", "纠纷", "仲裁")) {
+            return QuestionIntent.LAWSUIT;
+        }
+        if (containsAny(text, "寻物", "失物", "找东西", "丢了", "丢失")) {
+            return QuestionIntent.LOST_ITEM;
         }
         return QuestionIntent.UNKNOWN;
     }

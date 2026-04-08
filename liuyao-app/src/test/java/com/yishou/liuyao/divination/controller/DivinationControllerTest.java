@@ -171,4 +171,25 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets[0]").value(org.hamcrest.Matchers.containsString("用神宜旺相")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("用神宜旺相")));
     }
+
+    @Test
+    void shouldNormalizeSecondBatchCategoryThroughHttpEndpoint() throws Exception {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次买房手续能顺利办下来吗");
+        request.setQuestionCategory("买房");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(2026, 4, 9, 9, 0));
+        request.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        request.setMovingLines(List.of(1, 5));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.chartSnapshot.questionCategory").value("房产"))
+                .andExpect(jsonPath("$.data.chartSnapshot.useGod").value("父母"))
+                .andExpect(jsonPath("$.data.analysisContext.questionCategory").value("房产"))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("问房产")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")));
+    }
 }
