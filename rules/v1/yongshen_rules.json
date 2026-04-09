@@ -1,0 +1,285 @@
+{
+  "rules": [
+    {
+      "id": "R000",
+      "ruleCode": "USE_GOD_SELECTION",
+      "name": "用神选择",
+      "category": "YONGSHEN_STATE",
+      "priority": 5,
+      "enabled": true,
+      "effect": {
+        "score": 0,
+        "tags": [
+          "确定用神"
+        ],
+        "conclusionHints": [
+          "已确定本次判断的主用神。"
+        ]
+      },
+      "description": "根据问题类型确定主用神。"
+    },
+    {
+      "id": "R005",
+      "ruleCode": "USE_GOD_EMPTY",
+      "name": "用神空亡",
+      "category": "YONGSHEN_STATE",
+      "priority": 24,
+      "enabled": true,
+      "effect": {
+        "score": -2,
+        "tags": [
+          "落空",
+          "虚"
+        ],
+        "conclusionHints": [
+          "用神落空，主事情容易落空或延后。"
+        ]
+      },
+      "description": "用神落空亡。"
+    },
+    {
+      "id": "R001",
+      "ruleCode": "USE_GOD_MONTH_BREAK",
+      "name": "用神被冲",
+      "category": "YONGSHEN_STATE",
+      "priority": 25,
+      "enabled": true,
+      "effect": {
+        "score": -2,
+        "tags": [
+          "不稳",
+          "受制"
+        ],
+        "conclusionHints": [
+          "用神受冲，主事情波动较大。"
+        ]
+      },
+      "description": "用神受月建所冲。"
+    },
+    {
+      "id": "R002",
+      "ruleCode": "USE_GOD_DAY_BREAK",
+      "name": "用神被克",
+      "category": "YONGSHEN_STATE",
+      "priority": 26,
+      "enabled": true,
+      "effect": {
+        "score": -2,
+        "tags": [
+          "受制",
+          "不稳"
+        ],
+        "conclusionHints": [
+          "用神受日辰压制，短期承压。"
+        ]
+      },
+      "description": "用神受日辰所冲克。"
+    },
+    {
+      "id": "R003",
+      "name": "用神生世",
+      "category": "YONGSHEN_STATE",
+      "priority": 27,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_TO_SHI_RELATION",
+        "operator": "EQUALS",
+        "value": "生"
+      },
+      "effect": {
+        "score": 2,
+        "tags": [
+          "有利"
+        ],
+        "conclusionHints": [
+          "用神生世，说明事情对自己更有帮助。"
+        ]
+      },
+      "description": "用神五行生世爻。"
+    },
+    {
+      "id": "R004",
+      "name": "用神合世",
+      "category": "YONGSHEN_STATE",
+      "priority": 28,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_HE_SHI",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "有接近",
+          "有机会"
+        ],
+        "conclusionHints": [
+          "用神合世，说明事情与自己有接近和促成的机会。"
+        ]
+      },
+      "description": "用神与世爻形成六合。"
+    },
+    {
+      "id": "R099",
+      "ruleCode": "USE_GOD_STRENGTH",
+      "name": "用神强弱",
+      "category": "YONGSHEN_STATE",
+      "priority": 31,
+      "enabled": true,
+      "effect": {
+        "conclusionHints": [
+          "用神旺衰会直接影响结果稳定性。"
+        ]
+      },
+      "description": "综合月建、日辰、空亡与动变判断用神强弱。"
+    },
+    {
+      "id": "R023",
+      "name": "用神多现",
+      "category": "YONGSHEN_STATE",
+      "priority": 38,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_LINE_COUNT",
+        "operator": "GREATER_THAN_OR_EQUALS",
+        "value": 2
+      },
+      "effect": {
+        "score": 0,
+        "tags": [
+          "多重候选"
+        ],
+        "conclusionHints": [
+          "盘面同类用神不止一处，需要结合定位结果判断主次。"
+        ]
+      },
+      "description": "盘面存在多个同类用神候选。"
+    },
+    {
+      "id": "R024",
+      "name": "主用神落空",
+      "category": "YONGSHEN_STATE",
+      "priority": 39,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_EMPTY",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "主象落空"
+        ],
+        "conclusionHints": [
+          "主用神落空，核心判断对象偏虚，事情容易延后或落空。"
+        ]
+      },
+      "description": "主用神对应爻落空亡。"
+    },
+    {
+      "id": "R025",
+      "name": "主用神月建受冲",
+      "category": "YONGSHEN_STATE",
+      "priority": 40,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_MONTH_BREAK",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "月建受冲"
+        ],
+        "conclusionHints": [
+          "主用神受月建相冲，事情在阶段节奏上更不稳。"
+        ]
+      },
+      "description": "主用神对应爻受月建所冲。"
+    },
+    {
+      "id": "R026",
+      "name": "主用神日辰受冲",
+      "category": "YONGSHEN_STATE",
+      "priority": 41,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_DAY_BREAK",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "日辰受冲"
+        ],
+        "conclusionHints": [
+          "主用神受日辰相冲，短期波动和阻滞会更明显。"
+        ]
+      },
+      "description": "主用神对应爻受日辰所冲。"
+    },
+    {
+      "id": "R030",
+      "name": "主用神入墓",
+      "category": "YONGSHEN_STATE",
+      "priority": 45,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_RU_MU",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "用神入墓"
+        ],
+        "conclusionHints": [
+          "主用神入墓，事情核心对象更容易停滞、收束或被压住。"
+        ]
+      },
+      "description": "主用神对应爻落入本五行墓库。"
+    },
+    {
+      "id": "R031",
+      "name": "用神受冲而开",
+      "category": "YONGSHEN_STATE",
+      "priority": 46,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_CHONG_KAI",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "冲开束缚"
+        ],
+        "conclusionHints": [
+          "用神原本受束，再逢冲有时反而能冲开阻滞。"
+        ]
+      },
+      "description": "用神空亡或入墓时再遇冲，按冲开处理。"
+    },
+    {
+      "id": "R032",
+      "name": "用神受冲而散",
+      "category": "YONGSHEN_STATE",
+      "priority": 47,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_CHONG_SAN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "受冲易散"
+        ],
+        "conclusionHints": [
+          "用神本不受束而逢冲，更容易出现波动、松散或反复。"
+        ]
+      },
+      "description": "用神未受束时遇冲，按冲散处理。"
+    }
+  ]
+}

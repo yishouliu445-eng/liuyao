@@ -13,6 +13,22 @@ public class RuleEvaluationContext {
     private String useGod;
     private Boolean useGodFound;
     private Integer useGodLineIndex;
+    private Boolean useGodMoving;
+    private Integer useGodLineCount;
+    private Boolean useGodEmpty;
+    private Boolean useGodMonthBreak;
+    private Boolean useGodDayBreak;
+    private Boolean useGodRuMu;
+    private Boolean useGodChongKai;
+    private Boolean useGodChongSan;
+    private Boolean hasMovingShengUseGod;
+    private Boolean hasMovingKeUseGod;
+    private Boolean hasChangedShengUseGod;
+    private Boolean hasChangedKeUseGod;
+    private Boolean hasMovingChongUseGod;
+    private Boolean hasMovingChongShi;
+    private Integer useGodBestScore;
+    private Integer useGodDistanceToShi;
     private String yongshenState;
     private String useGodToShiRelation;
     private Boolean useGodHeShi;
@@ -20,6 +36,8 @@ public class RuleEvaluationContext {
     private String shiState;
     private Boolean shiMoving;
     private Boolean shiEmpty;
+    private Boolean shiYingExists;
+    private Integer shiYingDistance;
     private String shiYingRelation;
     private Integer movingCount;
     private List<String> kongWangBranches = List.of();
@@ -30,6 +48,22 @@ public class RuleEvaluationContext {
         context.setUseGod(UseGodLineLocator.extractUseGod(chartSnapshot));
         context.setUseGodFound(context.getUseGod() != null && !context.getUseGod().isBlank());
         context.setUseGodLineIndex(resolveUseGodLineIndex(chartSnapshot, context.getUseGod()));
+        context.setUseGodLineCount(resolveUseGodLineCount(chartSnapshot, context.getUseGod()));
+        context.setUseGodMoving(resolveUseGodMoving(chartSnapshot, context.getUseGodLineIndex()));
+        context.setUseGodEmpty(resolveUseGodEmpty(chartSnapshot, context.getUseGodLineIndex()));
+        context.setUseGodMonthBreak(resolveRuleHitFlag(hits, "USE_GOD_MONTH_BREAK"));
+        context.setUseGodDayBreak(resolveRuleHitFlag(hits, "USE_GOD_DAY_BREAK"));
+        context.setUseGodRuMu(resolveUseGodRuMu(chartSnapshot, context.getUseGodLineIndex()));
+        context.setUseGodChongKai(resolveUseGodChongKai(context));
+        context.setUseGodChongSan(resolveUseGodChongSan(context));
+        context.setHasMovingShengUseGod(resolveMovingEffectFlag(hits, "relation", "动爻生用神"));
+        context.setHasMovingKeUseGod(resolveMovingEffectFlag(hits, "relation", "动爻克用神"));
+        context.setHasChangedShengUseGod(resolveMovingEffectFlag(hits, "changeRelation", "变爻生用神"));
+        context.setHasChangedKeUseGod(resolveMovingEffectFlag(hits, "changeRelation", "变爻克用神"));
+        context.setHasMovingChongUseGod(resolveMovingChongUseGod(chartSnapshot, context.getUseGodLineIndex()));
+        context.setHasMovingChongShi(resolveMovingChongShi(chartSnapshot));
+        context.setUseGodBestScore(resolveUseGodBestScore(hits));
+        context.setUseGodDistanceToShi(resolveUseGodDistanceToShi(chartSnapshot, context.getUseGodLineIndex()));
         context.setYongshenState(resolveUseGodState(hits));
         context.setUseGodToShiRelation(resolveUseGodToShiRelation(chartSnapshot, context.getUseGod()));
         context.setUseGodHeShi(resolveUseGodHeShi(chartSnapshot, context.getUseGod()));
@@ -37,6 +71,8 @@ public class RuleEvaluationContext {
         context.setShiState(resolveShiState(chartSnapshot));
         context.setShiMoving(resolveShiMoving(chartSnapshot));
         context.setShiEmpty(resolveShiEmpty(chartSnapshot));
+        context.setShiYingExists(resolveShiYingExists(chartSnapshot));
+        context.setShiYingDistance(resolveShiYingDistance(chartSnapshot));
         context.setShiYingRelation(resolveShiYingRelation(hits));
         context.setMovingCount(resolveMovingCount(chartSnapshot));
         context.setKongWangBranches(chartSnapshot == null || chartSnapshot.getKongWang() == null ? List.of() : chartSnapshot.getKongWang());
@@ -47,11 +83,18 @@ public class RuleEvaluationContext {
         if (chartSnapshot == null || useGod == null || useGod.isBlank()) {
             return null;
         }
-        return chartSnapshot.getLines().stream()
-                .filter(line -> useGod.equals(line.getLiuQin()))
+        Object explicitLineIndex = chartSnapshot.getExt() == null ? null : chartSnapshot.getExt().get("useGodLineIndex");
+        if (explicitLineIndex instanceof Number number) {
+            return number.intValue();
+        }
+        return resolveUseGodLines(chartSnapshot, useGod).stream()
                 .map(LineInfo::getIndex)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private static Integer resolveUseGodLineCount(ChartSnapshot chartSnapshot, String useGod) {
+        return resolveUseGodLines(chartSnapshot, useGod).size();
     }
 
     private static String resolveUseGodState(List<RuleHit> hits) {
@@ -80,14 +123,12 @@ public class RuleEvaluationContext {
         if (shiLine == null || shiLine.getWuXing() == null || shiLine.getWuXing().isBlank()) {
             return null;
         }
-        return chartSnapshot.getLines().stream()
-                .filter(line -> useGod.equals(line.getLiuQin()))
-                .map(LineInfo::getWuXing)
-                .filter(value -> value != null && !value.isBlank())
-                .map(value -> UseGodLineLocator.relationOf(value, shiLine.getWuXing()))
-                .filter(value -> value != null && !value.isBlank())
-                .findFirst()
-                .orElse(null);
+        LineInfo useGodLine = resolveSelectedUseGodLine(chartSnapshot, useGod);
+        if (useGodLine == null || useGodLine.getWuXing() == null || useGodLine.getWuXing().isBlank()) {
+            return null;
+        }
+        String relation = UseGodLineLocator.relationOf(useGodLine.getWuXing(), shiLine.getWuXing());
+        return relation == null || relation.isBlank() ? null : relation;
     }
 
     private static Boolean resolveUseGodHeShi(ChartSnapshot chartSnapshot, String useGod) {
@@ -101,22 +142,187 @@ public class RuleEvaluationContext {
         if (shiLine == null || shiLine.getBranch() == null || shiLine.getBranch().isBlank()) {
             return false;
         }
-        return chartSnapshot.getLines().stream()
-                .filter(line -> useGod.equals(line.getLiuQin()))
-                .map(LineInfo::getBranch)
-                .filter(value -> value != null && !value.isBlank())
-                .anyMatch(value -> isHe(value, shiLine.getBranch()));
+        LineInfo useGodLine = resolveSelectedUseGodLine(chartSnapshot, useGod);
+        return useGodLine != null
+                && useGodLine.getBranch() != null
+                && !useGodLine.getBranch().isBlank()
+                && isHe(useGodLine.getBranch(), shiLine.getBranch());
     }
 
     private static Boolean resolveUseGodRetreat(ChartSnapshot chartSnapshot, String useGod) {
         if (chartSnapshot == null || chartSnapshot.getLines() == null || useGod == null || useGod.isBlank()) {
             return false;
         }
-        return chartSnapshot.getLines().stream()
-                .filter(line -> useGod.equals(line.getLiuQin()))
+        LineInfo useGodLine = resolveSelectedUseGodLine(chartSnapshot, useGod);
+        if (useGodLine == null || !Boolean.TRUE.equals(useGodLine.getIsMoving())) {
+            return false;
+        }
+        return (useGodLine.getChangeLiuQin() != null && !useGod.equals(useGodLine.getChangeLiuQin()))
+                || "被克".equals(UseGodLineLocator.relationOf(useGodLine.getChangeWuXing(), useGodLine.getWuXing()));
+    }
+
+    private static Boolean resolveUseGodMoving(ChartSnapshot chartSnapshot, Integer useGodLineIndex) {
+        return resolveLineByIndex(chartSnapshot, useGodLineIndex)
+                .map(line -> Boolean.TRUE.equals(line.getIsMoving()))
+                .orElse(false);
+    }
+
+    private static Boolean resolveUseGodEmpty(ChartSnapshot chartSnapshot, Integer useGodLineIndex) {
+        if (chartSnapshot == null || chartSnapshot.getKongWang() == null || chartSnapshot.getKongWang().isEmpty()) {
+            return false;
+        }
+        return resolveLineByIndex(chartSnapshot, useGodLineIndex)
+                .map(line -> line.getBranch() != null && chartSnapshot.getKongWang().contains(line.getBranch()))
+                .orElse(false);
+    }
+
+    private static Integer resolveUseGodBestScore(List<RuleHit> hits) {
+        if (hits == null) {
+            return null;
+        }
+        return hits.stream()
+                .filter(hit -> "USE_GOD_STRENGTH".equals(hit.getRuleCode()))
+                .map(RuleHit::getEvidence)
+                .filter(evidence -> evidence != null)
+                .map(evidence -> evidence.get("bestScore"))
+                .filter(Number.class::isInstance)
+                .map(Number.class::cast)
+                .map(Number::intValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static Boolean resolveMovingEffectFlag(List<RuleHit> hits, String field, String expectedValue) {
+        if (hits == null || field == null || expectedValue == null) {
+            return false;
+        }
+        for (RuleHit hit : hits) {
+            if (!"MOVING_LINE_AFFECT_USE_GOD".equals(hit.getRuleCode()) || !Boolean.TRUE.equals(hit.getHit())) {
+                continue;
+            }
+            Object effects = hit.getEvidence() == null ? null : hit.getEvidence().get("effects");
+            if (!(effects instanceof List<?> effectList)) {
+                continue;
+            }
+            for (Object item : effectList) {
+                if (!(item instanceof java.util.Map<?, ?> effect)) {
+                    continue;
+                }
+                if (expectedValue.equals(effect.get(field))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static Boolean resolveRuleHitFlag(List<RuleHit> hits, String ruleCode) {
+        if (hits == null || ruleCode == null || ruleCode.isBlank()) {
+            return false;
+        }
+        return hits.stream()
+                .anyMatch(hit -> ruleCode.equals(hit.getRuleCode()) && Boolean.TRUE.equals(hit.getHit()));
+    }
+
+    private static Integer resolveUseGodDistanceToShi(ChartSnapshot chartSnapshot, Integer useGodLineIndex) {
+        if (chartSnapshot == null || chartSnapshot.getShi() == null || useGodLineIndex == null) {
+            return null;
+        }
+        return Math.abs(useGodLineIndex - chartSnapshot.getShi());
+    }
+
+    private static Boolean resolveUseGodRuMu(ChartSnapshot chartSnapshot, Integer useGodLineIndex) {
+        LineInfo useGodLine = resolveLineByIndex(chartSnapshot, useGodLineIndex).orElse(null);
+        if (useGodLine == null || useGodLine.getWuXing() == null || useGodLine.getBranch() == null) {
+            return false;
+        }
+        String tombBranch = resolveTombBranch(useGodLine.getWuXing());
+        return tombBranch != null && tombBranch.equals(useGodLine.getBranch());
+    }
+
+    private static String resolveTombBranch(String wuXing) {
+        if (wuXing == null || wuXing.isBlank()) {
+            return null;
+        }
+        return switch (wuXing) {
+            case "木" -> "未";
+            case "火" -> "戌";
+            case "金" -> "丑";
+            case "水", "土" -> "辰";
+            default -> null;
+        };
+    }
+
+    private static Boolean resolveUseGodChongKai(RuleEvaluationContext context) {
+        if (context == null) {
+            return false;
+        }
+        boolean hasBreak = Boolean.TRUE.equals(context.getUseGodMonthBreak())
+                || Boolean.TRUE.equals(context.getUseGodDayBreak())
+                || Boolean.TRUE.equals(context.getHasMovingChongUseGod());
+        boolean constrained = Boolean.TRUE.equals(context.getUseGodEmpty()) || Boolean.TRUE.equals(context.getUseGodRuMu());
+        return hasBreak && constrained;
+    }
+
+    private static Boolean resolveUseGodChongSan(RuleEvaluationContext context) {
+        if (context == null) {
+            return false;
+        }
+        boolean hasBreak = Boolean.TRUE.equals(context.getUseGodMonthBreak())
+                || Boolean.TRUE.equals(context.getUseGodDayBreak())
+                || Boolean.TRUE.equals(context.getHasMovingChongUseGod());
+        boolean constrained = Boolean.TRUE.equals(context.getUseGodEmpty()) || Boolean.TRUE.equals(context.getUseGodRuMu());
+        return hasBreak && !constrained;
+    }
+
+    private static Boolean resolveMovingChongUseGod(ChartSnapshot chartSnapshot, Integer useGodLineIndex) {
+        LineInfo useGodLine = resolveLineByIndex(chartSnapshot, useGodLineIndex).orElse(null);
+        if (useGodLine == null || useGodLine.getBranch() == null || useGodLine.getBranch().isBlank()) {
+            return false;
+        }
+        return chartSnapshot != null && chartSnapshot.getLines() != null && chartSnapshot.getLines().stream()
                 .filter(line -> Boolean.TRUE.equals(line.getIsMoving()))
-                .anyMatch(line -> (line.getChangeLiuQin() != null && !useGod.equals(line.getChangeLiuQin()))
-                        || "被克".equals(UseGodLineLocator.relationOf(line.getChangeWuXing(), line.getWuXing())));
+                .filter(line -> line.getIndex() == null || !line.getIndex().equals(useGodLineIndex))
+                .anyMatch(line -> line.getBranch() != null && UseGodLineLocator.isChong(line.getBranch(), useGodLine.getBranch()));
+    }
+
+    private static Boolean resolveMovingChongShi(ChartSnapshot chartSnapshot) {
+        if (chartSnapshot == null || chartSnapshot.getShi() == null) {
+            return false;
+        }
+        LineInfo shiLine = resolveLineByIndex(chartSnapshot, chartSnapshot.getShi()).orElse(null);
+        if (shiLine == null || shiLine.getBranch() == null || shiLine.getBranch().isBlank()) {
+            return false;
+        }
+        return chartSnapshot.getLines() != null && chartSnapshot.getLines().stream()
+                .filter(line -> Boolean.TRUE.equals(line.getIsMoving()))
+                .filter(line -> line.getIndex() == null || !line.getIndex().equals(chartSnapshot.getShi()))
+                .anyMatch(line -> line.getBranch() != null && UseGodLineLocator.isChong(line.getBranch(), shiLine.getBranch()));
+    }
+
+    private static LineInfo resolveSelectedUseGodLine(ChartSnapshot chartSnapshot, String useGod) {
+        Integer useGodLineIndex = resolveUseGodLineIndex(chartSnapshot, useGod);
+        return resolveLineByIndex(chartSnapshot, useGodLineIndex).orElse(null);
+    }
+
+    private static java.util.Optional<LineInfo> resolveLineByIndex(ChartSnapshot chartSnapshot, Integer lineIndex) {
+        if (chartSnapshot == null || chartSnapshot.getLines() == null || lineIndex == null) {
+            return java.util.Optional.empty();
+        }
+        return chartSnapshot.getLines().stream()
+                .filter(line -> lineIndex.equals(line.getIndex()))
+                .findFirst();
+    }
+
+    private static List<LineInfo> resolveUseGodLines(ChartSnapshot chartSnapshot, String useGod) {
+        if (chartSnapshot == null || chartSnapshot.getLines() == null || useGod == null || useGod.isBlank()) {
+            return List.of();
+        }
+        return switch (useGod) {
+            case "世爻" -> chartSnapshot.getLines().stream().filter(line -> Boolean.TRUE.equals(line.getIsShi())).toList();
+            case "应爻" -> chartSnapshot.getLines().stream().filter(line -> Boolean.TRUE.equals(line.getIsYing())).toList();
+            default -> chartSnapshot.getLines().stream().filter(line -> useGod.equals(line.getLiuQin())).toList();
+        };
     }
 
     private static String resolveShiState(ChartSnapshot chartSnapshot) {
@@ -197,6 +403,22 @@ public class RuleEvaluationContext {
                 .orElse(null);
     }
 
+    private static Boolean resolveShiYingExists(ChartSnapshot chartSnapshot) {
+        if (chartSnapshot == null || chartSnapshot.getLines() == null) {
+            return false;
+        }
+        boolean hasShi = chartSnapshot.getLines().stream().anyMatch(line -> Boolean.TRUE.equals(line.getIsShi()));
+        boolean hasYing = chartSnapshot.getLines().stream().anyMatch(line -> Boolean.TRUE.equals(line.getIsYing()));
+        return hasShi && hasYing;
+    }
+
+    private static Integer resolveShiYingDistance(ChartSnapshot chartSnapshot) {
+        if (chartSnapshot == null || chartSnapshot.getShi() == null || chartSnapshot.getYing() == null) {
+            return null;
+        }
+        return Math.abs(chartSnapshot.getShi() - chartSnapshot.getYing());
+    }
+
     private static Integer resolveMovingCount(ChartSnapshot chartSnapshot) {
         if (chartSnapshot == null || chartSnapshot.getLines() == null) {
             return 0;
@@ -226,6 +448,134 @@ public class RuleEvaluationContext {
 
     public void setUseGodLineIndex(Integer useGodLineIndex) {
         this.useGodLineIndex = useGodLineIndex;
+    }
+
+    public Boolean getUseGodMoving() {
+        return useGodMoving;
+    }
+
+    public void setUseGodMoving(Boolean useGodMoving) {
+        this.useGodMoving = useGodMoving;
+    }
+
+    public Integer getUseGodLineCount() {
+        return useGodLineCount;
+    }
+
+    public void setUseGodLineCount(Integer useGodLineCount) {
+        this.useGodLineCount = useGodLineCount;
+    }
+
+    public Boolean getUseGodEmpty() {
+        return useGodEmpty;
+    }
+
+    public void setUseGodEmpty(Boolean useGodEmpty) {
+        this.useGodEmpty = useGodEmpty;
+    }
+
+    public Boolean getUseGodMonthBreak() {
+        return useGodMonthBreak;
+    }
+
+    public void setUseGodMonthBreak(Boolean useGodMonthBreak) {
+        this.useGodMonthBreak = useGodMonthBreak;
+    }
+
+    public Boolean getUseGodDayBreak() {
+        return useGodDayBreak;
+    }
+
+    public void setUseGodDayBreak(Boolean useGodDayBreak) {
+        this.useGodDayBreak = useGodDayBreak;
+    }
+
+    public Boolean getUseGodRuMu() {
+        return useGodRuMu;
+    }
+
+    public void setUseGodRuMu(Boolean useGodRuMu) {
+        this.useGodRuMu = useGodRuMu;
+    }
+
+    public Boolean getUseGodChongKai() {
+        return useGodChongKai;
+    }
+
+    public void setUseGodChongKai(Boolean useGodChongKai) {
+        this.useGodChongKai = useGodChongKai;
+    }
+
+    public Boolean getUseGodChongSan() {
+        return useGodChongSan;
+    }
+
+    public void setUseGodChongSan(Boolean useGodChongSan) {
+        this.useGodChongSan = useGodChongSan;
+    }
+
+    public Boolean getHasMovingShengUseGod() {
+        return hasMovingShengUseGod;
+    }
+
+    public void setHasMovingShengUseGod(Boolean hasMovingShengUseGod) {
+        this.hasMovingShengUseGod = hasMovingShengUseGod;
+    }
+
+    public Boolean getHasMovingKeUseGod() {
+        return hasMovingKeUseGod;
+    }
+
+    public void setHasMovingKeUseGod(Boolean hasMovingKeUseGod) {
+        this.hasMovingKeUseGod = hasMovingKeUseGod;
+    }
+
+    public Boolean getHasChangedShengUseGod() {
+        return hasChangedShengUseGod;
+    }
+
+    public void setHasChangedShengUseGod(Boolean hasChangedShengUseGod) {
+        this.hasChangedShengUseGod = hasChangedShengUseGod;
+    }
+
+    public Boolean getHasChangedKeUseGod() {
+        return hasChangedKeUseGod;
+    }
+
+    public void setHasChangedKeUseGod(Boolean hasChangedKeUseGod) {
+        this.hasChangedKeUseGod = hasChangedKeUseGod;
+    }
+
+    public Boolean getHasMovingChongUseGod() {
+        return hasMovingChongUseGod;
+    }
+
+    public void setHasMovingChongUseGod(Boolean hasMovingChongUseGod) {
+        this.hasMovingChongUseGod = hasMovingChongUseGod;
+    }
+
+    public Boolean getHasMovingChongShi() {
+        return hasMovingChongShi;
+    }
+
+    public void setHasMovingChongShi(Boolean hasMovingChongShi) {
+        this.hasMovingChongShi = hasMovingChongShi;
+    }
+
+    public Integer getUseGodBestScore() {
+        return useGodBestScore;
+    }
+
+    public void setUseGodBestScore(Integer useGodBestScore) {
+        this.useGodBestScore = useGodBestScore;
+    }
+
+    public Integer getUseGodDistanceToShi() {
+        return useGodDistanceToShi;
+    }
+
+    public void setUseGodDistanceToShi(Integer useGodDistanceToShi) {
+        this.useGodDistanceToShi = useGodDistanceToShi;
     }
 
     public Boolean getUseGodFound() {
@@ -290,6 +640,22 @@ public class RuleEvaluationContext {
 
     public void setShiEmpty(Boolean shiEmpty) {
         this.shiEmpty = shiEmpty;
+    }
+
+    public Boolean getShiYingExists() {
+        return shiYingExists;
+    }
+
+    public void setShiYingExists(Boolean shiYingExists) {
+        this.shiYingExists = shiYingExists;
+    }
+
+    public Integer getShiYingDistance() {
+        return shiYingDistance;
+    }
+
+    public void setShiYingDistance(Integer shiYingDistance) {
+        this.shiYingDistance = shiYingDistance;
     }
 
     public String getShiYingRelation() {

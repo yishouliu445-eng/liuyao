@@ -5,6 +5,7 @@ from psycopg import Connection
 
 from app.schemas.chunk_models import ChunkRecord
 from app.schemas.task_models import BookRecord, TaskRecord
+from app.schemas.rule_models import RuleCandidateRecord
 
 
 class TaskRepository:
@@ -17,6 +18,41 @@ class TaskRepository:
                 SELECT id
                 FROM doc_process_task
                 WHERE task_type = 'BOOK_PARSE' AND status = 'PENDING'
+                ORDER BY id
+                FOR UPDATE SKIP LOCKED
+                LIMIT 1
+            )
+            UPDATE doc_process_task task
+            SET status = 'PROCESSING',
+                processor_type = 'PYTHON_WORKER',
+                locked_by = %s,
+                locked_at = CURRENT_TIMESTAMP,
+                started_at = CURRENT_TIMESTAMP,
+                finished_at = NULL,
+                error_message = NULL
+            FROM picked
+            WHERE task.id = picked.id
+            RETURNING task.id, task.ref_id, task.status, COALESCE(task.payload_json, '')
+        """
+        with self.connection.transaction():
+            with self.connection.cursor() as cursor:
+                cursor.execute(sql, (worker_id,))
+                row = cursor.fetchone()
+                if row is None:
+                    return None
+                return TaskRecord(
+                    task_id=row[0],
+                    book_id=row[1],
+                    status=row[2],
+                    payload_json=row[3],
+                )
+
+    def claim_next_rule_extract_task(self, worker_id: str) -> TaskRecord | None:
+        sql = """
+            WITH picked AS (
+                SELECT id
+                FROM doc_process_task
+                WHERE task_type = 'RULE_EXTRACT' AND status = 'PENDING'
                 ORDER BY id
                 FOR UPDATE SKIP LOCKED
                 LIMIT 1
@@ -242,3 +278,82 @@ class ChunkRepository:
 
 def dump_json(data: dict | list) -> str:
     return json.dumps(data, ensure_ascii=False)
+
+
+class RuleCandidateRepository:
+    def __init__(self, connection: Connection):
+        self.connection = connection
+
+    def save_candidates(self, candidates: Iterable[RuleCandidateRecord]) -> int:
+        count = 0
+        with self.connection.transaction():
+            with self.connection.cursor() as cursor:
+                for candidate in candidates:
+                    cursor.execute(
+                        """
+                        INSERT INTO rule_candidate (
+                            book_chunk_id,
+                            task_id,
+                            rule_title,
+                            category,
+                            condition_desc,
+                            effect_direction,
+                            source_book,
+                            evidence_text,
+                            confidence,
+                            status
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (
+                            candidate.book_chunk_id,
+                            candidate.task_id,
+                            candidate.rule_title,
+                            candidate.category,
+                            candidate.condition_desc,
+                            candidate.effect_direction,
+                            candidate.source_book,
+                            candidate.evidence_text,
+                            candidate.confidence,
+                            candidate.status,
+                        )
+                    )
+                    count += 1
+        return count
+
+    def get_chunks_for_rule_extraction(self, book_id: int) -> list[ChunkRecord]:
+        chunks = []
+        with self.connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT book_id, task_id, chunk_index, content, chapter_title, content_type,
+                       focus_topic, topic_tags_json, metadata_json, char_count, sentence_count,
+                       embedding_json, embedding_model, embedding_provider, embedding_dim, embedding_version, id
+                FROM book_chunk
+                WHERE book_id = %s AND content_type IN ('rule', 'mixed', 'example')
+                ORDER BY chunk_index
+                """,
+                (book_id,)
+            )
+            for row in cursor.fetchall():
+                chunk = ChunkRecord(
+                    book_id=row[0],
+                    task_id=row[1],
+                    chunk_index=row[2],
+                    content=row[3],
+                    chapter_title=row[4],
+                    content_type=row[5],
+                    focus_topic=row[6],
+                    topic_tags_json=row[7],
+                    metadata_json=row[8],
+                    char_count=row[9],
+                    sentence_count=row[10],
+                    embedding_json=row[11],
+                    embedding_vector_literal=None,
+                    embedding_model=row[12],
+                    embedding_provider=row[13],
+                    embedding_dim=row[14],
+                    embedding_version=row[15],
+                )
+                chunk.chunk_id = row[16] # Ad hoc property to hold chunk ID
+                chunks.append(chunk)
+        return chunks

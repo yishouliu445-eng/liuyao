@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "files": [
+    "yongshen_rules.json",
+    "shi_rules.json",
+    "moving_rules.json",
+    "composite_rules.json"
+  ]
+}

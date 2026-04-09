@@ -15,6 +15,7 @@ import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.advanced.UseGodMonthBreakRule;
 import com.yishou.liuyao.rule.basic.MovingLineExistsRule;
 import com.yishou.liuyao.rule.batch.MovingLineAffectUseGodRule;
+import com.yishou.liuyao.rule.batch.UseGodDayBreakRule;
 import com.yishou.liuyao.rule.batch.UseGodStrengthRule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -225,6 +226,159 @@ class RuleEngineRealChartRegressionTest {
     }
 
     @Test
+    void shouldApplyConfiguredSelectedUseGodFactRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot chart = new ChartSnapshot();
+        chart.setShi(3);
+        chart.setUseGod("官鬼");
+        chart.setKongWang(List.of("戌"));
+        chart.setExt(new LinkedHashMap<>());
+        chart.getExt().put("useGod", "官鬼");
+        chart.getExt().put("useGodLineIndex", 4);
+        chart.setLines(new ArrayList<>(List.of(
+                buildLine(2, "官鬼", false, "金", "金", "申"),
+                buildShiLine(3, false, "木", "木", "寅"),
+                buildLine(4, "官鬼", true, "水", "水", "子"),
+                buildYingLine(6, false, "火", "火", "午")
+        )));
+
+        RuleEvaluationResult result = ruleEngineService.evaluateResult(chart);
+
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R021".equals(hit.getRuleId())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R022".equals(hit.getRuleId())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R023".equals(hit.getRuleId())));
+        assertTrue(result.getTags().contains("主象已动"));
+        assertTrue(result.getTags().contains("贴近日身"));
+        assertTrue(result.getTags().contains("多重候选"));
+    }
+
+    @Test
+    void shouldApplyConfiguredBreakAndShiYingDistanceRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new UseGodMonthBreakRule(),
+                new UseGodDayBreakRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot chart = new ChartSnapshot();
+        chart.setShi(1);
+        chart.setYing(4);
+        chart.setUseGod("官鬼");
+        chart.setYueJian("午");
+        chart.setRiChen("午");
+        chart.setExt(new LinkedHashMap<>());
+        chart.getExt().put("useGod", "官鬼");
+        chart.getExt().put("useGodLineIndex", 6);
+        chart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "寅"),
+                buildYingLine(4, false, "火", "火", "午"),
+                buildLine(6, "官鬼", false, "水", "水", "子")
+        )));
+
+        RuleEvaluationResult result = ruleEngineService.evaluateResult(chart);
+
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R025".equals(hit.getRuleId())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R026".equals(hit.getRuleId())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R027".equals(hit.getRuleId())));
+        assertTrue(result.getTags().contains("月建受冲"));
+        assertTrue(result.getTags().contains("日辰受冲"));
+        assertTrue(result.getTags().contains("彼此有距"));
+    }
+
+    @Test
+    void shouldApplyConfiguredMovingChongShiAndUseGodRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot chart = new ChartSnapshot();
+        chart.setShi(1);
+        chart.setYing(4);
+        chart.setUseGod("官鬼");
+        chart.setExt(new LinkedHashMap<>());
+        chart.getExt().put("useGod", "官鬼");
+        chart.getExt().put("useGodLineIndex", 6);
+        chart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "子"),
+                buildYingLine(4, false, "火", "火", "午"),
+                buildLine(3, "兄弟", true, "土", "土", "午"),
+                buildLine(6, "官鬼", false, "水", "水", "子")
+        )));
+
+        RuleEvaluationResult result = ruleEngineService.evaluateResult(chart);
+
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R028".equals(hit.getRuleId())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R029".equals(hit.getRuleId())));
+        assertTrue(result.getTags().contains("动冲世爻"));
+        assertTrue(result.getTags().contains("动冲用神"));
+    }
+
+    @Test
+    void shouldApplyConfiguredUseGodRuMuRule() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot chart = new ChartSnapshot();
+        chart.setShi(1);
+        chart.setUseGod("官鬼");
+        chart.setExt(new LinkedHashMap<>());
+        chart.getExt().put("useGod", "官鬼");
+        chart.getExt().put("useGodLineIndex", 4);
+        chart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "寅"),
+                buildLine(4, "官鬼", false, "水", "水", "辰"),
+                buildYingLine(6, false, "火", "火", "午")
+        )));
+
+        RuleEvaluationResult result = ruleEngineService.evaluateResult(chart);
+
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R030".equals(hit.getRuleId())));
+        assertTrue(result.getTags().contains("用神入墓"));
+    }
+
+    @Test
+    void shouldApplyConfiguredUseGodChongKaiAndChongSanRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new UseGodDayBreakRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot chongKaiChart = new ChartSnapshot();
+        chongKaiChart.setShi(1);
+        chongKaiChart.setUseGod("官鬼");
+        chongKaiChart.setKongWang(List.of("子"));
+        chongKaiChart.setRiChen("午");
+        chongKaiChart.setExt(new LinkedHashMap<>());
+        chongKaiChart.getExt().put("useGod", "官鬼");
+        chongKaiChart.getExt().put("useGodLineIndex", 4);
+        chongKaiChart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "寅"),
+                buildLine(4, "官鬼", false, "水", "水", "子"),
+                buildYingLine(6, false, "火", "火", "午")
+        )));
+        RuleEvaluationResult chongKaiResult = ruleEngineService.evaluateResult(chongKaiChart);
+        assertTrue(chongKaiResult.getHits().stream().anyMatch(hit -> "R031".equals(hit.getRuleId())));
+        assertTrue(chongKaiResult.getTags().contains("冲开束缚"));
+
+        ChartSnapshot chongSanChart = new ChartSnapshot();
+        chongSanChart.setShi(1);
+        chongSanChart.setUseGod("官鬼");
+        chongSanChart.setRiChen("午");
+        chongSanChart.setExt(new LinkedHashMap<>());
+        chongSanChart.getExt().put("useGod", "官鬼");
+        chongSanChart.getExt().put("useGodLineIndex", 4);
+        chongSanChart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "寅"),
+                buildLine(4, "官鬼", false, "水", "水", "子"),
+                buildYingLine(6, false, "火", "火", "午")
+        )));
+        RuleEvaluationResult chongSanResult = ruleEngineService.evaluateResult(chongSanChart);
+        assertTrue(chongSanResult.getHits().stream().anyMatch(hit -> "R032".equals(hit.getRuleId())));
+        assertTrue(chongSanResult.getTags().contains("受冲易散"));
+    }
+
+    @Test
     void shouldApplyConfiguredShiYingRelationRules() {
         RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
         RuleEngineService ruleEngineService = new RuleEngineService(List.of(new com.yishou.liuyao.rule.advanced.ShiYingRelationRule()),
@@ -275,9 +429,17 @@ class RuleEngineRealChartRegressionTest {
     }
 
     private LineInfo buildUseGodLine(int index, boolean moving, String wuXing, String changeWuXing, String branch, String changeLiuQin) {
+        return buildLine(index, "妻财", moving, wuXing, changeWuXing, branch, changeLiuQin);
+    }
+
+    private LineInfo buildLine(int index, String liuQin, boolean moving, String wuXing, String changeWuXing, String branch) {
+        return buildLine(index, liuQin, moving, wuXing, changeWuXing, branch, null);
+    }
+
+    private LineInfo buildLine(int index, String liuQin, boolean moving, String wuXing, String changeWuXing, String branch, String changeLiuQin) {
         LineInfo line = new LineInfo();
         line.setIndex(index);
-        line.setLiuQin("妻财");
+        line.setLiuQin(liuQin);
         line.setMoving(moving);
         line.setWuXing(wuXing);
         line.setChangeWuXing(changeWuXing);

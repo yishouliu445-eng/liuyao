@@ -248,6 +248,28 @@ class AnalysisServiceTest {
     }
 
     @Test
+    void shouldSurfaceConstraintDominantSignalInAnalysisConclusion() {
+        AnalysisContextDTO context = new AnalysisContextDTO();
+        context.setQuestion("这次财运能不能尽快回款");
+        context.setQuestionCategory("财运");
+        context.setUseGod("妻财");
+        context.setMainHexagram("山火贲");
+        context.setChangedHexagram("风山渐");
+        context.setKnowledgeSnippets(List.of("[增删卜易] 用神入墓，财气受困，先防迟滞与压制。"));
+
+        StructuredAnalysisResultDTO structuredResult = new StructuredAnalysisResultDTO();
+        structuredResult.setEffectiveResultLevel("BAD");
+        structuredResult.setEffectiveScore(-2);
+        structuredResult.setEffectiveRuleCodes(List.of("R030"));
+        context.setStructuredResult(structuredResult);
+
+        String analysis = new AnalysisService().analyze(context);
+
+        assertTrue(analysis.contains("受制较深"));
+        assertTrue(analysis.contains("入墓"));
+    }
+
+    @Test
     void shouldPickDifferentKnowledgeSnippetsForRiskAndAction() {
         AnalysisContextDTO context = new AnalysisContextDTO();
         context.setQuestion("这次找工作能不能顺利拿到 offer");

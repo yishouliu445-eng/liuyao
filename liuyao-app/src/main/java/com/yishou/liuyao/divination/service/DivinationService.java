@@ -1,6 +1,7 @@
 package com.yishou.liuyao.divination.service;
 
 import com.yishou.liuyao.analysis.service.AnalysisService;
+import com.yishou.liuyao.analysis.service.AnalysisContextFactory;
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.analysis.dto.RuleConflictSummaryDTO;
 import com.yishou.liuyao.analysis.dto.RuleCategorySummaryDTO;
@@ -34,6 +35,7 @@ public class DivinationService {
     private final ChartBuilderService chartBuilderService;
     private final RuleEngineService ruleEngineService;
     private final AnalysisService analysisService;
+    private final AnalysisContextFactory analysisContextFactory;
     private final CaseCenterService caseCenterService;
     private final KnowledgeSearchService knowledgeSearchService;
 
@@ -41,12 +43,14 @@ public class DivinationService {
                              ChartBuilderService chartBuilderService,
                              RuleEngineService ruleEngineService,
                              AnalysisService analysisService,
+                             AnalysisContextFactory analysisContextFactory,
                              CaseCenterService caseCenterService,
                              KnowledgeSearchService knowledgeSearchService) {
         this.divinationMapper = divinationMapper;
         this.chartBuilderService = chartBuilderService;
         this.ruleEngineService = ruleEngineService;
         this.analysisService = analysisService;
+        this.analysisContextFactory = analysisContextFactory;
         this.caseCenterService = caseCenterService;
         this.knowledgeSearchService = knowledgeSearchService;
     }
@@ -89,17 +93,9 @@ public class DivinationService {
                                                     ChartSnapshot chartSnapshot,
                                                     List<RuleHit> ruleHits,
                                                     StructuredAnalysisResultDTO structuredResult) {
-        AnalysisContextDTO context = new AnalysisContextDTO();
-        context.setContextVersion("v1");
-        context.setQuestion(question);
-        context.setQuestionCategory(chartSnapshot.getQuestionCategory());
-        context.setUseGod(chartSnapshot.getUseGod());
-        context.setMainHexagram(chartSnapshot.getMainHexagram());
-        context.setChangedHexagram(chartSnapshot.getChangedHexagram());
+        AnalysisContextDTO context = analysisContextFactory.create(question, chartSnapshot, ruleHits);
         context.setChartSnapshot(toChartSnapshotDto(chartSnapshot));
         context.setRuleHits(toRuleHitDtos(ruleHits));
-        context.setRuleCount(ruleHits == null ? 0 : ruleHits.size());
-        context.setRuleCodes(ruleHits == null ? List.of() : ruleHits.stream().map(RuleHit::getRuleCode).toList());
         context.setStructuredResult(structuredResult);
         context.setKnowledgeSnippets(knowledgeSearchService.suggestKnowledgeSnippets(
                 chartSnapshot.getQuestionCategory(),

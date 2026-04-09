@@ -44,9 +44,17 @@ public class UseGodRule implements Rule {
         evidence.put("scenario", selection.getScenario());
         evidence.put("note", selection.getNote());
         evidence.put("configVersion", selection.getConfigVersion());
+        evidence.put("selectedLineIndex", selection.getSelectedLineIndex());
+        evidence.put("candidateLineIndexes", selection.getCandidateLineIndexes());
+        evidence.put("selectionStrategy", selection.getSelectionStrategy());
+        evidence.put("selectionReason", selection.getSelectionReason());
+        evidence.put("fallbackApplied", Boolean.TRUE.equals(selection.getFallbackApplied()));
+        evidence.put("fallbackStrategy", selection.getFallbackStrategy());
+        evidence.put("scoreDetails", selection.getScoreDetails());
         hit.setEvidence(evidence);
         chart.setUseGod(selection.getUseGod().getDisplayName());
         chart.getExt().put("useGod", selection.getUseGod().getDisplayName());
+        chart.getExt().put("useGodLineIndex", selection.getSelectedLineIndex());
         return hit;
     }
 }

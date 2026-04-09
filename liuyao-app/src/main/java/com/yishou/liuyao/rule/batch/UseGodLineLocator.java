@@ -3,7 +3,9 @@ package com.yishou.liuyao.rule.batch;
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.domain.LineInfo;
 import com.yishou.liuyao.divination.service.WuXingSupport;
+import com.yishou.liuyao.rule.usegod.UseGodType;
 
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,52 @@ public final class UseGodLineLocator {
         return chart.getLines().stream()
                 .filter(line -> useGod.equals(line.getLiuQin()))
                 .toList();
+    }
+
+    public static List<LineInfo> findCandidates(ChartSnapshot chart, UseGodType useGodType) {
+        if (chart == null || chart.getLines() == null || useGodType == null) {
+            return List.of();
+        }
+        return switch (useGodType) {
+            case SHI -> chart.getLines().stream().filter(line -> Boolean.TRUE.equals(line.getIsShi())).toList();
+            case YING -> chart.getLines().stream().filter(line -> Boolean.TRUE.equals(line.getIsYing())).toList();
+            default -> findUseGodLines(chart, useGodType.getDisplayName());
+        };
+    }
+
+    public static SelectionResult locate(ChartSnapshot chart, UseGodType useGodType) {
+        List<LineInfo> candidates = findCandidates(chart, useGodType);
+        if (useGodType == null) {
+            return SelectionResult.empty();
+        }
+        if (useGodType == UseGodType.SHI) {
+            return singleMatch(candidates, "SELF_ONLY", "直接取世爻为用神。");
+        }
+        if (useGodType == UseGodType.YING && candidates.size() == 1) {
+            return singleMatch(candidates, "SINGLE_MATCH", "直接取应爻为用神。");
+        }
+        if (candidates.size() == 1) {
+            return singleMatch(candidates, "SINGLE_MATCH", "仅有一个候选爻，直接采用。");
+        }
+        if (!candidates.isEmpty()) {
+            return scoreSelection(chart, candidates);
+        }
+        LineInfo shiLine = chart == null || chart.getLines() == null
+                ? null
+                : chart.getLines().stream().filter(line -> Boolean.TRUE.equals(line.getIsShi())).findFirst().orElse(null);
+        if (shiLine == null) {
+            return SelectionResult.empty();
+        }
+        return new SelectionResult(
+                shiLine.getIndex(),
+                List.of(shiLine.getIndex()),
+                "FALLBACK",
+                "未找到匹配候选，回退取世爻。",
+                true,
+                "USE_SHI_LINE",
+                List.of(Map.of("lineIndex", shiLine.getIndex(), "totalScore", 0, "reason", "fallback to shi")),
+                Map.of("fallbackTarget", "SHI")
+        );
     }
 
     public static String extractBranch(String source) {
@@ -120,5 +168,92 @@ public final class UseGodLineLocator {
 
     private static String defaultValue(String value) {
         return value == null ? "" : value;
+    }
+
+    private static SelectionResult singleMatch(List<LineInfo> candidates, String strategy, String reason) {
+        if (candidates == null || candidates.isEmpty()) {
+            return SelectionResult.empty();
+        }
+        LineInfo line = candidates.get(0);
+        return new SelectionResult(
+                line.getIndex(),
+                candidates.stream().map(LineInfo::getIndex).toList(),
+                strategy,
+                reason,
+                false,
+                null,
+                List.of(Map.of("lineIndex", line.getIndex(), "totalScore", 0, "reason", "single candidate")),
+                Map.of("candidateCount", candidates.size())
+        );
+    }
+
+    private static SelectionResult scoreSelection(ChartSnapshot chart, List<LineInfo> candidates) {
+        List<Map<String, Object>> scoreDetails = candidates.stream()
+                .map(line -> scoreLine(chart, line))
+                .sorted(Comparator.comparingInt(item -> -((Integer) item.get("totalScore"))))
+                .toList();
+        Integer selectedLineIndex = (Integer) scoreDetails.get(0).get("lineIndex");
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("candidateCount", candidates.size());
+        evidence.put("shiIndex", chart == null ? null : chart.getShi());
+        return new SelectionResult(
+                selectedLineIndex,
+                candidates.stream().map(LineInfo::getIndex).sorted().toList(),
+                "SCORING",
+                "按发动、距离世爻和空亡等因素排序后取最高分候选。",
+                false,
+                null,
+                scoreDetails,
+                evidence
+        );
+    }
+
+    private static Map<String, Object> scoreLine(ChartSnapshot chart, LineInfo line) {
+        int totalScore = 5;
+        if (Boolean.TRUE.equals(line.getIsMoving())) {
+            totalScore += 2;
+        }
+        if (Boolean.TRUE.equals(line.getIsShi())) {
+            totalScore += 2;
+        }
+        if (Boolean.TRUE.equals(line.getIsYing())) {
+            totalScore += 1;
+        }
+        if (chart != null && chart.getShi() != null && line.getIndex() != null) {
+            int distance = Math.abs(line.getIndex() - chart.getShi());
+            if (distance == 0) {
+                totalScore += 2;
+            } else if (distance == 1) {
+                totalScore += 1;
+            }
+        }
+        if (chart != null && chart.getKongWang() != null && line.getBranch() != null) {
+            if (chart.getKongWang().contains(line.getBranch())) {
+                totalScore -= 2;
+            } else {
+                totalScore += 1;
+            }
+        }
+        return Map.of(
+                "lineIndex", line.getIndex(),
+                "totalScore", totalScore,
+                "moving", Boolean.TRUE.equals(line.getIsMoving()),
+                "isShi", Boolean.TRUE.equals(line.getIsShi()),
+                "isYing", Boolean.TRUE.equals(line.getIsYing())
+        );
+    }
+
+    public record SelectionResult(
+            Integer selectedLineIndex,
+            List<Integer> candidateLineIndexes,
+            String selectionStrategy,
+            String selectionReason,
+            Boolean fallbackApplied,
+            String fallbackStrategy,
+            List<Map<String, Object>> scoreDetails,
+            Map<String, Object> evidence) {
+        public static SelectionResult empty() {
+            return new SelectionResult(null, List.of(), null, null, false, null, List.of(), Map.of());
+        }
     }
 }

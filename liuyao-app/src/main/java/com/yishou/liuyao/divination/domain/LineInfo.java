@@ -1,5 +1,8 @@
 package com.yishou.liuyao.divination.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LineInfo {
 
     private Integer index;

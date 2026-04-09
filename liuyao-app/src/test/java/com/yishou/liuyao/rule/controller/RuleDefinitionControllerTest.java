@@ -25,7 +25,7 @@ class RuleDefinitionControllerTest {
         mockMvc.perform(get("/api/rules/definitions"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.version").isNotEmpty())
+                .andExpect(jsonPath("$.data.version").value("v1"))
                 .andExpect(jsonPath("$.data.total").value(org.hamcrest.Matchers.greaterThanOrEqualTo(10)))
                 .andExpect(jsonPath("$.data.rules[*].ruleCode").value(hasItem("R019")))
                 .andExpect(jsonPath("$.data.rules[?(@.ruleCode=='R019')].name").value(hasItem("用神旺且世旺")))

@@ -1,0 +1,162 @@
+{
+  "rules": [
+    {
+      "id": "R006",
+      "ruleCode": "MOVING_LINE_EXISTS",
+      "name": "用神发动",
+      "category": "MOVING_CHANGE",
+      "priority": 10,
+      "enabled": true,
+      "effect": {
+        "score": 0,
+        "tags": [
+          "有变化"
+        ],
+        "conclusionHints": [
+          "盘面存在动爻，局势不静。"
+        ]
+      },
+      "description": "盘面存在动爻，说明事情存在变化。"
+    },
+    {
+      "id": "R017",
+      "ruleCode": "MOVING_LINE_AFFECT_USE_GOD",
+      "name": "用神动而生世",
+      "category": "MOVING_CHANGE",
+      "priority": 33,
+      "enabled": true,
+      "effect": {
+        "conclusionHints": [
+          "动爻与变爻会改变用神后续走势。"
+        ]
+      },
+      "description": "动爻和变爻对用神产生影响。"
+    },
+    {
+      "id": "R018",
+      "name": "用神动而化退",
+      "category": "MOVING_CHANGE",
+      "priority": 34,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_RETREAT",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "后劲不足"
+        ],
+        "conclusionHints": [
+          "用神虽然发动，但后续转衰或转出他亲，后劲不足。"
+        ]
+      },
+      "description": "用神发动后转弱或转出他亲。"
+    },
+    {
+      "id": "R021",
+      "name": "用神发动",
+      "category": "MOVING_CHANGE",
+      "priority": 32,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_MOVING",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "主象已动"
+        ],
+        "conclusionHints": [
+          "主用神已经发动，说明事情的核心对象正在变化中。"
+        ]
+      },
+      "description": "主用神对应爻发动。"
+    },
+    {
+      "id": "R028",
+      "name": "动爻冲世",
+      "category": "MOVING_CHANGE",
+      "priority": 43,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_MOVING_CHONG_SHI",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "动冲世爻"
+        ],
+        "conclusionHints": [
+          "动爻冲世，自己这一方更容易受扰动或承压。"
+        ]
+      },
+      "description": "存在动爻直接冲击世爻。"
+    },
+    {
+      "id": "R029",
+      "name": "动爻冲用神",
+      "category": "MOVING_CHANGE",
+      "priority": 44,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_MOVING_CHONG_USE_GOD",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "动冲用神"
+        ],
+        "conclusionHints": [
+          "动爻冲用神，事情核心对象更容易反复或受扰。"
+        ]
+      },
+      "description": "存在动爻直接冲击主用神。"
+    },
+    {
+      "id": "R033",
+      "name": "动爻生用神",
+      "category": "MOVING_CHANGE",
+      "priority": 45,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_MOVING_SHENG_USE_GOD",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "动来相生"
+        ],
+        "conclusionHints": [
+          "有动爻生助用神，事情有推波助澜的助力。"
+        ]
+      },
+      "description": "存在动爻五行生用神。"
+    },
+    {
+      "id": "R034",
+      "name": "动爻克用神",
+      "category": "MOVING_CHANGE",
+      "priority": 46,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_MOVING_KE_USE_GOD",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "动来相克"
+        ],
+        "conclusionHints": [
+          "有动爻克制用神，事情有节外生枝的阻力。"
+        ]
+      },
+      "description": "存在动爻五行克用神。"
+    }
+  ]
+}

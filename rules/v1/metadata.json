@@ -1,0 +1,6 @@
+{
+  "bundleVersion": "v1",
+  "ruleDefinitionsVersion": "v1",
+  "useGodRulesVersion": "v1",
+  "sourceOfTruth": "rules/v1"
+}

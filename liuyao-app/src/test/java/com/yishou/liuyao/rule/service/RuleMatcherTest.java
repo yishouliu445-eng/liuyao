@@ -159,4 +159,142 @@ class RuleMatcherTest {
         assertTrue(matcher.matches(shengCondition, context));
         assertTrue(matcher.matches(inKongWangCondition, context));
     }
+
+    @Test
+    void shouldMatchExtendedUseGodTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGodMoving(true);
+        context.setUseGodEmpty(false);
+        context.setUseGodLineCount(2);
+        context.setUseGodBestScore(8);
+        context.setUseGodDistanceToShi(1);
+
+        RuleCondition movingCondition = new RuleCondition();
+        movingCondition.setTarget("USE_GOD_MOVING");
+        movingCondition.setOperator("IS_TRUE");
+
+        RuleCondition lineCountCondition = new RuleCondition();
+        lineCountCondition.setTarget("USE_GOD_LINE_COUNT");
+        lineCountCondition.setOperator("GREATER_THAN_OR_EQUALS");
+        lineCountCondition.setValue(2);
+
+        RuleCondition scoreCondition = new RuleCondition();
+        scoreCondition.setTarget("USE_GOD_BEST_SCORE");
+        scoreCondition.setOperator("GREATER_THAN");
+        scoreCondition.setValue(5);
+
+        RuleCondition distanceCondition = new RuleCondition();
+        distanceCondition.setTarget("USE_GOD_DISTANCE_TO_SHI");
+        distanceCondition.setOperator("LESS_THAN_OR_EQUALS");
+        distanceCondition.setValue(1);
+
+        assertTrue(matcher.matches(movingCondition, context));
+        assertTrue(matcher.matches(lineCountCondition, context));
+        assertTrue(matcher.matches(scoreCondition, context));
+        assertTrue(matcher.matches(distanceCondition, context));
+    }
+
+    @Test
+    void shouldMatchContainsOperator() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGod("应爻");
+
+        RuleCondition containsCondition = new RuleCondition();
+        containsCondition.setTarget("USE_GOD");
+        containsCondition.setOperator("CONTAINS");
+        containsCondition.setValue("应");
+
+        assertTrue(matcher.matches(containsCondition, context));
+    }
+
+    @Test
+    void shouldMatchBreakAndShiYingStructureTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGodMonthBreak(true);
+        context.setUseGodDayBreak(true);
+        context.setShiYingExists(true);
+        context.setShiYingDistance(3);
+
+        RuleCondition monthBreakCondition = new RuleCondition();
+        monthBreakCondition.setTarget("USE_GOD_MONTH_BREAK");
+        monthBreakCondition.setOperator("IS_TRUE");
+
+        RuleCondition dayBreakCondition = new RuleCondition();
+        dayBreakCondition.setTarget("USE_GOD_DAY_BREAK");
+        dayBreakCondition.setOperator("IS_TRUE");
+
+        RuleCondition shiYingExistsCondition = new RuleCondition();
+        shiYingExistsCondition.setTarget("SHI_YING_EXISTS");
+        shiYingExistsCondition.setOperator("IS_TRUE");
+
+        RuleCondition shiYingDistanceCondition = new RuleCondition();
+        shiYingDistanceCondition.setTarget("SHI_YING_DISTANCE");
+        shiYingDistanceCondition.setOperator("GREATER_THAN_OR_EQUALS");
+        shiYingDistanceCondition.setValue(3);
+
+        assertTrue(matcher.matches(monthBreakCondition, context));
+        assertTrue(matcher.matches(dayBreakCondition, context));
+        assertTrue(matcher.matches(shiYingExistsCondition, context));
+        assertTrue(matcher.matches(shiYingDistanceCondition, context));
+    }
+
+    @Test
+    void shouldMatchMovingAffectTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setHasMovingShengUseGod(true);
+        context.setHasChangedKeUseGod(true);
+        context.setHasMovingChongUseGod(true);
+        context.setHasMovingChongShi(true);
+
+        RuleCondition movingShengUseGod = new RuleCondition();
+        movingShengUseGod.setTarget("HAS_MOVING_SHENG_USE_GOD");
+        movingShengUseGod.setOperator("IS_TRUE");
+
+        RuleCondition changedKeUseGod = new RuleCondition();
+        changedKeUseGod.setTarget("HAS_CHANGED_KE_USE_GOD");
+        changedKeUseGod.setOperator("IS_TRUE");
+
+        RuleCondition movingChongUseGod = new RuleCondition();
+        movingChongUseGod.setTarget("HAS_MOVING_CHONG_USE_GOD");
+        movingChongUseGod.setOperator("IS_TRUE");
+
+        RuleCondition movingChongShi = new RuleCondition();
+        movingChongShi.setTarget("HAS_MOVING_CHONG_SHI");
+        movingChongShi.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(movingShengUseGod, context));
+        assertTrue(matcher.matches(changedKeUseGod, context));
+        assertTrue(matcher.matches(movingChongUseGod, context));
+        assertTrue(matcher.matches(movingChongShi, context));
+    }
+
+    @Test
+    void shouldMatchUseGodRuMuTarget() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGodRuMu(true);
+
+        RuleCondition ruMuCondition = new RuleCondition();
+        ruMuCondition.setTarget("USE_GOD_RU_MU");
+        ruMuCondition.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(ruMuCondition, context));
+    }
+
+    @Test
+    void shouldMatchUseGodChongDetailTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGodChongKai(true);
+        context.setUseGodChongSan(true);
+
+        RuleCondition chongKaiCondition = new RuleCondition();
+        chongKaiCondition.setTarget("USE_GOD_CHONG_KAI");
+        chongKaiCondition.setOperator("IS_TRUE");
+
+        RuleCondition chongSanCondition = new RuleCondition();
+        chongSanCondition.setTarget("USE_GOD_CHONG_SAN");
+        chongSanCondition.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(chongKaiCondition, context));
+        assertTrue(matcher.matches(chongSanCondition, context));
+    }
 }

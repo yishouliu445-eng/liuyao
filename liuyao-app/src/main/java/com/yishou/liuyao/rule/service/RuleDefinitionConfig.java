@@ -8,6 +8,7 @@ import java.util.List;
 public class RuleDefinitionConfig {
 
     private String version = "unknown";
+    private List<String> files = new ArrayList<>();
     private List<RuleDefinition> rules = new ArrayList<>();
 
     public String getVersion() {
@@ -24,5 +25,13 @@ public class RuleDefinitionConfig {
 
     public void setRules(List<RuleDefinition> rules) {
         this.rules = rules;
+    }
+
+    public List<String> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<String> files) {
+        this.files = files;
     }
 }

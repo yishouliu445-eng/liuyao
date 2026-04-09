@@ -1,0 +1,246 @@
+{
+  "rules": [
+    {
+      "id": "R101",
+      "ruleCode": "SHI_YING_EXISTS",
+      "name": "世应存在",
+      "category": "SHI_YING",
+      "priority": 22,
+      "enabled": true,
+      "effect": {
+        "score": 0,
+        "tags": []
+      },
+      "description": "盘面已识别出世应。"
+    },
+    {
+      "id": "R012",
+      "ruleCode": "SHI_YING_RELATION",
+      "name": "世应关系",
+      "category": "SHI_YING",
+      "priority": 23,
+      "enabled": true,
+      "effect": {
+        "conclusionHints": [
+          "世应关系会显著影响你方与外部互动。"
+        ]
+      },
+      "description": "根据世应生克关系判断互动方向。"
+    },
+    {
+      "id": "R013",
+      "name": "世应相克",
+      "category": "SHI_YING",
+      "priority": 24,
+      "enabled": true,
+      "condition": {
+        "anyOf": [
+          {
+            "target": "SHI_YING_RELATION",
+            "operator": "EQUALS",
+            "value": "世克应"
+          },
+          {
+            "target": "SHI_YING_RELATION",
+            "operator": "EQUALS",
+            "value": "应克世"
+          }
+        ]
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "对立"
+        ],
+        "conclusionHints": [
+          "世应相克，说明双方互动存在明显冲突。"
+        ]
+      },
+      "description": "世应之间存在克制关系。"
+    },
+    {
+      "id": "R014",
+      "name": "应爻生世",
+      "category": "SHI_YING",
+      "priority": 25,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_YING_RELATION",
+        "operator": "EQUALS",
+        "value": "应生世"
+      },
+      "effect": {
+        "score": 2,
+        "tags": [
+          "外部助力"
+        ],
+        "conclusionHints": [
+          "应爻生世，说明外部对自己有帮助。"
+        ]
+      },
+      "description": "应爻五行生世爻。"
+    },
+    {
+      "id": "R015",
+      "name": "应爻克世",
+      "category": "SHI_YING",
+      "priority": 26,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_YING_RELATION",
+        "operator": "EQUALS",
+        "value": "应克世"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "外部压制"
+        ],
+        "conclusionHints": [
+          "应爻克世，说明外部环境或对方对自己形成压制。"
+        ]
+      },
+      "description": "应爻五行克世爻。"
+    },
+    {
+      "id": "R007",
+      "name": "世爻旺",
+      "category": "SHI_STATE",
+      "priority": 34,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_STATE",
+        "operator": "EQUALS",
+        "value": "STRONG"
+      },
+      "effect": {
+        "score": 2,
+        "tags": [
+          "自身有力"
+        ],
+        "conclusionHints": [
+          "世爻旺，说明自己这一方当前更有把握。"
+        ]
+      },
+      "description": "世爻旺，自身较有力。"
+    },
+    {
+      "id": "R008",
+      "name": "世爻弱",
+      "category": "SHI_STATE",
+      "priority": 35,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_STATE",
+        "operator": "EQUALS",
+        "value": "WEAK"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "自身不足"
+        ],
+        "conclusionHints": [
+          "世爻弱，说明自己这一方状态偏弱。"
+        ]
+      },
+      "description": "世爻弱，自身力量不足。"
+    },
+    {
+      "id": "R009",
+      "name": "世爻被克",
+      "category": "SHI_STATE",
+      "priority": 35,
+      "enabled": true,
+      "condition": {
+        "anyOf": [
+          {
+            "target": "SHI_YING_RELATION",
+            "operator": "EQUALS",
+            "value": "应克世"
+          },
+          {
+            "target": "USE_GOD_TO_SHI_RELATION",
+            "operator": "EQUALS",
+            "value": "克"
+          }
+        ]
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "压力"
+        ],
+        "conclusionHints": [
+          "世爻被克，说明自己这一方正承受压力。"
+        ]
+      },
+      "description": "世爻受到外部或用神所克。"
+    },
+    {
+      "id": "R010",
+      "name": "世爻发动",
+      "category": "SHI_STATE",
+      "priority": 36,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_MOVING",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "主动变化"
+        ],
+        "conclusionHints": [
+          "世爻发动，说明自己这一方更主动，也意味着状态正在变化。"
+        ]
+      },
+      "description": "世爻发动，主自身主动变化。"
+    },
+    {
+      "id": "R011",
+      "name": "世爻空亡",
+      "category": "SHI_STATE",
+      "priority": 37,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_EMPTY",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "心虚",
+          "落空"
+        ],
+        "conclusionHints": [
+          "世爻空亡，说明自己这一方底气不足，事情容易落空或心里没底。"
+        ]
+      },
+      "description": "世爻落空亡，自身一方状态偏虚。"
+    },
+    {
+      "id": "R027",
+      "name": "世应相距较远",
+      "category": "SHI_YING",
+      "priority": 42,
+      "enabled": true,
+      "condition": {
+        "target": "SHI_YING_DISTANCE",
+        "operator": "GREATER_THAN_OR_EQUALS",
+        "value": 3
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "彼此有距"
+        ],
+        "conclusionHints": [
+          "世应相距较远，互动和反馈链路往往更慢。"
+        ]
+      },
+      "description": "世应距离较远，彼此联系不够直接。"
+    }
+  ]
+}

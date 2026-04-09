@@ -15,6 +15,10 @@ class Settings:
     embedding_timeout_seconds: int = 30
     embedding_batch_size: int = 16
     vector_store_dim: int = 1024
+    vector_store_dim: int = 1024
+    llm_api_key: str | None = None
+    llm_model: str = "gpt-4o"
+    llm_base_url: str | None = None
 
 
 def load_settings() -> Settings:
@@ -44,6 +48,9 @@ def load_settings() -> Settings:
         embedding_timeout_seconds=int(os.getenv("LIUYAO_EMBEDDING_TIMEOUT_SECONDS", "30")),
         embedding_batch_size=int(os.getenv("LIUYAO_EMBEDDING_BATCH_SIZE", "16")),
         vector_store_dim=int(os.getenv("LIUYAO_VECTOR_STORE_DIM", "1024")),
+        llm_api_key=_read_optional_env("LIUYAO_LLM_API_KEY") or _read_optional_env("OPENAI_API_KEY"),
+        llm_model=os.getenv("LIUYAO_LLM_MODEL", "gpt-4o").strip(),
+        llm_base_url=_read_optional_env("LIUYAO_LLM_BASE_URL"),
     )
 
 

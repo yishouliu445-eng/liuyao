@@ -127,6 +127,231 @@ class CaseCenterControllerTest {
     }
 
     @Test
+    void shouldReplayCaseThroughHttpEndpoint() throws Exception {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次合作推进会不会反复");
+        request.setQuestionCategory("合作");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(2026, 4, 15, 10, 0));
+        request.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        request.setMovingLines(List.of(1, 5));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        String listResponse = mockMvc.perform(get("/api/cases/search")
+                        .param("questionCategory", "合作")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long caseId = objectMapper.readTree(listResponse).path("data").path("items").get(0).path("caseId").asLong();
+
+        mockMvc.perform(get("/api/cases/{caseId}/replay", caseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.caseId").value(caseId))
+                .andExpect(jsonPath("$.data.baselineRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.replayRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.baselineEffectiveRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.replayEffectiveRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.baselineSuppressedRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.replaySuppressedRuleCodes").isArray())
+                .andExpect(jsonPath("$.data.baselineTags").isArray())
+                .andExpect(jsonPath("$.data.replayTags").isArray())
+                .andExpect(jsonPath("$.data.baselineEffectiveScore").isNumber())
+                .andExpect(jsonPath("$.data.replayEffectiveScore").isNumber())
+                .andExpect(jsonPath("$.data.effectiveScoreDelta").isNumber())
+                .andExpect(jsonPath("$.data.baselineRuleVersion").isNotEmpty())
+                .andExpect(jsonPath("$.data.replayRuleVersion").isNotEmpty())
+                .andExpect(jsonPath("$.data.replayUseGodConfigVersion").isNotEmpty())
+                .andExpect(jsonPath("$.data.ruleBundleVersion").value("v1"))
+                .andExpect(jsonPath("$.data.ruleDefinitionsVersion").value("v1"))
+                .andExpect(jsonPath("$.data.useGodRulesVersion").value("v1"))
+                .andExpect(jsonPath("$.data.resultLevelChanged").isBoolean())
+                .andExpect(jsonPath("$.data.baselineAnalysisContext").exists())
+                .andExpect(jsonPath("$.data.baselineStructuredResult").exists())
+                .andExpect(jsonPath("$.data.baselineRuleHits").isArray())
+                .andExpect(jsonPath("$.data.baselineSummary").isNotEmpty())
+                .andExpect(jsonPath("$.data.replaySummary").isNotEmpty())
+                .andExpect(jsonPath("$.data.summaryChanged").isBoolean())
+                .andExpect(jsonPath("$.data.analysisChanged").isBoolean())
+                .andExpect(jsonPath("$.data.recommendPersistReplay").isBoolean())
+                .andExpect(jsonPath("$.data.persistenceAssessment").isNotEmpty())
+                .andExpect(jsonPath("$.data.replayRuleHits").isArray())
+                .andExpect(jsonPath("$.data.replayAnalysis").value(org.hamcrest.Matchers.containsString("合作")))
+                .andExpect(jsonPath("$.data.replayAnalysisContext.useGod").value("应爻"));
+    }
+
+    @Test
+    void shouldExposeReplayPersistenceAssessmentEndpoint() throws Exception {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次合作复盘值不值得留历史");
+        request.setQuestionCategory("合作");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(2026, 4, 17, 10, 0));
+        request.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        request.setMovingLines(List.of(1, 5));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/cases/replay-assessments")
+                        .param("questionCategory", "合作")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.total").isNumber())
+                .andExpect(jsonPath("$.data.items").isArray())
+                .andExpect(jsonPath("$.data.items[0].caseId").exists())
+                .andExpect(jsonPath("$.data.items[0].questionCategory").value("合作"))
+                .andExpect(jsonPath("$.data.items[0].recommendPersistReplay").isBoolean())
+                .andExpect(jsonPath("$.data.items[0].persistenceAssessment").isNotEmpty())
+                .andExpect(jsonPath("$.data.items[0].ruleBundleVersion").value("v1"))
+                .andExpect(jsonPath("$.data.items[0].replayRuleVersion").isNotEmpty());
+    }
+
+    @Test
+    void shouldPersistAndListReplayRunsThroughHttpEndpoints() throws Exception {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次合作 replay run 需要保留吗");
+        request.setQuestionCategory("合作");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(2026, 4, 19, 10, 0));
+        request.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        request.setMovingLines(List.of(1, 5));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+
+        String listResponse = mockMvc.perform(get("/api/cases/search")
+                        .param("questionCategory", "合作")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long caseId = objectMapper.readTree(listResponse).path("data").path("items").get(0).path("caseId").asLong();
+
+        mockMvc.perform(post("/api/cases/{caseId}/replay-runs", caseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.caseId").value(caseId))
+                .andExpect(jsonPath("$.data.replayRunId").exists())
+                .andExpect(jsonPath("$.data.ruleBundleVersion").value("v1"))
+                .andExpect(jsonPath("$.data.payloadJson").isNotEmpty());
+
+        mockMvc.perform(get("/api/cases/{caseId}/replay-runs", caseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].caseId").value(caseId))
+                .andExpect(jsonPath("$.data[0].replayRuleVersion").isNotEmpty());
+    }
+
+    @Test
+    void shouldSearchReplayRunsThroughHttpEndpoint() throws Exception {
+        DivinationAnalyzeRequest coopRequest = new DivinationAnalyzeRequest();
+        coopRequest.setQuestionText("这次合作 replay run 需要全局筛选吗");
+        coopRequest.setQuestionCategory("合作");
+        coopRequest.setDivinationMethod("手工起卦");
+        coopRequest.setDivinationTime(LocalDateTime.of(2026, 4, 22, 10, 0));
+        coopRequest.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        coopRequest.setMovingLines(List.of(1, 5));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(coopRequest)))
+                .andExpect(status().isOk());
+
+        String listResponse = mockMvc.perform(get("/api/cases/search")
+                        .param("questionCategory", "合作")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long caseId = objectMapper.readTree(listResponse).path("data").path("items").get(0).path("caseId").asLong();
+
+        mockMvc.perform(post("/api/cases/{caseId}/replay-runs", caseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(get("/api/cases/replay-runs/search")
+                        .param("questionCategory", "合作")
+                        .param("recommendPersistReplay", "false")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.page").value(1))
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.total").isNumber())
+                .andExpect(jsonPath("$.data.items").isArray())
+                .andExpect(jsonPath("$.data.items[0].caseId").exists())
+                .andExpect(jsonPath("$.data.items[0].questionCategory").value("合作"))
+                .andExpect(jsonPath("$.data.items[0].recommendPersistReplay").value(false))
+                .andExpect(jsonPath("$.data.items[0].replayRunId").exists());
+    }
+
+    @Test
+    void shouldExposeReplayRunStatsThroughHttpEndpoint() throws Exception {
+        DivinationAnalyzeRequest coopRequest = new DivinationAnalyzeRequest();
+        coopRequest.setQuestionText("这次合作 replay run 统计接口可见吗");
+        coopRequest.setQuestionCategory("合作");
+        coopRequest.setDivinationMethod("手工起卦");
+        coopRequest.setDivinationTime(LocalDateTime.of(2026, 4, 25, 10, 0));
+        coopRequest.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        coopRequest.setMovingLines(List.of(1, 5));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(coopRequest)))
+                .andExpect(status().isOk());
+
+        String listResponse = mockMvc.perform(get("/api/cases/search")
+                        .param("questionCategory", "合作")
+                        .param("page", "1")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Long caseId = objectMapper.readTree(listResponse).path("data").path("items").get(0).path("caseId").asLong();
+
+        mockMvc.perform(post("/api/cases/{caseId}/replay-runs", caseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+
+        mockMvc.perform(get("/api/cases/replay-runs/stats"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalRuns").isNumber())
+                .andExpect(jsonPath("$.data.recommendPersistRuns").isNumber())
+                .andExpect(jsonPath("$.data.observeOnlyRuns").isNumber())
+                .andExpect(jsonPath("$.data.categoryStats").isArray())
+                .andExpect(jsonPath("$.data.categoryStats[0].questionCategory").isNotEmpty())
+                .andExpect(jsonPath("$.data.categoryStats[0].runCount").isNumber());
+    }
+
+    @Test
     void shouldClampInvalidPagingParametersOnSearch() throws Exception {
         mockMvc.perform(get("/api/cases/search")
                         .param("page", "0")

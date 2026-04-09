@@ -1,0 +1,110 @@
+{
+  "rules": [
+    {
+      "id": "R016",
+      "name": "多动爻",
+      "category": "COMPOSITE",
+      "priority": 60,
+      "enabled": true,
+      "condition": {
+        "target": "MOVING_COUNT",
+        "operator": "GREATER_THAN",
+        "value": 3
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "局势混乱"
+        ],
+        "conclusionHints": [
+          "动爻过多，局势较乱，结果反复。"
+        ]
+      },
+      "description": "动爻数量过多时，局势不稳。"
+    },
+    {
+      "id": "R019",
+      "name": "用神旺且世旺",
+      "category": "COMPOSITE",
+      "priority": 61,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "YONGSHEN_STATE",
+            "operator": "EQUALS",
+            "value": "STRONG"
+          },
+          {
+            "target": "SHI_STATE",
+            "operator": "EQUALS",
+            "value": "STRONG"
+          }
+        ]
+      },
+      "effect": {
+        "score": 3,
+        "tags": [
+          "双强"
+        ],
+        "conclusionHints": [
+          "用神与世爻都旺，整体偏吉。"
+        ]
+      },
+      "description": "用神和世爻都旺。"
+    },
+    {
+      "id": "R020",
+      "name": "用神弱且世弱",
+      "category": "COMPOSITE",
+      "priority": 62,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "YONGSHEN_STATE",
+            "operator": "EQUALS",
+            "value": "WEAK"
+          },
+          {
+            "target": "SHI_STATE",
+            "operator": "EQUALS",
+            "value": "WEAK"
+          }
+        ]
+      },
+      "effect": {
+        "score": -3,
+        "tags": [
+          "双弱"
+        ],
+        "conclusionHints": [
+          "用神和世爻都弱，整体偏凶。"
+        ]
+      },
+      "description": "用神和世爻都弱。"
+    },
+    {
+      "id": "R022",
+      "name": "主用神贴近世爻",
+      "category": "COMPOSITE",
+      "priority": 63,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_DISTANCE_TO_SHI",
+        "operator": "LESS_THAN_OR_EQUALS",
+        "value": 1
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "贴近日身"
+        ],
+        "conclusionHints": [
+          "主用神贴近世爻，说明事情与自己关联更直接。"
+        ]
+      },
+      "description": "主用神与世爻距离较近。"
+    }
+  ]
+}

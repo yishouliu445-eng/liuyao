@@ -35,7 +35,10 @@ public class RuleMatcher {
             case "IN" -> inValues(actual, expected);
             case "NOT_IN" -> !inValues(actual, expected);
             case "GREATER_THAN" -> toInteger(actual) != null && toInteger(expected) != null && toInteger(actual) > toInteger(expected);
+            case "GREATER_THAN_OR_EQUALS" -> toInteger(actual) != null && toInteger(expected) != null && toInteger(actual) >= toInteger(expected);
             case "LESS_THAN" -> toInteger(actual) != null && toInteger(expected) != null && toInteger(actual) < toInteger(expected);
+            case "LESS_THAN_OR_EQUALS" -> toInteger(actual) != null && toInteger(expected) != null && toInteger(actual) <= toInteger(expected);
+            case "CONTAINS" -> contains(actual, expected);
             case "HAS_RELATION" -> hasRelation(actual, expected);
             case "IS_EMPTY" -> isEmpty(actual);
             case "NOT_EMPTY" -> !isEmpty(actual);
@@ -54,6 +57,22 @@ public class RuleMatcher {
             case "USE_GOD" -> context.getUseGod();
             case "USE_GOD_FOUND" -> context.getUseGodFound();
             case "USE_GOD_LINE_INDEX" -> context.getUseGodLineIndex();
+            case "USE_GOD_MOVING" -> context.getUseGodMoving();
+            case "USE_GOD_LINE_COUNT" -> context.getUseGodLineCount();
+            case "USE_GOD_EMPTY" -> context.getUseGodEmpty();
+            case "USE_GOD_MONTH_BREAK" -> context.getUseGodMonthBreak();
+            case "USE_GOD_DAY_BREAK" -> context.getUseGodDayBreak();
+            case "USE_GOD_RU_MU" -> context.getUseGodRuMu();
+            case "USE_GOD_CHONG_KAI" -> context.getUseGodChongKai();
+            case "USE_GOD_CHONG_SAN" -> context.getUseGodChongSan();
+            case "HAS_MOVING_SHENG_USE_GOD" -> context.getHasMovingShengUseGod();
+            case "HAS_MOVING_KE_USE_GOD" -> context.getHasMovingKeUseGod();
+            case "HAS_CHANGED_SHENG_USE_GOD" -> context.getHasChangedShengUseGod();
+            case "HAS_CHANGED_KE_USE_GOD" -> context.getHasChangedKeUseGod();
+            case "HAS_MOVING_CHONG_USE_GOD" -> context.getHasMovingChongUseGod();
+            case "HAS_MOVING_CHONG_SHI" -> context.getHasMovingChongShi();
+            case "USE_GOD_BEST_SCORE" -> context.getUseGodBestScore();
+            case "USE_GOD_DISTANCE_TO_SHI" -> context.getUseGodDistanceToShi();
             case "YONGSHEN_STATE" -> context.getYongshenState();
             case "USE_GOD_TO_SHI_RELATION" -> context.getUseGodToShiRelation();
             case "USE_GOD_HE_SHI" -> context.getUseGodHeShi();
@@ -61,11 +80,28 @@ public class RuleMatcher {
             case "SHI_STATE" -> context.getShiState();
             case "SHI_MOVING" -> context.getShiMoving();
             case "SHI_EMPTY" -> context.getShiEmpty();
+            case "SHI_YING_EXISTS" -> context.getShiYingExists();
+            case "SHI_YING_DISTANCE" -> context.getShiYingDistance();
             case "SHI_YING_RELATION" -> context.getShiYingRelation();
             case "MOVING_COUNT" -> context.getMovingCount();
             case "KONG_WANG" -> context.getKongWangBranches();
             default -> null;
         };
+    }
+
+    private boolean contains(Object actual, Object expected) {
+        if (actual == null || expected == null) {
+            return false;
+        }
+        if (actual instanceof Iterable<?> values) {
+            for (Object item : values) {
+                if (item != null && String.valueOf(item).contains(String.valueOf(expected))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return String.valueOf(actual).contains(String.valueOf(expected));
     }
 
     private boolean inValues(Object actual, Object expected) {
