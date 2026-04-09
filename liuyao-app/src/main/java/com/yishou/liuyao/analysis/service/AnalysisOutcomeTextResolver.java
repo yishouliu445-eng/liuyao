@@ -1,5 +1,8 @@
 package com.yishou.liuyao.analysis.service;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class AnalysisOutcomeTextResolver {
 
     public String renderRiskText(String questionCategory, String level) {

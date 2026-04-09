@@ -12,19 +12,14 @@ public class AnalysisService {
 
     private final AnalysisContextFactory contextFactory;
     private final AnalysisSectionComposer sectionComposer;
+    private final LlmExpressionClient llmExpressionClient;
 
-    public AnalysisService() {
-        this(new AnalysisContextFactory(),
-                new AnalysisSectionComposer(
-                        new AnalysisKnowledgeEvidenceService(),
-                        new AnalysisCategoryTextResolver(),
-                        new AnalysisOutcomeTextResolver()
-                ));
-    }
-
-    AnalysisService(AnalysisContextFactory contextFactory, AnalysisSectionComposer sectionComposer) {
+    public AnalysisService(AnalysisContextFactory contextFactory, 
+                           AnalysisSectionComposer sectionComposer,
+                           LlmExpressionClient llmExpressionClient) {
         this.contextFactory = contextFactory;
         this.sectionComposer = sectionComposer;
+        this.llmExpressionClient = llmExpressionClient;
     }
 
     public String analyze(String question, ChartSnapshot chartSnapshot, List<RuleHit> ruleHits) {
@@ -33,7 +28,17 @@ public class AnalysisService {
     }
 
     public String analyze(AnalysisContextDTO context) {
-        return sectionComposer.compose(context);
+        String mechanicalText = sectionComposer.compose(context);
+        String question = context == null ? null : context.getQuestion();
+        
+        if (llmExpressionClient != null) {
+            String refinedText = llmExpressionClient.refine(mechanicalText, question);
+            if (refinedText != null && !refinedText.isBlank()) {
+                return refinedText;
+            }
+        }
+        
+        return mechanicalText;
     }
 
     private AnalysisContextDTO buildContext(String question, ChartSnapshot chartSnapshot, List<RuleHit> ruleHits) {

@@ -5,7 +5,9 @@ import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import java.util.List;
 
 import static java.lang.Integer.MIN_VALUE;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AnalysisKnowledgeEvidenceService {
 
     public String appendKnowledgeEvidence(String baseText, AnalysisContextDTO context, String purpose) {

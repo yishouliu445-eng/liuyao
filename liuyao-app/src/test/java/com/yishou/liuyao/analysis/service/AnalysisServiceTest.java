@@ -11,6 +11,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AnalysisServiceTest {
 
+    private AnalysisService createService() {
+        return new AnalysisService(
+                new AnalysisContextFactory(),
+                new AnalysisSectionComposer(
+                        new AnalysisKnowledgeEvidenceService(),
+                        new AnalysisCategoryTextResolver(),
+                        new AnalysisOutcomeTextResolver()
+                ),
+                null
+        );
+    }
+
     @Test
     void shouldGenerateReadableStructuredAnalysisText() {
         AnalysisContextDTO context = new AnalysisContextDTO();
@@ -40,7 +52,7 @@ class AnalysisServiceTest {
         structuredResult.setCategorySummaries(List.of(categorySummaryDTO));
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("问收入"));
         assertTrue(analysis.contains("卦象概览"));
@@ -71,7 +83,7 @@ class AnalysisServiceTest {
         structuredResult.setEffectiveScore(2);
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("财运层面"));
         assertTrue(analysis.contains("投资回报"));
@@ -100,8 +112,8 @@ class AnalysisServiceTest {
         lawsuitResult.setEffectiveScore(-2);
         lawsuit.setStructuredResult(lawsuitResult);
 
-        String realEstateAnalysis = new AnalysisService().analyze(realEstate);
-        String lawsuitAnalysis = new AnalysisService().analyze(lawsuit);
+        String realEstateAnalysis = createService().analyze(realEstate);
+        String lawsuitAnalysis = createService().analyze(lawsuit);
 
         assertTrue(realEstateAnalysis.contains("重点看手续、文书、住处安排与成交推进"));
         assertTrue(realEstateAnalysis.contains("时间安排和文书细节"));
@@ -123,11 +135,11 @@ class AnalysisServiceTest {
         AnalysisContextDTO health = buildCategoryContext("健康", "官鬼", structuredResult);
         AnalysisContextDTO travel = buildCategoryContext("出行", "父母", structuredResult);
 
-        String jobAnalysis = new AnalysisService().analyze(job);
-        String emotionAnalysis = new AnalysisService().analyze(emotion);
-        String cooperationAnalysis = new AnalysisService().analyze(cooperation);
-        String healthAnalysis = new AnalysisService().analyze(health);
-        String travelAnalysis = new AnalysisService().analyze(travel);
+        String jobAnalysis = createService().analyze(job);
+        String emotionAnalysis = createService().analyze(emotion);
+        String cooperationAnalysis = createService().analyze(cooperation);
+        String healthAnalysis = createService().analyze(health);
+        String travelAnalysis = createService().analyze(travel);
 
         assertTrue(jobAnalysis.contains("录用链条是否继续往前推"));
         assertTrue(jobAnalysis.contains("岗位事项已经开始推动"));
@@ -171,8 +183,8 @@ class AnalysisServiceTest {
         relationshipResult.setEffectiveRuleCodes(List.of("SHI_YING_RELATION", "R014"));
         relationship.setStructuredResult(relationshipResult);
 
-        String examAnalysis = new AnalysisService().analyze(exam);
-        String relationshipAnalysis = new AnalysisService().analyze(relationship);
+        String examAnalysis = createService().analyze(exam);
+        String relationshipAnalysis = createService().analyze(relationship);
 
         assertTrue(examAnalysis.contains("考试层面"));
         assertTrue(examAnalysis.contains("临场"));
@@ -192,12 +204,12 @@ class AnalysisServiceTest {
         AnalysisContextDTO promotion = buildSimpleContext("升职", "官鬼", "GOOD", 2);
         AnalysisContextDTO transfer = buildSimpleContext("调岗", "官鬼", "BAD", -1);
 
-        String growthAnalysis = new AnalysisService().analyze(growth);
-        String pressureAnalysis = new AnalysisService().analyze(pressure);
-        String marriageAnalysis = new AnalysisService().analyze(marriage);
-        String reunionAnalysis = new AnalysisService().analyze(reunion);
-        String promotionAnalysis = new AnalysisService().analyze(promotion);
-        String transferAnalysis = new AnalysisService().analyze(transfer);
+        String growthAnalysis = createService().analyze(growth);
+        String pressureAnalysis = createService().analyze(pressure);
+        String marriageAnalysis = createService().analyze(marriage);
+        String reunionAnalysis = createService().analyze(reunion);
+        String promotionAnalysis = createService().analyze(promotion);
+        String transferAnalysis = createService().analyze(transfer);
 
         assertTrue(growthAnalysis.contains("成长层面"));
         assertTrue(growthAnalysis.contains("投入"));
@@ -239,7 +251,7 @@ class AnalysisServiceTest {
         structuredResult.setEffectiveScore(1);
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("下一步建议"));
         assertTrue(analysis.contains("当前暂未检索到直接匹配资料"));
@@ -263,7 +275,7 @@ class AnalysisServiceTest {
         structuredResult.setEffectiveRuleCodes(List.of("R030"));
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("受制较深"));
         assertTrue(analysis.contains("入墓"));
@@ -287,7 +299,7 @@ class AnalysisServiceTest {
         structuredResult.setEffectiveScore(-2);
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("风险提示："));
         assertTrue(analysis.contains("下一步建议："));
@@ -313,7 +325,7 @@ class AnalysisServiceTest {
         structuredResult.setEffectiveScore(2);
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("下一步建议："));
         assertTrue(analysis.contains("黄金策中的“用神旺相则财易得"));
@@ -339,7 +351,7 @@ class AnalysisServiceTest {
         structuredResult.setSuppressedRuleCodes(List.of("USE_GOD_EMPTY"));
         context.setStructuredResult(structuredResult);
 
-        String analysis = new AnalysisService().analyze(context);
+        String analysis = createService().analyze(context);
 
         assertTrue(analysis.contains("下一步建议："));
         assertTrue(analysis.contains("黄金策中的“用神旺相则财易得"));

@@ -21,3 +21,9 @@ server:
 liuyao:
   rules:
     version: ${LIUYAO_RULES_VERSION:v1}
+  llm:
+    enabled: ${LIUYAO_LLM_ENABLED:false}
+    base-url: ${LIUYAO_LLM_BASE_URL:https://api.openai.com/v1}
+    api-key: ${LIUYAO_LLM_API_KEY:}
+    model: ${LIUYAO_LLM_MODEL:gpt-4o}
+    timeout-ms: 8000

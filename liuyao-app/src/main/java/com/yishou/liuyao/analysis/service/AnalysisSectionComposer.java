@@ -1,9 +1,11 @@
 package com.yishou.liuyao.analysis.service;
 
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class AnalysisSectionComposer {
 
     private final AnalysisKnowledgeEvidenceService knowledgeEvidenceService;

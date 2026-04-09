@@ -14,3 +14,5 @@ spring:
 liuyao:
   rules:
     version: v1
+  llm:
+    enabled: false
