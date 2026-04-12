@@ -48,8 +48,8 @@ public class LlmExpressionClient {
         this.llmProperties = llmProperties;
         this.objectMapper = objectMapper;
         this.restTemplate = restTemplateBuilder
-                .connectTimeout(Duration.ofMillis(llmProperties.getTimeoutMs()))
-                .readTimeout(Duration.ofMillis(llmProperties.getTimeoutMs()))
+                .setConnectTimeout(Duration.ofMillis(llmProperties.getTimeoutMs()))
+                .setReadTimeout(Duration.ofMillis(llmProperties.getTimeoutMs()))
                 .build();
     }
 

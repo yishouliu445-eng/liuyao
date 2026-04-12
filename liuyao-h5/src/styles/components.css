@@ -1,0 +1,700 @@
+/* ==================== Header ==================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 6, 11, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gold-border);
+}
+
+.header-inner {
+  width: min(720px, calc(100% - 32px));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+
+.header-nav {
+  display: flex;
+  gap: 24px;
+}
+
+.nav-link {
+  font-size: 14px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--gold);
+}
+
+/* ==================== Page States ==================== */
+.page-input,
+.page-loading,
+.page-result {
+  padding-top: 24px;
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ==================== Question Form ==================== */
+.question-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(201, 169, 98, 0.15);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 15px;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ==================== Category Tags ==================== */
+.category-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-tag {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid rgba(201, 169, 98, 0.1);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.category-tag:hover {
+  border-color: var(--gold-border);
+  color: var(--text-primary);
+}
+
+.category-tag.active {
+  background: var(--gold-bg);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ==================== Line Input ==================== */
+.line-input-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.line-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid rgba(201, 169, 98, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.line-cell:hover {
+  border-color: var(--gold-border);
+}
+
+.line-cell.active {
+  background: var(--gold-bg);
+  border-color: var(--gold);
+}
+
+.line-cell-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ==================== Submit Button ==================== */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold) 100%);
+  color: var(--bg-deep);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.submit-btn:hover {
+  opacity: 0.92;
+}
+
+.submit-btn:active {
+  transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ==================== Loading ==================== */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 16px;
+  gap: 24px;
+}
+
+.ink-circle {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.ink-circle::before,
+.ink-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 169, 98, 0.3) 0%, transparent 70%);
+  animation: ink-spread 2s ease-out infinite;
+}
+
+.ink-circle::after {
+  animation-delay: 0.7s;
+}
+
+.loading-text {
+  color: var(--text-muted);
+  font-size: 14px;
+  animation: ink-pulse 2s ease-in-out infinite;
+}
+
+/* ==================== Hexagram Chart ==================== */
+.chart-section {
+  margin-bottom: 24px;
+}
+
+.chart-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.chart-hexagram-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.chart-change-arrow {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin: 0 12px;
+}
+
+.chart-meta-row {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chart-meta-tag {
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  border: 1px solid rgba(201, 169, 98, 0.1);
+}
+
+/* ==================== Hexagram Line ==================== */
+.hexagram-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid rgba(201, 169, 98, 0.1);
+}
+
+.hexagram-line-row {
+  display: grid;
+  grid-template-columns: 36px 36px 44px 1fr 44px 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 0;
+  position: relative;
+}
+
+.hexagram-line-row.use-god {
+  background: var(--gold-bg);
+  border-radius: var(--radius-sm);
+  padding-left: 6px;
+}
+
+.hexagram-line-row.use-god::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+.line-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.line-label.liu-shen {
+  color: var(--text-secondary);
+}
+
+.line-label.shi-ying {
+  font-size: 10px;
+  color: var(--gold);
+}
+
+/* Yao drawing */
+.yao-drawing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  position: relative;
+}
+
+.yao-yang {
+  width: 70%;
+  height: 3px;
+  background: var(--yao-line);
+  border-radius: 1.5px;
+}
+
+.yao-yin {
+  width: 70%;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.yao-yin-segment {
+  width: calc(35% - 6px);
+  height: 3px;
+  background: var(--yao-line);
+  border-radius: 1.5px;
+}
+
+.yao-moving-marker {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Change branch */
+.line-change {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ==================== Analysis Section ==================== */
+.analysis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.analysis-text {
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(201, 169, 98, 0.1);
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ==================== Verdict Box ==================== */
+.verdict-box {
+  padding: 20px;
+  border-radius: var(--radius-md);
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-border);
+  box-shadow: var(--shadow-gold);
+}
+
+.verdict-score {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.verdict-level {
+  font-size: 14px;
+  color: var(--gold-light);
+  margin-top: 4px;
+}
+
+.verdict-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.verdict-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(201, 169, 98, 0.12);
+  color: var(--gold);
+}
+
+/* ==================== Rule Card ==================== */
+.rule-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rule-card {
+  padding: 14px;
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(201, 169, 98, 0.08);
+}
+
+.rule-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.rule-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rule-card-delta {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rule-card-delta.positive { color: var(--success); }
+.rule-card-delta.negative { color: var(--danger); }
+
+.rule-card-reason {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.rule-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.rule-card-tag {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
+
+/* ==================== Category Breakdown ==================== */
+.category-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-bar-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  width: 76px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: 8px;
+}
+
+.category-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.category-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.6s ease-out;
+}
+
+.category-bar-value {
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 32px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ==================== Conflict Note ==================== */
+.conflict-note {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(201, 169, 98, 0.06);
+  border-left: 3px solid var(--gold-dim);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ==================== Feedback Strip ==================== */
+.feedback-strip {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.feedback-btn {
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid rgba(201, 169, 98, 0.1);
+  transition: all 0.2s;
+}
+
+.feedback-btn:hover {
+  border-color: var(--gold-border);
+  color: var(--text-primary);
+}
+
+.feedback-btn.selected {
+  background: var(--gold-bg);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* ==================== Reset Button ==================== */
+.reset-btn {
+  display: block;
+  margin: 24px auto 0;
+  padding: 10px 32px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--text-muted);
+  border: 1px solid rgba(201, 169, 98, 0.15);
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+/* ==================== Cases Page ==================== */
+.cases-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cases-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.cases-filter {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border: 1px solid rgba(201, 169, 98, 0.1);
+  font-size: 13px;
+}
+
+.case-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.case-card {
+  display: block;
+  padding: 16px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(201, 169, 98, 0.08);
+  transition: border-color 0.2s;
+}
+
+.case-card:hover {
+  border-color: var(--gold-border);
+}
+
+.case-card-question {
+  font-size: 15px;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.case-card-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.case-card-hexagram {
+  font-size: 13px;
+  color: var(--gold-dim);
+  margin-top: 6px;
+}
+
+/* ==================== Case Detail ==================== */
+.case-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.case-detail-header {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(201, 169, 98, 0.1);
+}
+
+.case-detail-question {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.case-detail-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ==================== Section Title ==================== */
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+/* ==================== Error ==================== */
+.error-text {
+  color: var(--danger);
+  text-align: center;
+  padding: 24px;
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hexagram-line-row {
+    grid-template-columns: 28px 28px 36px 1fr 36px 28px;
+    gap: 4px;
+  }
+
+  .header-inner {
+    height: 48px;
+  }
+
+  .chart-hexagram-name {
+    font-size: 22px;
+  }
+}

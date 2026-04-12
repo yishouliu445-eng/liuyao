@@ -1,0 +1,17 @@
+.page-shell {
+  width: min(720px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 0 0 48px;
+}
+
+@media (min-width: 768px) {
+  .page-shell {
+    width: min(720px, calc(100% - 48px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-shell {
+    width: 720px;
+  }
+}

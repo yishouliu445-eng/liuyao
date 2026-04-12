@@ -4,7 +4,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/liuyao}
     username: ${DB_USERNAME:dify}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:password123}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -22,8 +22,8 @@ liuyao:
   rules:
     version: ${LIUYAO_RULES_VERSION:v1}
   llm:
-    enabled: ${LIUYAO_LLM_ENABLED:false}
+    enabled: ${LIUYAO_LLM_ENABLED:true}
     base-url: ${LIUYAO_LLM_BASE_URL:https://api.openai.com/v1}
-    api-key: ${LIUYAO_LLM_API_KEY:}
-    model: ${LIUYAO_LLM_MODEL:gpt-4o}
+    api-key: ${LIUYAO_LLM_API_KEY:${DASHSCOPE_API_KEY:${OPENAI_API_KEY:}}}
+    model: ${LIUYAO_LLM_MODEL:qwen-plus}
     timeout-ms: 8000
