@@ -1,4 +1,5 @@
 import type { RuleConflictSummaryDTO } from '../../types/rule';
+import { RULE_CATEGORY_MAP } from '../../constants/categories';
 
 interface Props {
   summary: RuleConflictSummaryDTO;
@@ -10,18 +11,10 @@ const DECISION_MAP: Record<string, string> = {
   'MIXED': '多空交织',
 };
 
-const CATEGORY_MAP: Record<string, string> = {
-  YONGSHEN_STATE: '用神状态',
-  SHI_STATE: '世爻状态',
-  SHI_YING: '世应联系',
-  MOVING_CHANGE: '动变影响',
-  COMPOSITE: '综合裁定',
-};
-
 export default function ConflictNote({ summary }: Props) {
   const decision = DECISION_MAP[summary.decision] ?? summary.decision;
   const netText = summary.netScore != null ? `净得分 ${summary.netScore}` : '';
-  const categoryLabel = CATEGORY_MAP[summary.category] || summary.category;
+  const categoryLabel = RULE_CATEGORY_MAP[summary.category] || summary.category;
 
   return (
     <div className="conflict-note">

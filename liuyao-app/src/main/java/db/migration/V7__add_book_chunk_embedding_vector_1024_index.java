@@ -5,6 +5,8 @@ import org.flywaydb.core.api.migration.Context;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -14,6 +16,9 @@ public class V7__add_book_chunk_embedding_vector_1024_index extends BaseJavaMigr
     public void migrate(Context context) throws Exception {
         Connection connection = context.getConnection();
         if (!"PostgreSQL".equalsIgnoreCase(readDatabaseProduct(connection))) {
+            return;
+        }
+        if (!isVectorColumn(connection)) {
             return;
         }
         try (Statement statement = connection.createStatement()) {
@@ -29,5 +34,18 @@ public class V7__add_book_chunk_embedding_vector_1024_index extends BaseJavaMigr
     private String readDatabaseProduct(Connection connection) throws SQLException {
         DatabaseMetaData metadata = connection.getMetaData();
         return metadata == null ? "" : metadata.getDatabaseProductName();
+    }
+
+    private boolean isVectorColumn(Connection connection) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement("""
+                SELECT data_type = 'USER-DEFINED' AND udt_name = 'vector'
+                FROM information_schema.columns
+                WHERE table_schema = current_schema()
+                  AND table_name = 'book_chunk'
+                  AND column_name = 'embedding_vector'
+                """);
+             ResultSet resultSet = statement.executeQuery()) {
+            return resultSet.next() && resultSet.getBoolean(1);
+        }
     }
 }

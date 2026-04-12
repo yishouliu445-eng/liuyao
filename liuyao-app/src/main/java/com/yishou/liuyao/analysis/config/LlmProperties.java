@@ -7,69 +7,41 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "liuyao.llm")
 public class LlmProperties {
 
-    /**
-     * 是否启用 LLM 表达层。默认 false，代表纯机械拼文模式。
-     */
     private boolean enabled = false;
-
-    /**
-     * OpenAI-compatible base URL。
-     * 支持通义千问、月之暗面等兼容 OpenAI 接口的模型入口。
-     */
-    private String baseUrl = "https://api.openai.com/v1";
-
-    /**
-     * API Key。
-     */
+    private String baseUrl = "https://dashscope.aliyuncs.com/compatible-mode/v1";
     private String apiKey = "";
+    private String model = "qwen-plus";
+    /** 追问时使用的更小模型，节省成本 */
+    private String followupModel = "qwen-turbo";
+    private int timeoutMs = 15000;
+    private int maxTokens = 1500;
+    private double temperature = 0.5;
+    private boolean forceJson = true;
 
-    /**
-     * 模型名称，默认 gpt-4o。
-     */
-    private String model = "gpt-4o";
+    public boolean isEnabled() { return enabled; }
+    public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    /**
-     * 请求超时（毫秒），超时后自动降级到机械文案。
-     */
-    private int timeoutMs = 8000;
+    public String getBaseUrl() { return baseUrl; }
+    public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
 
-    public boolean isEnabled() {
-        return enabled;
-    }
+    public String getApiKey() { return apiKey; }
+    public void setApiKey(String apiKey) { this.apiKey = apiKey; }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
 
-    public String getBaseUrl() {
-        return baseUrl;
-    }
+    public String getFollowupModel() { return followupModel; }
+    public void setFollowupModel(String followupModel) { this.followupModel = followupModel; }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
+    public int getTimeoutMs() { return timeoutMs; }
+    public void setTimeoutMs(int timeoutMs) { this.timeoutMs = timeoutMs; }
 
-    public String getApiKey() {
-        return apiKey;
-    }
+    public int getMaxTokens() { return maxTokens; }
+    public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
 
-    public void setApiKey(String apiKey) {
-        this.apiKey = apiKey;
-    }
+    public double getTemperature() { return temperature; }
+    public void setTemperature(double temperature) { this.temperature = temperature; }
 
-    public String getModel() {
-        return model;
-    }
-
-    public void setModel(String model) {
-        this.model = model;
-    }
-
-    public int getTimeoutMs() {
-        return timeoutMs;
-    }
-
-    public void setTimeoutMs(int timeoutMs) {
-        this.timeoutMs = timeoutMs;
-    }
+    public boolean isForceJson() { return forceJson; }
+    public void setForceJson(boolean forceJson) { this.forceJson = forceJson; }
 }

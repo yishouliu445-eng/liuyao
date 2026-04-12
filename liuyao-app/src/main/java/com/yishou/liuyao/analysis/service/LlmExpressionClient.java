@@ -23,6 +23,7 @@ import java.util.Map;
  * <p>若 LLM 不可用（无 Key、超时、或禁用），返回 null，上游自动降级。</p>
  */
 @Component
+@Deprecated(since = "2.0", forRemoval = false)
 public class LlmExpressionClient {
 
     private static final Logger log = LoggerFactory.getLogger(LlmExpressionClient.class);

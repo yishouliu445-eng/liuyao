@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@Deprecated(since = "2.0", forRemoval = false)
 public class AnalysisService {
 
     private final AnalysisContextFactory contextFactory;

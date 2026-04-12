@@ -6,11 +6,13 @@ import com.yishou.liuyao.book.repository.BookRepository;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.knowledge.domain.BookChunk;
 import com.yishou.liuyao.knowledge.repository.BookChunkRepository;
+import com.yishou.liuyao.session.repository.ChatSessionRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 @TestPropertySource(properties = "spring.flyway.enabled=true")
 class DivinationControllerTest {
 
@@ -38,8 +41,12 @@ class DivinationControllerTest {
     @Autowired
     private BookChunkRepository bookChunkRepository;
 
+    @Autowired
+    private ChatSessionRepository chatSessionRepository;
+
     @Test
     void shouldAnalyzeThroughHttpEndpoint() throws Exception {
+        long initialSessionCount = chatSessionRepository.count();
         DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
         request.setQuestionText("这次出行会不会顺利");
         request.setQuestionCategory("出行");
@@ -102,6 +109,8 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("用神判断")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("问出行")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")));
+
+        org.junit.jupiter.api.Assertions.assertEquals(initialSessionCount + 1, chatSessionRepository.count());
     }
 
     @Test

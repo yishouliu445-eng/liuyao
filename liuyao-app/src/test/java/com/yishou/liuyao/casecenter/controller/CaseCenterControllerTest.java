@@ -88,7 +88,7 @@ class CaseCenterControllerTest {
     @Test
     void shouldReturnUnifiedFailureWhenCaseNotFound() throws Exception {
         mockMvc.perform(get("/api/cases/{caseId}", 999999L))
-                .andExpect(status().isOk())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("案例不存在"));

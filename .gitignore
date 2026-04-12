@@ -1,15 +1,33 @@
 .DS_Store
 **/.DS_Store
 
+# Environment secrets
+.env
+.liuyao_*.pid
+
+# Logs
+*.log
+liuyao-app/app.log
+worker.log
+h5.log
+
+# Build artifacts
+liuyao-app/target/
+liuyao-h5/dist/
+liuyao-h5/node_modules/
+liuyao-h5/tsconfig.tsbuildinfo
+apache-maven-*/
+
 .codex/
 .playwright-cli/
+.vscode/
 
 liuyao-app/.idea/
-liuyao-app/target/
 
 liuyao-worker/.tessdata/
 liuyao-worker/**/__pycache__/
 liuyao-worker/**/*.py[cod]
+liuyao-worker/.pytest_cache/
 
 /15周惠新玄宗六爻卦例100例88页.pdf
 /卜筮正宗-清-王洪绪.txt
