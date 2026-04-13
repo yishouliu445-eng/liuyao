@@ -1,0 +1,45 @@
+{
+  "caseId": "career_promotion_positive",
+  "description": "事业升职-正面场景：用神旺相、世应相生",
+  "input": {
+    "question": "我下个月能升职吗？",
+    "questionCategory": "升职",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "天火同人",
+      "changedHexagram": "天雷无妄",
+      "useGod": "官鬼",
+      "palace": "离",
+      "palaceWuXing": "火",
+      "shi": 2,
+      "ying": 5,
+      "riChen": "巳",
+      "yueJian": "辰",
+      "kongWang": ["午", "未"]
+    },
+    "ruleHits": [
+      { "ruleCode": "USE_GOD_STRENGTH", "impactLevel": "HIGH", "scoreDelta": 2, "hitReason": "用神旺相" },
+      { "ruleCode": "SHI_YING_RELATION", "impactLevel": "HIGH", "scoreDelta": 2, "hitReason": "应生世" }
+    ],
+    "structuredResult": {
+      "effectiveScore": 4,
+      "effectiveResultLevel": "GOOD",
+      "summary": "本卦天火同人，围绕升职共命中2条主导信号。",
+      "tags": ["事业", "推进"],
+      "effectiveRuleCodes": ["USE_GOD_STRENGTH", "SHI_YING_RELATION"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": [
+      "[《增删卜易·官鬼章》] 官鬼持世旺相，升迁有望。"
+    ]
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "POSITIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["建议", "推进"],
+    "actionPlanMinLength": 2,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

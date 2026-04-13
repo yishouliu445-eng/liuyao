@@ -1,0 +1,14 @@
+spring:
+  flyway:
+    enabled: true
+
+liuyao:
+  llm:
+    enabled: false         # 测试环境禁用真实 LLM，走 MockLlmClient
+
+  feature:
+    session-api-enabled: true
+    orchestrated-analysis: true
+
+  knowledge:
+    similarity-threshold: 0.0   # 测试时不过滤RAG结果

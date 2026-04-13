@@ -1,0 +1,44 @@
+{
+  "caseId": "edge_ambiguous_question",
+  "description": "边界场景：问题模糊但仍需给出可操作建议",
+  "input": {
+    "question": "这件事会怎样？",
+    "questionCategory": "",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "雷泽归妹",
+      "changedHexagram": "泽雷随",
+      "useGod": "世爻",
+      "palace": "震",
+      "palaceWuXing": "木",
+      "shi": 1,
+      "ying": 4,
+      "riChen": "卯",
+      "yueJian": "寅",
+      "kongWang": ["辰", "巳"]
+    },
+    "ruleHits": [
+      { "ruleCode": "R010", "impactLevel": "MEDIUM", "scoreDelta": 1, "hitReason": "事情有变化" }
+    ],
+    "structuredResult": {
+      "effectiveScore": 1,
+      "effectiveResultLevel": "NEUTRAL",
+      "summary": "本卦雷泽归妹，问题模糊时优先维持中性解释。",
+      "tags": ["模糊", "观察"],
+      "effectiveRuleCodes": ["R010"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": [
+      "[《易林·总论》] 事不明时，宜先观其变。"
+    ]
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "POSITIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["建议", "推进"],
+    "actionPlanMinLength": 2,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

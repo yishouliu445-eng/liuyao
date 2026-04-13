@@ -1,0 +1,45 @@
+{
+  "caseId": "career_promotion_negative",
+  "description": "事业升职-负面场景：流程受阻、需要先稳住节奏",
+  "input": {
+    "question": "我这次升职会不会不顺？",
+    "questionCategory": "升职",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "山泽损",
+      "changedHexagram": "水山蹇",
+      "useGod": "官鬼",
+      "palace": "艮",
+      "palaceWuXing": "土",
+      "shi": 3,
+      "ying": 6,
+      "riChen": "申",
+      "yueJian": "寅",
+      "kongWang": ["辰", "巳"]
+    },
+    "ruleHits": [
+      { "ruleCode": "USE_GOD_DAY_BREAK", "impactLevel": "HIGH", "scoreDelta": -2, "hitReason": "用神受制" },
+      { "ruleCode": "MOVING_LINE_AFFECT_USE_GOD", "impactLevel": "MEDIUM", "scoreDelta": -1, "hitReason": "动爻牵制用神" }
+    ],
+    "structuredResult": {
+      "effectiveScore": -2,
+      "effectiveResultLevel": "BAD",
+      "summary": "本卦山泽损，围绕升职共命中2条负向信号。",
+      "tags": ["受阻", "观望"],
+      "effectiveRuleCodes": ["USE_GOD_DAY_BREAK"],
+      "suppressedRuleCodes": ["MOVING_LINE_AFFECT_USE_GOD"]
+    },
+    "knowledgeSnippets": [
+      "[《增删卜易·用神章》] 用神受制，则事多迟滞。"
+    ]
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "NEGATIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["稳住节奏", "备选方案"],
+    "actionPlanMinLength": 3,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

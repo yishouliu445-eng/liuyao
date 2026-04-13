@@ -11,8 +11,10 @@ import com.yishou.liuyao.knowledge.dto.KnowledgeSearchResponse;
 import com.yishou.liuyao.knowledge.mapper.KnowledgeMapper;
 import com.yishou.liuyao.knowledge.repository.BookChunkRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRepository;
+import com.yishou.liuyao.knowledge.repository.BookChunkHybridSearchRepository;
 import com.yishou.liuyao.knowledge.repository.BookChunkVectorSearchRow;
 import com.yishou.liuyao.rule.usegod.QuestionCategoryNormalizer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -32,8 +34,12 @@ public class KnowledgeSearchService {
     private final KnowledgeMapper knowledgeMapper;
     private final KnowledgeQueryEmbeddingService knowledgeQueryEmbeddingService;
     private final BookChunkVectorSearchRepository bookChunkVectorSearchRepository;
+    private final BookChunkHybridSearchRepository bookChunkHybridSearchRepository;
     private final QuestionCategoryNormalizer questionCategoryNormalizer;
     private final ObjectMapper objectMapper;
+
+    @Value("${liuyao.knowledge.similarity-threshold:0.65}")
+    private double similarityThreshold = 0.65D;
 
     public KnowledgeSearchService(BookChunkRepository bookChunkRepository,
                                   BookRepository bookRepository,
@@ -41,6 +47,7 @@ public class KnowledgeSearchService {
                                   KnowledgeMapper knowledgeMapper,
                                   KnowledgeQueryEmbeddingService knowledgeQueryEmbeddingService,
                                   BookChunkVectorSearchRepository bookChunkVectorSearchRepository,
+                                  BookChunkHybridSearchRepository bookChunkHybridSearchRepository,
                                   QuestionCategoryNormalizer questionCategoryNormalizer,
                                   ObjectMapper objectMapper) {
         this.bookChunkRepository = bookChunkRepository;
@@ -49,6 +56,7 @@ public class KnowledgeSearchService {
         this.knowledgeMapper = knowledgeMapper;
         this.knowledgeQueryEmbeddingService = knowledgeQueryEmbeddingService;
         this.bookChunkVectorSearchRepository = bookChunkVectorSearchRepository;
+        this.bookChunkHybridSearchRepository = bookChunkHybridSearchRepository;
         this.questionCategoryNormalizer = questionCategoryNormalizer;
         this.objectMapper = objectMapper;
     }
@@ -127,6 +135,7 @@ public class KnowledgeSearchService {
                         queryEmbedding.size(),
                         resolvedLimit)
                 .stream()
+                .filter(this::passesSimilarityThreshold)
                 .map(row -> knowledgeMapper.toBookChunkDto(
                         row,
                         readTopicTags(row.topicTagsJson()),
@@ -176,7 +185,7 @@ public class KnowledgeSearchService {
         }
         int resolvedLimit = Math.max(1, Math.min(limit, 8));
         List<String> snippets = new ArrayList<>();
-        appendSemanticSnippets(snippets, resolvedLimit, normalizedCategory, useGod, ruleCodes);
+        appendHybridSnippets(snippets, resolvedLimit, normalizedCategory, useGod, ruleCodes);
         Map<Long, Book> booksById = loadBooksByTopicCandidates(candidateTopics);
         for (String topic : candidateTopics) {
             for (BookChunk chunk : sortChunks(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(topic), booksById)) {
@@ -192,26 +201,17 @@ public class KnowledgeSearchService {
         return snippets;
     }
 
-    private void appendSemanticSnippets(List<String> snippets,
-                                        int resolvedLimit,
-                                        String questionCategory,
-                                        String useGod,
-                                        List<String> ruleCodes) {
+    private void appendHybridSnippets(List<String> snippets,
+                                      int resolvedLimit,
+                                      String questionCategory,
+                                      String useGod,
+                                      List<String> ruleCodes) {
         if (!bookChunkVectorSearchRepository.supportsVectorSearch() || snippets.size() >= resolvedLimit) {
             return;
         }
         try {
-            List<Double> queryEmbedding = knowledgeQueryEmbeddingService.embed(buildSemanticQueryText(questionCategory, useGod, ruleCodes));
-            if (queryEmbedding.isEmpty()) {
-                return;
-            }
-            List<BookChunkVectorSearchRow> rows = bookChunkVectorSearchRepository.search(
-                    null,
-                    null,
-                    toVectorLiteral(queryEmbedding),
-                    queryEmbedding.size(),
-                    resolvedLimit
-            );
+            String queryText = buildSemanticQueryText(questionCategory, useGod, ruleCodes);
+            List<BookChunkVectorSearchRow> rows = hybridSearch(queryText, null, resolvedLimit);
             if (rows.isEmpty()) {
                 return;
             }
@@ -220,6 +220,9 @@ public class KnowledgeSearchService {
                 booksById.put(book.getId(), book);
             }
             for (BookChunkVectorSearchRow row : rows) {
+                if (!passesSimilarityThreshold(row)) {
+                    continue;
+                }
                 String snippet = buildKnowledgeSnippet(row.focusTopic(), row.content(), row.chapterTitle(), booksById.get(row.bookId()));
                 if (!snippets.contains(snippet)) {
                     snippets.add(snippet);
@@ -229,8 +232,25 @@ public class KnowledgeSearchService {
                 }
             }
         } catch (RuntimeException exception) {
-            // 语义检索失败时回退到标签召回，不中断主流程。
+            // 检索失败时回退到标签召回
         }
+    }
+
+    List<BookChunkVectorSearchRow> hybridSearch(String queryText,
+                                                String knowledgeType,
+                                                int limit) {
+        List<Double> queryEmbedding = knowledgeQueryEmbeddingService.embed(queryText);
+        if (queryEmbedding.isEmpty()) {
+            return List.of();
+        }
+        return bookChunkHybridSearchRepository.hybridSearch(
+                queryText,
+                toVectorLiteral(queryEmbedding),
+                queryEmbedding.size(),
+                null,
+                knowledgeType,
+                limit
+        );
     }
 
     private List<String> readTopicTags(String topicTagsJson) {
@@ -250,6 +270,14 @@ public class KnowledgeSearchService {
         } catch (Exception exception) {
             return Map.of();
         }
+    }
+
+    private boolean passesSimilarityThreshold(BookChunkVectorSearchRow row) {
+        Double similarity = row == null ? null : row.similarityScore();
+        if (similarity == null) {
+            return false;
+        }
+        return similarityThreshold <= 0 || similarity >= similarityThreshold;
     }
 
     private Map<String, Object> normalizeMetadataMap(Map<String, Object> metadata) {

@@ -47,6 +47,8 @@ class KnowledgeSemanticSearchControllerTest {
                         "用神宜旺相，不宜休囚。",
                         "rule",
                         "用神",
+                        "RULE",
+                        false,
                         "[\"用神\"]",
                         "{\"split_reason\":\"trigger_split\"}",
                         12,

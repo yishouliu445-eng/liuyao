@@ -20,8 +20,12 @@ import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
 import com.yishou.liuyao.rule.service.RuleEvaluationResult;
 import com.yishou.liuyao.rule.service.RuleEngineService;
+import com.yishou.liuyao.session.dto.SessionCreateRequest;
+import com.yishou.liuyao.session.dto.SessionCreateResponse;
+import com.yishou.liuyao.session.service.SessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,6 +42,10 @@ public class DivinationService {
     private final AnalysisContextFactory analysisContextFactory;
     private final CaseCenterService caseCenterService;
     private final KnowledgeSearchService knowledgeSearchService;
+    private final SessionService sessionService;
+
+    @Value("${liuyao.feature.session-api-enabled:true}")
+    private boolean sessionApiEnabled;
 
     public DivinationService(DivinationMapper divinationMapper,
                              ChartBuilderService chartBuilderService,
@@ -45,7 +53,8 @@ public class DivinationService {
                              AnalysisService analysisService,
                              AnalysisContextFactory analysisContextFactory,
                              CaseCenterService caseCenterService,
-                             KnowledgeSearchService knowledgeSearchService) {
+                             KnowledgeSearchService knowledgeSearchService,
+                             SessionService sessionService) {
         this.divinationMapper = divinationMapper;
         this.chartBuilderService = chartBuilderService;
         this.ruleEngineService = ruleEngineService;
@@ -53,9 +62,36 @@ public class DivinationService {
         this.analysisContextFactory = analysisContextFactory;
         this.caseCenterService = caseCenterService;
         this.knowledgeSearchService = knowledgeSearchService;
+        this.sessionService = sessionService;
     }
 
     public DivinationAnalyzeResponse analyze(DivinationAnalyzeRequest request) {
+        if (sessionApiEnabled) {
+            return analyzeThroughSessionApi(request);
+        }
+        return analyzeLegacy(request);
+    }
+
+    private DivinationAnalyzeResponse analyzeThroughSessionApi(DivinationAnalyzeRequest request) {
+        log.info("旧版分析接口转发到Session编排: category={}, time={}, rawLineCount={}, movingLineCount={}",
+                request.getQuestionCategory(),
+                request.getDivinationTime(),
+                request.getRawLines() == null ? 0 : request.getRawLines().size(),
+                request.getMovingLines() == null ? 0 : request.getMovingLines().size());
+        SessionCreateResponse response = sessionService.createSession(toSessionCreateRequest(request));
+        String legacyAnalysis = response.getAnalysisContext() == null
+                ? ""
+                : analysisService.analyze(response.getAnalysisContext());
+        return new DivinationAnalyzeResponse(
+                response.getChartSnapshot(),
+                response.getRuleHits(),
+                legacyAnalysis,
+                response.getAnalysisContext(),
+                response.getStructuredResult()
+        );
+    }
+
+    private DivinationAnalyzeResponse analyzeLegacy(DivinationAnalyzeRequest request) {
         log.info("开始分析六爻请求: category={}, time={}, rawLineCount={}, movingLineCount={}",
                 request.getQuestionCategory(),
                 request.getDivinationTime(),
@@ -87,6 +123,19 @@ public class DivinationService {
                 analysisContext,
                 structuredResult
         );
+    }
+
+    private SessionCreateRequest toSessionCreateRequest(DivinationAnalyzeRequest request) {
+        SessionCreateRequest sessionRequest = new SessionCreateRequest();
+        sessionRequest.setQuestionText(request.getQuestionText());
+        sessionRequest.setQuestionCategory(request.getQuestionCategory());
+        sessionRequest.setDivinationMethod(request.getDivinationMethod());
+        sessionRequest.setRawLines(request.getRawLines());
+        sessionRequest.setMovingLines(request.getMovingLines());
+        if (request.getDivinationTime() != null) {
+            sessionRequest.setDivinationTime(request.getDivinationTime().toString());
+        }
+        return sessionRequest;
     }
 
     private AnalysisContextDTO buildAnalysisContext(String question,

@@ -7,10 +7,12 @@ interface Props {
 const LEVEL_MAP: Record<string, string> = {
   'STRONG_POSITIVE': '大吉',
   'POSITIVE': '吉',
+  'GOOD': '吉',
   'WEAK_POSITIVE': '小吉',
   'NEUTRAL': '平',
   'WEAK_NEGATIVE': '小凶',
   'NEGATIVE': '凶',
+  'BAD': '凶',
   'STRONG_NEGATIVE': '大凶',
 };
 

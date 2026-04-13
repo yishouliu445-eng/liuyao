@@ -31,29 +31,32 @@ class Worker:
 
     def _process_book_parse_task(self, task, connection, task_repository, book_repository, chunk_repository) -> bool:
         book_repository.update_parse_status(task.book_id, "PROCESSING")
-            try:
-                book = book_repository.get_book(task.book_id)
-                pipeline = BookPipeline(
-                    embedding_dim=self.settings.embedding_dim,
-                    embedding_batch_size=self.settings.embedding_batch_size,
-                    embedding_provider=self.settings.embedding_provider,
-                    embedding_model=self.settings.embedding_model,
-                    embedding_base_url=self.settings.embedding_base_url,
-                    embedding_api_key=self.settings.embedding_api_key,
-                    embedding_timeout_seconds=self.settings.embedding_timeout_seconds,
-                    vector_store_dim=self.settings.vector_store_dim,
-                )
-                chunks = pipeline.process(task, book)
-                created_count = chunk_repository.replace_chunks_for_book(task.book_id, chunks)
-                task_repository.mark_task_completed(task.task_id)
-                book_repository.update_parse_status(task.book_id, "COMPLETED")
-                LOGGER.info("Processed task %s for book %s with %s chunks", task.task_id, task.book_id, created_count)
-                return True
-            except Exception as exc:
-                task_repository.mark_task_failed(task.task_id, str(exc))
-                book_repository.update_parse_status(task.book_id, "FAILED")
-                LOGGER.exception("Failed task %s", task.task_id)
-                return True
+        try:
+            book = book_repository.get_book(task.book_id)
+            pipeline = BookPipeline(
+                embedding_dim=self.settings.embedding_dim,
+                embedding_batch_size=self.settings.embedding_batch_size,
+                embedding_provider=self.settings.embedding_provider,
+                embedding_model=self.settings.embedding_model,
+                embedding_base_url=self.settings.embedding_base_url,
+                embedding_api_key=self.settings.embedding_api_key,
+                embedding_timeout_seconds=self.settings.embedding_timeout_seconds,
+                vector_store_dim=self.settings.vector_store_dim,
+                llm_api_key=self.settings.llm_api_key,
+                llm_model=self.settings.llm_model,
+                llm_base_url=self.settings.llm_base_url,
+            )
+            chunks = pipeline.process(task, book)
+            created_count = chunk_repository.replace_chunks_for_book(task.book_id, chunks)
+            task_repository.mark_task_completed(task.task_id)
+            book_repository.update_parse_status(task.book_id, "COMPLETED")
+            LOGGER.info("Processed task %s for book %s with %s chunks", task.task_id, task.book_id, created_count)
+            return True
+        except Exception as exc:
+            task_repository.mark_task_failed(task.task_id, str(exc))
+            book_repository.update_parse_status(task.book_id, "FAILED")
+            LOGGER.exception("Failed task %s", task.task_id)
+            return True
 
     def _process_rule_extract_task(self, task, connection, task_repository, book_repository) -> bool:
         chunk_repository = ChunkRepository(connection)

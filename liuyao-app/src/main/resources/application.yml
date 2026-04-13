@@ -21,9 +21,43 @@ server:
 liuyao:
   rules:
     version: ${LIUYAO_RULES_VERSION:v1}
+
   llm:
     enabled: ${LIUYAO_LLM_ENABLED:true}
-    base-url: ${LIUYAO_LLM_BASE_URL:https://api.openai.com/v1}
+    base-url: ${LIUYAO_LLM_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
     api-key: ${LIUYAO_LLM_API_KEY:${DASHSCOPE_API_KEY:${OPENAI_API_KEY:}}}
     model: ${LIUYAO_LLM_MODEL:qwen-plus}
-    timeout-ms: 8000
+    followup-model: ${LIUYAO_LLM_FOLLOWUP_MODEL:qwen-turbo}  # 追问用更小模型
+    timeout-ms: ${LIUYAO_LLM_TIMEOUT_MS:15000}
+    max-tokens: ${LIUYAO_LLM_MAX_TOKENS:1500}
+    temperature: ${LIUYAO_LLM_TEMPERATURE:0.5}
+    force-json: ${LIUYAO_LLM_FORCE_JSON:true}
+
+  prompt:
+    version: ${LIUYAO_PROMPT_VERSION:v1}
+    ab-test-enabled: ${LIUYAO_PROMPT_AB_TEST:false}
+
+  session:
+    max-inactive-hours: ${SESSION_MAX_INACTIVE_HOURS:24}
+    max-messages-per-session: ${SESSION_MAX_MESSAGES:50}
+    anonymous-retention-days: ${SESSION_ANON_RETENTION_DAYS:7}
+
+  knowledge:
+    similarity-threshold: ${KNOWLEDGE_SIMILARITY_THRESHOLD:0.65}
+    hybrid-search-enabled: ${KNOWLEDGE_HYBRID_SEARCH:true}
+    max-snippets: ${KNOWLEDGE_MAX_SNIPPETS:6}
+
+  verification:
+    reminder-hour: ${VERIFICATION_REMINDER_HOUR:9}
+    expire-after-days: ${VERIFICATION_EXPIRE_DAYS:14}
+
+  cost:
+    alert-daily-threshold-yuan: ${COST_ALERT_DAILY:50}
+
+  rate-limit:
+    anonymous-per-day: ${RATE_LIMIT_ANON:5}
+    authenticated-per-day: ${RATE_LIMIT_AUTH:20}
+
+  feature:
+    session-api-enabled: ${SESSION_API_ENABLED:true}
+    orchestrated-analysis: ${ORCHESTRATED_ANALYSIS:true}

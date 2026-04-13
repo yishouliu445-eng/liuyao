@@ -1,0 +1,109 @@
+version: "3.9"
+
+# Required env vars:
+# - DB_PASSWORD
+# - LLM_API_KEY or DASHSCOPE_API_KEY
+# - LIUYAO_EMBEDDING_API_KEY or DASHSCOPE_API_KEY when the worker uses a real embedding provider
+#
+# Optional overrides:
+# - DB_USER, DB_PORT, APP_PORT, H5_PORT, SERVER_PORT
+# - LLM_BASE_URL, LLM_MODEL, LLM_FOLLOWUP_MODEL, LLM_ENABLED
+# - EMBEDDING_PROVIDER, EMBEDDING_MODEL, EMBEDDING_DIM, EMBEDDING_BASE_URL
+# - WORKER_ID, POLL_INTERVAL_SECONDS, EMBEDDING_TIMEOUT_SECONDS, EMBEDDING_BATCH_SIZE, VECTOR_STORE_DIM
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: liuyao-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: liuyao
+      POSTGRES_USER: ${DB_USER:-liuyao}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-liuyao}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./liuyao-app
+      dockerfile: Dockerfile
+    container_name: liuyao-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/liuyao
+      DB_USERNAME: ${DB_USER:-liuyao}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      LIUYAO_LLM_ENABLED: ${LLM_ENABLED:-true}
+      LIUYAO_LLM_API_KEY: ${LLM_API_KEY:-}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      LIUYAO_LLM_BASE_URL: ${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      LIUYAO_LLM_MODEL: ${LLM_MODEL:-qwen-plus}
+      LIUYAO_LLM_FOLLOWUP_MODEL: ${LLM_FOLLOWUP_MODEL:-qwen-turbo}
+      LIUYAO_LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-15000}
+      LIUYAO_LLM_MAX_TOKENS: ${LLM_MAX_TOKENS:-1500}
+      LIUYAO_LLM_TEMPERATURE: ${LLM_TEMPERATURE:-0.5}
+      LIUYAO_PROMPT_VERSION: ${PROMPT_VERSION:-v1}
+      SESSION_API_ENABLED: ${SESSION_API_ENABLED:-true}
+      ORCHESTRATED_ANALYSIS: ${ORCHESTRATED_ANALYSIS:-true}
+    ports:
+      - "${APP_PORT:-8080}:${SERVER_PORT:-8080}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:${SERVER_PORT:-8080}/api/analysis/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    build:
+      context: ./liuyao-worker
+      dockerfile: Dockerfile
+    container_name: liuyao-worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      LIUYAO_DB_DSN: postgresql://${DB_USER:-liuyao}:${DB_PASSWORD:?DB_PASSWORD is required}@postgres:5432/liuyao
+      LIUYAO_WORKER_ID: ${WORKER_ID:-python-worker-1}
+      LIUYAO_POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-5}
+      LIUYAO_EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-dashscope}
+      LIUYAO_EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-v4}
+      LIUYAO_EMBEDDING_DIM: ${EMBEDDING_DIM:-}
+      LIUYAO_EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-}
+      LIUYAO_EMBEDDING_API_KEY: ${LIUYAO_EMBEDDING_API_KEY:-}
+      LIUYAO_EMBEDDING_TIMEOUT_SECONDS: ${EMBEDDING_TIMEOUT_SECONDS:-30}
+      LIUYAO_EMBEDDING_BATCH_SIZE: ${EMBEDDING_BATCH_SIZE:-16}
+      LIUYAO_VECTOR_STORE_DIM: ${VECTOR_STORE_DIM:-1024}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      LIUYAO_LLM_API_KEY: ${LLM_API_KEY:-}
+      LIUYAO_LLM_BASE_URL: ${LLM_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+      LIUYAO_LLM_MODEL: ${LLM_MODEL:-qwen-plus}
+      TESSDATA_PREFIX: /app/tessdata
+
+  h5:
+    build:
+      context: ./liuyao-h5
+      dockerfile: Dockerfile
+    container_name: liuyao-h5
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "${H5_PORT:-3000}:80"
+
+volumes:
+  postgres-data:

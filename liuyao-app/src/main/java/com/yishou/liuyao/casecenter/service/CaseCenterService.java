@@ -1,6 +1,7 @@
 package com.yishou.liuyao.casecenter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.analysis.dto.RuleCategorySummaryDTO;
 import com.yishou.liuyao.analysis.dto.RuleConflictSummaryDTO;
@@ -95,12 +96,12 @@ public class CaseCenterService {
     }
 
     @Transactional
-    public void recordAnalysis(DivinationAnalyzeRequest request,
-                               ChartSnapshot chartSnapshot,
-                               List<RuleHit> ruleHits,
-                               AnalysisContextDTO analysisContext,
-                               StructuredAnalysisResultDTO structuredResult,
-                               String analysis) {
+    public RecordedAnalysisRefs recordAnalysis(DivinationAnalyzeRequest request,
+                                               ChartSnapshot chartSnapshot,
+                                               List<RuleHit> ruleHits,
+                                               AnalysisContextDTO analysisContext,
+                                               StructuredAnalysisResultDTO structuredResult,
+                                               String analysis) {
         // 一次分析会同时留下 case、快照、规则命中和分析结果四类留痕。
         DivinationCase divinationCase = new DivinationCase();
         divinationCase.setQuestionText(request.getQuestionText());
@@ -153,6 +154,7 @@ public class CaseCenterService {
                 snapshot.getMainHexagram(),
                 snapshot.getUseGod(),
                 ruleHits.size());
+        return new RecordedAnalysisRefs(divinationCase.getId(), snapshot.getId());
     }
 
     @Transactional(readOnly = true)
@@ -588,7 +590,7 @@ public class CaseCenterService {
         dto.setImpactLevel(entity.getImpactLevel());
         dto.setCategory(entity.getCategory());
         dto.setScoreDelta(entity.getScoreDelta());
-        dto.setTags(readJson(entity.getTagsJson(), List.class));
+        dto.setTags(readStringList(entity.getTagsJson()));
         dto.setEvidence(readEvidence(entity.getEvidenceJson()));
         return dto;
     }
@@ -699,7 +701,22 @@ public class CaseCenterService {
         if (evidenceJson == null || evidenceJson.isBlank()) {
             return Collections.emptyMap();
         }
-        return readJson(evidenceJson, Map.class);
+        try {
+            return objectMapper.readValue(evidenceJson, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception exception) {
+            throw new IllegalStateException("JSON deserializing failed", exception);
+        }
+    }
+
+    private List<String> readStringList(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception exception) {
+            throw new IllegalStateException("JSON deserializing failed", exception);
+        }
     }
 
     private <T> T readJson(String json, Class<T> clazz) {
@@ -711,5 +728,8 @@ public class CaseCenterService {
         } catch (Exception exception) {
             throw new IllegalStateException("JSON deserializing failed", exception);
         }
+    }
+
+    public record RecordedAnalysisRefs(Long caseId, Long snapshotId) {
     }
 }
