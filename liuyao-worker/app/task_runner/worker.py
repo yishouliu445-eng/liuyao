@@ -42,6 +42,9 @@ class Worker:
                 embedding_api_key=self.settings.embedding_api_key,
                 embedding_timeout_seconds=self.settings.embedding_timeout_seconds,
                 vector_store_dim=self.settings.vector_store_dim,
+                llm_api_key=self.settings.llm_api_key,
+                llm_model=self.settings.llm_model,
+                llm_base_url=self.settings.llm_base_url,
             )
             chunks = pipeline.process(task, book)
             created_count = chunk_repository.replace_chunks_for_book(task.book_id, chunks)

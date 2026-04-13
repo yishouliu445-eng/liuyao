@@ -1,0 +1,43 @@
+{
+  "caseId": "edge_all_negative",
+  "description": "边界场景：全局负向信号，结论必须稳住而不是绝对化",
+  "input": {
+    "question": "这次合作是不是最坏情况？",
+    "questionCategory": "合作",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "水山蹇",
+      "changedHexagram": "山水蒙",
+      "useGod": "应爻",
+      "palace": "坎",
+      "palaceWuXing": "水",
+      "shi": 5,
+      "ying": 2,
+      "riChen": "子",
+      "yueJian": "亥",
+      "kongWang": ["午", "未"]
+    },
+    "ruleHits": [
+      { "ruleCode": "USE_GOD_DAY_BREAK", "impactLevel": "HIGH", "scoreDelta": -2, "hitReason": "目标位受制" },
+      { "ruleCode": "MOVING_LINE_AFFECT_USE_GOD", "impactLevel": "HIGH", "scoreDelta": -2, "hitReason": "动爻进一步压制" }
+    ],
+    "structuredResult": {
+      "effectiveScore": -4,
+      "effectiveResultLevel": "BAD",
+      "summary": "本卦水山蹇，围绕合作共命中2条强负向信号。",
+      "tags": ["受阻", "谨慎"],
+      "effectiveRuleCodes": ["USE_GOD_DAY_BREAK", "MOVING_LINE_AFFECT_USE_GOD"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": []
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "NEGATIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["稳住节奏", "备选方案"],
+    "actionPlanMinLength": 3,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

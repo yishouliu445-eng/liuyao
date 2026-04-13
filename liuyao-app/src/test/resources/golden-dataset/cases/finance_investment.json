@@ -1,0 +1,45 @@
+{
+  "caseId": "finance_investment",
+  "description": "财运投资-正面场景：回报和兑现空间仍在",
+  "input": {
+    "question": "这笔投资能赚钱吗？",
+    "questionCategory": "财运",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "山火贲",
+      "changedHexagram": "风山渐",
+      "useGod": "妻财",
+      "palace": "艮",
+      "palaceWuXing": "土",
+      "shi": 2,
+      "ying": 5,
+      "riChen": "辰",
+      "yueJian": "巳",
+      "kongWang": ["寅", "卯"]
+    },
+    "ruleHits": [
+      { "ruleCode": "USE_GOD_STRENGTH", "impactLevel": "HIGH", "scoreDelta": 2, "hitReason": "财星有力" },
+      { "ruleCode": "SHI_YING_RELATION", "impactLevel": "MEDIUM", "scoreDelta": 1, "hitReason": "世应相生" }
+    ],
+    "structuredResult": {
+      "effectiveScore": 3,
+      "effectiveResultLevel": "GOOD",
+      "summary": "本卦山火贲，围绕财务回流共命中2条正向信号。",
+      "tags": ["财务", "回流"],
+      "effectiveRuleCodes": ["USE_GOD_STRENGTH", "SHI_YING_RELATION"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": [
+      "[《黄金策·财帛章》] 财星得地，则回流有望。"
+    ]
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "POSITIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["建议", "推进"],
+    "actionPlanMinLength": 2,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

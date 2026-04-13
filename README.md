@@ -1,6 +1,6 @@
 # liuyao v2.0
 
-六爻 AI 断卦系统正在从“单次起卦工具”升级为“多轮对话 + 应验反馈平台”。
+六爻 AI 断卦系统已经从“单次起卦工具”升级为“多轮对话 + 应验反馈平台”。
 
 当前仓库包含 3 个核心子项目：
 
@@ -14,6 +14,7 @@
 - `OrchestratedAnalysisService`：新的编排式分析入口，统一 Prompt 模板、多轮上下文与结构化输出
 - `VerificationEventService`：从 `predictedTimeline` 自动创建应验事件，支持反馈、时间线和提醒
 - 旧接口 `POST /api/divinations/analyze` 保留，但已经代理到新的 Session 流程
+- `PromptRegressionTest`：使用 `prompt-test` profile 的黄金数据集回归，保护 prompt 和 JSON 输出结构
 
 ## 本地启动
 
@@ -96,6 +97,17 @@ APP_PORT=8081 docker compose up -d --build
 
 - [liuyao-app/docs/api.md](/Users/liuyishou/wordspace/liuyao/liuyao-app/docs/api.md)
 
+## Prompt 回归
+
+当你改动 `src/main/resources/prompts/`、分析编排逻辑或 JSON 输出结构时，可以跑：
+
+```bash
+cd liuyao-app
+../apache-maven-3.9.6/bin/mvn test -Dtest=PromptRegressionTest -Dspring.profiles.active=prompt-test
+```
+
+这组测试使用 `src/test/resources/golden-dataset/` 下的黄金数据集，覆盖升职、感情、健康、财运和边界场景。
+
 ## 测试与验证
 
 后端：
@@ -103,6 +115,13 @@ APP_PORT=8081 docker compose up -d --build
 ```bash
 cd liuyao-app
 ../apache-maven-3.9.6/bin/mvn test
+```
+
+如果只想验证 prompt 回归：
+
+```bash
+cd liuyao-app
+../apache-maven-3.9.6/bin/mvn test -Dtest=PromptRegressionTest -Dspring.profiles.active=prompt-test
 ```
 
 前端：

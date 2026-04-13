@@ -1,0 +1,10 @@
+spring:
+  flyway:
+    enabled: false
+
+liuyao:
+  llm:
+    enabled: false
+  feature:
+    session-api-enabled: true
+    orchestrated-analysis: true

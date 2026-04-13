@@ -9,6 +9,8 @@ class ChunkDraft:
     content_type: str = "mixed"
     topic_tags: list[str] = field(default_factory=list)
     focus_topic: str | None = None
+    knowledge_type: str | None = None
+    has_timing_prediction: bool = False
     metadata: dict = field(default_factory=dict)
 
 
@@ -21,6 +23,8 @@ class ChunkRecord:
     chapter_title: str | None
     content_type: str
     focus_topic: str | None
+    knowledge_type: str | None
+    has_timing_prediction: bool
     topic_tags_json: str
     metadata_json: str
     char_count: int

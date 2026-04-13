@@ -1,0 +1,48 @@
+{
+  "caseId": "edge_followup_5rounds",
+  "description": "边界场景：恰好 5 轮追问，历史应完整保留不压缩",
+  "input": {
+    "question": "这段关系后续会怎样？",
+    "questionCategory": "感情",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "风火家人",
+      "changedHexagram": "火风鼎",
+      "useGod": "应爻",
+      "palace": "巽",
+      "palaceWuXing": "木",
+      "shi": 2,
+      "ying": 5,
+      "riChen": "申",
+      "yueJian": "酉",
+      "kongWang": ["戌", "亥"]
+    },
+    "ruleHits": [
+      { "ruleCode": "SHI_YING_RELATION", "impactLevel": "HIGH", "scoreDelta": 2, "hitReason": "关系仍可沟通" },
+      { "ruleCode": "R010", "impactLevel": "MEDIUM", "scoreDelta": 1, "hitReason": "后续仍有变化" }
+    ],
+    "structuredResult": {
+      "effectiveScore": 3,
+      "effectiveResultLevel": "GOOD",
+      "summary": "本卦风火家人，追问场景下依旧保持正向。",
+      "tags": ["感情", "追问"],
+      "effectiveRuleCodes": ["SHI_YING_RELATION", "R010"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": [
+      "[《卜筮正宗·世应章》] 世应相接，则看对方回应与来往节度。"
+    ],
+    "followUpQuestion": "我还需要继续主动联系吗？",
+    "historyRounds": 5,
+    "historyRepeatLength": 18
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "POSITIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["建议", "推进"],
+    "actionPlanMinLength": 2,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

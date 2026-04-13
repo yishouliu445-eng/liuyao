@@ -9,6 +9,8 @@ public record BookChunkVectorSearchRow(
         String content,
         String contentType,
         String focusTopic,
+        String knowledgeType,
+        Boolean hasTimingPrediction,
         String topicTagsJson,
         String metadataJson,
         Integer charCount,

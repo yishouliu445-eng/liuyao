@@ -1,0 +1,42 @@
+{
+  "caseId": "edge_empty_rag",
+  "description": "边界场景：知识片段为空，仍应稳定输出",
+  "input": {
+    "question": "这次能找到合适的工作吗？",
+    "questionCategory": "求职",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "火风鼎",
+      "changedHexagram": "风火家人",
+      "useGod": "官鬼",
+      "palace": "离",
+      "palaceWuXing": "火",
+      "shi": 3,
+      "ying": 6,
+      "riChen": "酉",
+      "yueJian": "申",
+      "kongWang": ["午", "未"]
+    },
+    "ruleHits": [
+      { "ruleCode": "USE_GOD_STRENGTH", "impactLevel": "MEDIUM", "scoreDelta": 1, "hitReason": "机会尚可" }
+    ],
+    "structuredResult": {
+      "effectiveScore": 1,
+      "effectiveResultLevel": "NEUTRAL",
+      "summary": "本卦火风鼎，知识片段为空时仍应依赖盘面与规则。",
+      "tags": ["求职", "等待"],
+      "effectiveRuleCodes": ["USE_GOD_STRENGTH"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": []
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "POSITIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["建议", "推进"],
+    "actionPlanMinLength": 2,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

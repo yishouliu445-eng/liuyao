@@ -1,11 +1,12 @@
 import json
 from dataclasses import asdict
 
-from app.chunker.zengshan_buyi_chunker import ZengshanBuyiChunker
+from app.chunker.case_example_chunker import CaseExampleChunker
 from app.cleaner.text_cleaner import clean_text
 from app.db.repositories import dump_json
 from app.embedding.factory import create_embedder
 from app.parser.txt_parser import parse_pdf, parse_txt
+from app.pipeline.metadata_enricher import MetadataEnricher
 from app.schemas.chunk_models import ChunkRecord
 from app.schemas.task_models import BookRecord, TaskRecord
 
@@ -19,8 +20,11 @@ class BookPipeline:
                  embedding_base_url: str | None,
                  embedding_api_key: str | None,
                  embedding_timeout_seconds: int,
-                 vector_store_dim: int):
-        self.chunker = ZengshanBuyiChunker()
+                 vector_store_dim: int,
+                 llm_api_key: str | None = None,
+                 llm_model: str = "gpt-4o",
+                 llm_base_url: str | None = None):
+        self.chunker = CaseExampleChunker()
         self.embedder = create_embedder(
             provider=embedding_provider,
             model=embedding_model,
@@ -28,6 +32,11 @@ class BookPipeline:
             base_url=embedding_base_url,
             api_key=embedding_api_key,
             timeout_seconds=embedding_timeout_seconds,
+        )
+        self.enricher = MetadataEnricher(
+            api_key=llm_api_key,
+            model=llm_model,
+            base_url=llm_base_url
         )
         self.embedding_batch_size = max(1, embedding_batch_size)
         self.embedding_provider = embedding_provider
@@ -41,6 +50,11 @@ class BookPipeline:
             "book_title": book.title,
             "allow_untagged": (book.source_type or "").upper() == "PDF",
         })
+        
+        # LLM Enrichment (Task 25)
+        for draft in drafts:
+            self.enricher.enrich(draft)
+            
         records: list[ChunkRecord] = []
         for batch_start in range(0, len(drafts), self.embedding_batch_size):
             batch = drafts[batch_start:batch_start + self.embedding_batch_size]
@@ -58,6 +72,8 @@ class BookPipeline:
                         chapter_title=draft.chapter_title,
                         content_type=draft.content_type,
                         focus_topic=draft.focus_topic,
+                        knowledge_type=draft.knowledge_type,
+                        has_timing_prediction=draft.has_timing_prediction,
                         topic_tags_json=dump_json(draft.topic_tags),
                         metadata_json=json.dumps(asdict(draft)["metadata"], ensure_ascii=False),
                         char_count=len(draft.content),

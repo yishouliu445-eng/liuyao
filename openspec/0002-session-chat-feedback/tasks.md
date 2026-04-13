@@ -112,7 +112,7 @@
 - [x] 创建新 `LlmClient`（支持 messages 数组、强制 JSON、Token 统计）
 - [x] 创建 `LlmResponse` record（含 parsedJson, tokenCount, latencyMs）
 - [x] 编写测试：正常 JSON 解析、非法 JSON 降级、超时处理
-- [ ] 旧 `LlmExpressionClient` 暂不删除，待 Task 9 完成后废弃
+- [x] 旧 `LlmExpressionClient` 暂不删除，待 Task 9 完成后废弃
 
 ### Task 8: 实现 PromptTemplateEngine 与 ContextWindowBuilder
 
@@ -320,10 +320,10 @@
 - Create: `liuyao-app/src/test/resources/golden-dataset/schema/analysis_output_schema.json`
 - Create: `liuyao-app/src/test/java/com/yishou/liuyao/analysis/PromptRegressionTest.java`
 
-- [ ] 编写10个黄金数据集Case（覆盖事业/感情/健康/财运/边界场景）
-- [ ] 编写JSON Schema定义
-- [ ] 实现 PromptRegressionTest（参数化测试+7项断言）
-- [ ] 验证在 prompt-test profile 下可运行
+- [x] 编写10个黄金数据集Case（覆盖事业/感情/健康/财运/边界场景）
+- [x] 编写JSON Schema定义
+- [x] 实现 PromptRegressionTest（参数化测试+7项断言）
+- [x] 验证在 prompt-test profile 下可运行
 
 ### Task 23: 成本控制
 
@@ -331,10 +331,10 @@
 - Create: `liuyao-app/src/main/java/com/yishou/liuyao/infrastructure/ratelimit/RateLimiter.java`
 - Modify: `liuyao-app/src/main/resources/application.yml`
 
-- [ ] 实现用户请求限流（匿名5次/天，登录20次/天）
-- [ ] LlmClient 记录每次调用的 Token 用量
-- [ ] 配置日成本告警阈值
-- [ ] 追问支持切换为更小模型（配置化）
+- [x] 实现用户请求限流（匿名5次/天，登录20次/天）
+- [x] LlmClient 记录每次调用的 Token 用量
+- [x] 配置日成本告警阈值
+- [x] 追问支持切换为更小模型（配置化）
 
 ---
 
@@ -346,10 +346,10 @@
 - Create: `liuyao-worker/app/chunker/case_example_chunker.py`
 - Create: `liuyao-worker/tests/test_case_example_chunker.py`
 
-- [ ] 实现卦例起始/结束模式识别
-- [ ] 保持完整卦例不被切碎
-- [ ] 标记 `content_type = "case_example"`
-- [ ] 用增删卜易中的已知卦例编写测试
+- [x] 实现卦例起始/结束模式识别
+- [x] 保持完整卦例不被切碎
+- [x] 标记 `content_type = "case_example"`
+- [x] 用增删卜易中的已知卦例编写测试
 
 ### Task 25: LLM元数据提取
 
@@ -357,10 +357,10 @@
 - Create: `liuyao-worker/app/pipeline/metadata_enrichment.py`
 - Create: `liuyao-worker/tests/test_metadata_enrichment.py`
 
-- [ ] 实现 MetadataEnrichmentStage
-- [ ] LLM提取: topic_tags, knowledge_type, scenario_types, applicable_hexagrams 等
-- [ ] 失败不中断主流程
-- [ ] Mock LLM 测试
+- [x] 实现 MetadataEnrichmentStage
+- [x] LLM提取: topic_tags, knowledge_type, scenario_types, applicable_hexagrams 等
+- [x] 失败不中断主流程
+- [x] Mock LLM 测试
 
 ### Task 26: 全文索引与混合检索
 
@@ -369,11 +369,11 @@
 - Create: `liuyao-app/src/main/resources/db/migration/V19__enhance_chunk_metadata.sql`
 - Modify: `liuyao-app/src/main/java/com/yishou/liuyao/knowledge/service/KnowledgeSearchService.java`
 
-- [ ] V18: book_chunk 新增 content_tsv 列 + GIN索引 + 触发器
-- [ ] V19: book_chunk 新增 knowledge_type, has_timing_prediction 等列
-- [ ] KnowledgeSearchService 新增 `hybridSearch()` 方法
-- [ ] 实现 RRF (Reciprocal Rank Fusion) 合并排序
-- [ ] 实现拒识阈值过滤 (similarity < 0.65 → 丢弃)
+- [x] V18: book_chunk 新增 content_tsv 列 + GIN索引 + 触发器
+- [x] V19: book_chunk 新增 knowledge_type, has_timing_prediction 等列
+- [x] KnowledgeSearchService 新增 `hybridSearch()` 方法
+- [x] 实现 RRF (Reciprocal Rank Fusion) 合并排序
+- [x] 实现拒识阈值过滤 (similarity < 0.65 → 丢弃)
 
 ---
 
@@ -394,7 +394,7 @@
 - Modify: `README.md`
 - Create: `docs/CHANGELOG.md`
 
-- [ ] 更新 README（新架构说明、启动方式、API文档链接）
-- [ ] 记录 v1.0→v2.0 的完整变更日志
-- [ ] 废弃标记：`AnalysisService`, `LlmExpressionClient`
+- [x] 更新 README（新架构说明、启动方式、API文档链接）
+- [x] 记录 v1.0→v2.0 的完整变更日志
+- [x] 废弃标记：`AnalysisService`, `LlmExpressionClient`
 - [ ] 合并分支到 main

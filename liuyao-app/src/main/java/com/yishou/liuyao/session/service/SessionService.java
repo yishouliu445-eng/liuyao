@@ -19,6 +19,7 @@ import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
 import com.yishou.liuyao.divination.mapper.DivinationMapper;
 import com.yishou.liuyao.divination.service.ChartBuilderService;
+import com.yishou.liuyao.infrastructure.ratelimit.RateLimiter;
 import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
@@ -70,6 +71,7 @@ public class SessionService {
     private final CaseChartSnapshotRepository caseChartSnapshotRepository;
     private final ChatSessionRepository sessionRepo;
     private final ChatMessageRepository messageRepo;
+    private final RateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
 
     @Value("${liuyao.session.max-messages-per-session:50}")
@@ -90,6 +92,7 @@ public class SessionService {
                           CaseChartSnapshotRepository caseChartSnapshotRepository,
                           ChatSessionRepository sessionRepo,
                           ChatMessageRepository messageRepo,
+                          RateLimiter rateLimiter,
                           ObjectMapper objectMapper) {
         this.divinationMapper = divinationMapper;
         this.chartBuilderService = chartBuilderService;
@@ -103,6 +106,7 @@ public class SessionService {
         this.caseChartSnapshotRepository = caseChartSnapshotRepository;
         this.sessionRepo = sessionRepo;
         this.messageRepo = messageRepo;
+        this.rateLimiter = rateLimiter;
         this.objectMapper = objectMapper;
     }
 
@@ -112,6 +116,7 @@ public class SessionService {
     public SessionCreateResponse createSession(SessionCreateRequest request) {
         log.info("创建Session: category={}, question={}", request.getQuestionCategory(),
                 truncate(request.getQuestionText(), 30));
+        rateLimiter.acquire(request.getUserId());
 
         // 1. 排盘
         DivinationAnalyzeRequest divRequest = toAnalyzeRequest(request);
@@ -206,6 +211,8 @@ public class SessionService {
             throw new BusinessException(ErrorCode.SESSION_MESSAGE_LIMIT_EXCEEDED,
                     "单次会话消息数已达上限（" + maxMessagesPerSession + "条）");
         }
+
+        rateLimiter.acquire(session.getUserId());
 
         // 刷新活跃时间
         session.refreshActivity();

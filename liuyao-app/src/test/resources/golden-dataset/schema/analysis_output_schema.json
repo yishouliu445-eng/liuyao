@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AnalysisOutput",
+  "type": "object",
+  "required": ["analysis", "metadata", "smartPrompts"],
+  "properties": {
+    "analysis": {
+      "type": "object",
+      "required": ["conclusion", "actionPlan", "emotionalTone"],
+      "properties": {
+        "hexagramOverview": { "type": "string" },
+        "useGodAnalysis": { "type": "string" },
+        "detailedReasoning": { "type": "string" },
+        "conclusion": { "type": "string" },
+        "predictedTimeline": { "type": "string" },
+        "emotionalTone": { "type": "string" },
+        "actionPlan": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "classicReferences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["source", "quote", "relevance"],
+            "properties": {
+              "source": { "type": "string" },
+              "quote": { "type": "string" },
+              "relevance": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["confidence", "modelUsed", "ragSourceCount", "processingTimeMs"],
+      "properties": {
+        "confidence": { "type": "number" },
+        "modelUsed": { "type": "string" },
+        "ragSourceCount": { "type": "integer" },
+        "processingTimeMs": { "type": "integer" }
+      }
+    },
+    "smartPrompts": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "type": "string" }
+    }
+  }
+}

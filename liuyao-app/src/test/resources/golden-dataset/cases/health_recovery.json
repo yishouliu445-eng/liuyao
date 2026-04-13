@@ -1,0 +1,45 @@
+{
+  "caseId": "health_recovery",
+  "description": "健康恢复-正面场景：恢复节奏稳定",
+  "input": {
+    "question": "身体恢复能顺利吗？",
+    "questionCategory": "健康",
+    "divinationTime": "2026-04-12T10:00:00",
+    "chartSnapshot": {
+      "mainHexagram": "山地剥",
+      "changedHexagram": "地雷复",
+      "useGod": "子孙",
+      "palace": "坤",
+      "palaceWuXing": "土",
+      "shi": 4,
+      "ying": 1,
+      "riChen": "午",
+      "yueJian": "未",
+      "kongWang": ["申", "酉"]
+    },
+    "ruleHits": [
+      { "ruleCode": "USE_GOD_STRENGTH", "impactLevel": "HIGH", "scoreDelta": 2, "hitReason": "恢复信号回升" },
+      { "ruleCode": "R010", "impactLevel": "MEDIUM", "scoreDelta": 1, "hitReason": "动爻推动变化" }
+    ],
+    "structuredResult": {
+      "effectiveScore": 3,
+      "effectiveResultLevel": "GOOD",
+      "summary": "本卦山地剥，围绕恢复共命中2条正向信号。",
+      "tags": ["恢复", "调养"],
+      "effectiveRuleCodes": ["USE_GOD_STRENGTH", "R010"],
+      "suppressedRuleCodes": []
+    },
+    "knowledgeSnippets": [
+      "[《增删卜易·子孙章》] 子孙得力，则病象可缓。"
+    ]
+  },
+  "assertions": {
+    "jsonSchemaValid": true,
+    "conclusionDirection": "POSITIVE",
+    "mustNotContain": ["绝对", "注定失败", "破产"],
+    "mustContain": ["建议", "推进"],
+    "actionPlanMinLength": 2,
+    "classicReferencesMaxFabricated": 0,
+    "smartPromptsLength": 3
+  }
+}

@@ -166,14 +166,16 @@ class ChunkRepository:
                     if vector_storage_ready:
                         cursor.execute(
                             """
-                        INSERT INTO book_chunk (
-                            book_id,
-                            task_id,
-                            chapter_title,
+                            INSERT INTO book_chunk (
+                                book_id,
+                                task_id,
+                                chapter_title,
                                 chunk_index,
                                 content,
                                 content_type,
                                 focus_topic,
+                                knowledge_type,
+                                has_timing_prediction,
                                 topic_tags_json,
                                 metadata_json,
                                 char_count,
@@ -185,7 +187,7 @@ class ChunkRepository:
                                 embedding_dim,
                                 embedding_version
                             ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector, %s, %s, %s, %s
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::vector, %s, %s, %s, %s
                             )
                             """,
                             (
@@ -196,6 +198,8 @@ class ChunkRepository:
                                 row.content,
                                 row.content_type,
                                 row.focus_topic,
+                                row.knowledge_type,
+                                row.has_timing_prediction,
                                 row.topic_tags_json,
                                 row.metadata_json,
                                 row.char_count,
@@ -219,6 +223,8 @@ class ChunkRepository:
                                 content,
                                 content_type,
                                 focus_topic,
+                                knowledge_type,
+                                has_timing_prediction,
                                 topic_tags_json,
                                 metadata_json,
                                 char_count,
@@ -227,20 +233,22 @@ class ChunkRepository:
                             embedding_vector,
                             embedding_model,
                             embedding_provider,
-                            embedding_dim,
-                            embedding_version
-                        ) VALUES (
-                            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CAST(%s AS vector), %s, %s, %s, %s
-                        )
-                        """,
-                        (
-                            row.book_id,
+                                embedding_dim,
+                                embedding_version
+                            ) VALUES (
+                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                            )
+                            """,
+                            (
+                                row.book_id,
                                 row.task_id,
                                 row.chapter_title,
                                 row.chunk_index,
                                 row.content,
                                 row.content_type,
                                 row.focus_topic,
+                                row.knowledge_type,
+                                row.has_timing_prediction,
                                 row.topic_tags_json,
                             row.metadata_json,
                             row.char_count,
@@ -248,9 +256,9 @@ class ChunkRepository:
                             row.embedding_json,
                             row.embedding_vector_literal,
                             row.embedding_model,
-                            row.embedding_provider,
-                            row.embedding_dim,
-                            row.embedding_version,
+                                row.embedding_provider,
+                                row.embedding_dim,
+                                row.embedding_version,
                             ),
                         )
         return len(rows)
@@ -326,10 +334,11 @@ class RuleCandidateRepository:
             cursor.execute(
                 """
                 SELECT book_id, task_id, chunk_index, content, chapter_title, content_type,
-                       focus_topic, topic_tags_json, metadata_json, char_count, sentence_count,
+                       focus_topic, knowledge_type, has_timing_prediction,
+                       topic_tags_json, metadata_json, char_count, sentence_count,
                        embedding_json, embedding_model, embedding_provider, embedding_dim, embedding_version, id
                 FROM book_chunk
-                WHERE book_id = %s AND content_type IN ('rule', 'mixed', 'example')
+                WHERE book_id = %s AND content_type IN ('rule', 'mixed', 'example', 'case_example')
                 ORDER BY chunk_index
                 """,
                 (book_id,)
@@ -343,17 +352,19 @@ class RuleCandidateRepository:
                     chapter_title=row[4],
                     content_type=row[5],
                     focus_topic=row[6],
-                    topic_tags_json=row[7],
-                    metadata_json=row[8],
-                    char_count=row[9],
-                    sentence_count=row[10],
-                    embedding_json=row[11],
+                    knowledge_type=row[7],
+                    has_timing_prediction=row[8],
+                    topic_tags_json=row[9],
+                    metadata_json=row[10],
+                    char_count=row[11],
+                    sentence_count=row[12],
+                    embedding_json=row[13],
                     embedding_vector_literal=None,
-                    embedding_model=row[12],
-                    embedding_provider=row[13],
-                    embedding_dim=row[14],
-                    embedding_version=row[15],
+                    embedding_model=row[14],
+                    embedding_provider=row[15],
+                    embedding_dim=row[16],
+                    embedding_version=row[17],
                 )
-                chunk.chunk_id = row[16] # Ad hoc property to hold chunk ID
+                chunk.chunk_id = row[18] # Ad hoc property to hold chunk ID
                 chunks.append(chunk)
         return chunks

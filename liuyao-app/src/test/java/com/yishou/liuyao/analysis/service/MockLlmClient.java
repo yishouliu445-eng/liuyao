@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Component
 @Primary
-@Profile("test")
+@Profile({"test", "prompt-test"})
 public class MockLlmClient extends LlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(MockLlmClient.class);

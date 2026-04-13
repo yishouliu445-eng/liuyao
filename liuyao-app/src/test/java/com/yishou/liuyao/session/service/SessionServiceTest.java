@@ -17,6 +17,7 @@ import com.yishou.liuyao.divination.domain.DivinationInput;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.mapper.DivinationMapper;
 import com.yishou.liuyao.divination.service.ChartBuilderService;
+import com.yishou.liuyao.infrastructure.ratelimit.RateLimiter;
 import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.service.RuleEngineService;
@@ -86,6 +87,8 @@ class SessionServiceTest {
     private ChatSessionRepository sessionRepository;
     @Mock
     private ChatMessageRepository messageRepository;
+    @Mock
+    private RateLimiter rateLimiter;
 
     private SessionService sessionService;
     private ObjectMapper objectMapper;
@@ -106,6 +109,7 @@ class SessionServiceTest {
                 caseChartSnapshotRepository,
                 sessionRepository,
                 messageRepository,
+                rateLimiter,
                 objectMapper
         );
         ReflectionTestUtils.setField(sessionService, "maxMessagesPerSession", 50);
@@ -165,6 +169,7 @@ class SessionServiceTest {
         ChatSession savedSession = savedSessions.get(savedSessions.size() - 1);
         assertEquals(101L, savedSession.getCaseId());
         assertEquals(202L, savedSession.getChartSnapshotId());
+        verify(rateLimiter).acquire(7L);
     }
 
     @Test
@@ -214,6 +219,7 @@ class SessionServiceTest {
         verify(analysisService).analyzeFollowUp(chartCaptor.capture(), anyList(), eq(8), eq("POSITIVE"), anyList(), anyList(), eq("还需要注意什么？"));
         assertEquals("地火明夷", chartCaptor.getValue().getMainHexagram());
         assertEquals("官鬼", chartCaptor.getValue().getUseGod());
+        verify(rateLimiter).acquire(7L);
     }
 
     @Test
@@ -286,6 +292,7 @@ class SessionServiceTest {
         assertEquals(4, fourthRound.getSessionMessageCount());
         assertEquals("CLOSED", storedSession.get().getStatus());
         verify(messageRepository, times(8)).save(any(ChatMessage.class));
+        verify(rateLimiter, times(4)).acquire(7L);
     }
 
     @Test
@@ -320,6 +327,23 @@ class SessionServiceTest {
                 () -> sessionService.addMessage(sessionId, new MessageRequest("还能继续吗")));
 
         assertEquals(ErrorCode.SESSION_MESSAGE_LIMIT_EXCEEDED, exception.getErrorCode());
+        verifyNoInteractions(messageRepository, analysisService);
+    }
+
+    @Test
+    void addMessageShouldRejectWhenRateLimitExceeded() {
+        UUID sessionId = UUID.fromString("77777777-7777-7777-7777-777777777777");
+        ChatSession session = ChatSession.create(7L, 101L, 202L, "原问题", "事业");
+        ReflectionTestUtils.setField(session, "id", sessionId);
+
+        when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+        org.mockito.Mockito.doThrow(new BusinessException(ErrorCode.RATE_LIMIT_EXCEEDED, "今日请求次数已达上限"))
+                .when(rateLimiter).acquire(7L);
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sessionService.addMessage(sessionId, new MessageRequest("还能继续吗")));
+
+        assertEquals(ErrorCode.RATE_LIMIT_EXCEEDED, exception.getErrorCode());
         verifyNoInteractions(messageRepository, analysisService);
     }
 

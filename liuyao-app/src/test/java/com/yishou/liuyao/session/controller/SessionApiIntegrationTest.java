@@ -159,6 +159,27 @@ class SessionApiIntegrationTest {
                 .andExpect(jsonPath("$.data.analysis.analysis.actionPlan.length()").value(greaterThanOrEqualTo(2)));
     }
 
+    @Test
+    void shouldReturnTooManyRequestsWhenAnonymousDailyQuotaIsExceeded() throws Exception {
+        SessionCreateRequest anonymousRequest = buildCreateRequest();
+        anonymousRequest.setUserId(null);
+
+        for (int index = 0; index < 5; index++) {
+            mockMvc.perform(post("/api/sessions")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(anonymousRequest)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.success").value(true));
+        }
+
+        mockMvc.perform(post("/api/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(anonymousRequest)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("RATE_LIMIT_EXCEEDED"));
+    }
+
     private SessionCreateRequest buildCreateRequest() {
         SessionCreateRequest request = new SessionCreateRequest();
         request.setUserId(1001L);
