@@ -27,7 +27,10 @@
             "properties": {
               "source": { "type": "string" },
               "quote": { "type": "string" },
-              "relevance": { "type": "string" }
+              "relevance": { "type": "string" },
+              "citationId": { "type": "string" },
+              "chunkId": { "type": "integer" },
+              "bookId": { "type": "integer" }
             }
           }
         }

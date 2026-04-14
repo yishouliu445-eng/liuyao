@@ -3,8 +3,10 @@ package com.yishou.liuyao.knowledge.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.book.domain.Book;
 import com.yishou.liuyao.book.repository.BookRepository;
+import com.yishou.liuyao.evaluation.dto.EvaluationScoreCard;
 import com.yishou.liuyao.knowledge.domain.BookChunk;
 import com.yishou.liuyao.knowledge.repository.BookChunkRepository;
+import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
 import com.yishou.liuyao.task.domain.DocProcessTask;
 import com.yishou.liuyao.task.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
@@ -43,6 +45,9 @@ class KnowledgeImportExecutionTest {
 
     @Autowired
     private BookChunkRepository bookChunkRepository;
+
+    @Autowired
+    private KnowledgeSearchService knowledgeSearchService;
 
     @Test
     void shouldRequeueTaskForPythonWorkerInsteadOfProcessingInJava() throws Exception {
@@ -200,6 +205,17 @@ class KnowledgeImportExecutionTest {
                 .andExpect(jsonPath("$.data[0].lockedAt").value("2026-04-06T16:30:00"))
                 .andExpect(jsonPath("$.data[0].startedAt").value("2026-04-06T16:30:01"))
                 .andExpect(jsonPath("$.data[0].finishedAt").value("2026-04-06T16:30:04"));
+    }
+
+    @Test
+    void shouldBuildRetrievalEvaluationScoreCard() {
+        EvaluationScoreCard scoreCard = knowledgeSearchService.buildRetrievalScoreCard("rag-import-01", 4, 2, 1);
+
+        org.junit.jupiter.api.Assertions.assertEquals("RAG_RECALL", scoreCard.getDatasetType());
+        org.junit.jupiter.api.Assertions.assertEquals(4, scoreCard.getHitCount());
+        org.junit.jupiter.api.Assertions.assertEquals(0.5D, scoreCard.getSelectedCitationRate());
+        org.junit.jupiter.api.Assertions.assertEquals(0.5D, scoreCard.getCitationMismatchRate());
+        org.junit.jupiter.api.Assertions.assertNotNull(scoreCard.getSummary());
     }
 
     private long createImportRequest(String sourceType, String filePath, List<String> topicTags) throws Exception {

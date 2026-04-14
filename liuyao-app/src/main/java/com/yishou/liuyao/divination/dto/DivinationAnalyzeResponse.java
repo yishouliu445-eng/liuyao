@@ -5,9 +5,11 @@ import com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
 
 import java.util.List;
+import java.util.UUID;
 
 public class DivinationAnalyzeResponse {
 
+    private UUID executionId;
     private ChartSnapshotDTO chartSnapshot;
     private List<RuleHitDTO> ruleHits;
     private String analysis;
@@ -27,6 +29,14 @@ public class DivinationAnalyzeResponse {
         this.analysis = analysis;
         this.analysisContext = analysisContext;
         this.structuredResult = structuredResult;
+    }
+
+    public UUID getExecutionId() {
+        return executionId;
+    }
+
+    public void setExecutionId(UUID executionId) {
+        this.executionId = executionId;
     }
 
     public ChartSnapshotDTO getChartSnapshot() {

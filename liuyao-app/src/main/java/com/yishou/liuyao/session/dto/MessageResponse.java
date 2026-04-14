@@ -11,6 +11,7 @@ public class MessageResponse {
 
     private UUID messageId;
     private UUID sessionId;
+    private UUID executionId;
     private AnalysisOutputDTO analysis;
     private List<String> smartPrompts;
     private LocalDateTime createdAt;
@@ -20,6 +21,8 @@ public class MessageResponse {
     public void setMessageId(UUID messageId) { this.messageId = messageId; }
     public UUID getSessionId() { return sessionId; }
     public void setSessionId(UUID sessionId) { this.sessionId = sessionId; }
+    public UUID getExecutionId() { return executionId; }
+    public void setExecutionId(UUID executionId) { this.executionId = executionId; }
     public AnalysisOutputDTO getAnalysis() { return analysis; }
     public void setAnalysis(AnalysisOutputDTO analysis) { this.analysis = analysis; }
     public List<String> getSmartPrompts() { return smartPrompts; }

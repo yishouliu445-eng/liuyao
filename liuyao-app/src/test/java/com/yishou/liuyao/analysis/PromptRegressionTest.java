@@ -3,6 +3,8 @@ package com.yishou.liuyao.analysis;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.analysis.dto.AnalysisOutputDTO;
+import com.yishou.liuyao.evaluation.dto.EvaluationScoreCard;
+import com.yishou.liuyao.evaluation.service.EvaluationRunService;
 import com.yishou.liuyao.analysis.service.ContextWindowBuilder;
 import com.yishou.liuyao.analysis.service.LlmClient;
 import com.yishou.liuyao.analysis.service.OrchestratedAnalysisService;
@@ -61,6 +63,9 @@ class PromptRegressionTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private EvaluationRunService evaluationRunService;
+
     static Stream<Arguments> loadGoldenCases() throws IOException {
         Resource[] resources = new PathMatchingResourcePatternResolver()
                 .getResources("classpath*:golden-dataset/cases/*.json");
@@ -96,6 +101,13 @@ class PromptRegressionTest {
         AnalysisOutputDTO output = runAnalysis(scenario);
         validateSchemaLike(schema, output);
         assertCoreRegressionAssertions(fileName, scenario, output);
+        EvaluationScoreCard scoreCard = evaluationRunService.evaluatePromptRegression(
+                fileName,
+                scenario.chart().getQuestionCategory(),
+                output
+        );
+        assertNotNull(scoreCard.getSummary());
+        assertEquals("PROMPT_REGRESSION", scoreCard.getDatasetType());
     }
 
     private List<LlmClient.ChatMessage> buildPromptMessages(ScenarioData scenario) {
@@ -327,9 +339,22 @@ class PromptRegressionTest {
             }
             if (!isKnownClassicSource(source)) {
                 fabricated++;
+                continue;
+            }
+            if (hasPartialCitationMetadata(reference)) {
+                fabricated++;
             }
         }
         return fabricated;
+    }
+
+    private boolean hasPartialCitationMetadata(AnalysisOutputDTO.ClassicReference reference) {
+        boolean hasCitationId = reference.getCitationId() != null && !reference.getCitationId().isBlank();
+        boolean hasChunkId = reference.getChunkId() != null;
+        boolean hasBookId = reference.getBookId() != null;
+        boolean hasAny = hasCitationId || hasChunkId || hasBookId;
+        boolean hasAll = hasCitationId && hasChunkId && hasBookId;
+        return hasAny && !hasAll;
     }
 
     private boolean isKnownClassicSource(String source) {

@@ -26,6 +26,8 @@ import com.yishou.liuyao.casecenter.dto.CaseSummaryDTO;
 import com.yishou.liuyao.common.exception.BusinessException;
 import com.yishou.liuyao.common.exception.ErrorCode;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
+import com.yishou.liuyao.evaluation.dto.EvaluationScenario;
+import com.yishou.liuyao.evaluation.service.EvaluationRunService;
 import com.yishou.liuyao.casecenter.repository.CaseAnalysisResultRepository;
 import com.yishou.liuyao.casecenter.repository.CaseChartSnapshotRepository;
 import com.yishou.liuyao.casecenter.repository.CaseReplayRunRepository;
@@ -70,6 +72,7 @@ public class CaseCenterService {
     private final AnalysisService analysisService;
     private final AnalysisContextFactory analysisContextFactory;
     private final KnowledgeSearchService knowledgeSearchService;
+    private final EvaluationRunService evaluationRunService;
 
     public CaseCenterService(DivinationCaseRepository divinationCaseRepository,
                              CaseChartSnapshotRepository caseChartSnapshotRepository,
@@ -81,7 +84,8 @@ public class CaseCenterService {
                              RuleResourceMetadataLoader ruleResourceMetadataLoader,
                              AnalysisService analysisService,
                              AnalysisContextFactory analysisContextFactory,
-                             KnowledgeSearchService knowledgeSearchService) {
+                             KnowledgeSearchService knowledgeSearchService,
+                             EvaluationRunService evaluationRunService) {
         this.divinationCaseRepository = divinationCaseRepository;
         this.caseChartSnapshotRepository = caseChartSnapshotRepository;
         this.caseRuleHitRepository = caseRuleHitRepository;
@@ -93,6 +97,7 @@ public class CaseCenterService {
         this.analysisService = analysisService;
         this.analysisContextFactory = analysisContextFactory;
         this.knowledgeSearchService = knowledgeSearchService;
+        this.evaluationRunService = evaluationRunService;
     }
 
     @Transactional
@@ -410,6 +415,11 @@ public class CaseCenterService {
         dto.setRecommendPersistReplay(shouldRecommendPersistReplay(dto));
         dto.setPersistenceAssessment(buildPersistenceAssessment(dto));
         return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public EvaluationScenario buildEvaluationScenario(Long caseId) {
+        return evaluationRunService.fromReplay(replayCase(caseId));
     }
 
     private boolean shouldRecommendPersistReplay(CaseReplayDTO dto) {

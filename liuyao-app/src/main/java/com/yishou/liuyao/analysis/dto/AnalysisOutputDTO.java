@@ -66,6 +66,12 @@ public class AnalysisOutputDTO {
         private String quote;
         /** 与本卦的关联说明 */
         private String relevance;
+        /** 命中的知识片段标识 */
+        private String citationId;
+        /** 命中的 chunk id */
+        private Long chunkId;
+        /** 命中的 book id */
+        private Long bookId;
 
         public String getSource() { return source; }
         public void setSource(String source) { this.source = source; }
@@ -73,6 +79,12 @@ public class AnalysisOutputDTO {
         public void setQuote(String quote) { this.quote = quote; }
         public String getRelevance() { return relevance; }
         public void setRelevance(String relevance) { this.relevance = relevance; }
+        public String getCitationId() { return citationId; }
+        public void setCitationId(String citationId) { this.citationId = citationId; }
+        public Long getChunkId() { return chunkId; }
+        public void setChunkId(Long chunkId) { this.chunkId = chunkId; }
+        public Long getBookId() { return bookId; }
+        public void setBookId(Long bookId) { this.bookId = bookId; }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

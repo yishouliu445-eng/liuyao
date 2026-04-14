@@ -3,11 +3,11 @@ package com.yishou.liuyao.session.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.analysis.dto.AnalysisOutputDTO;
-import com.yishou.liuyao.analysis.service.AnalysisService;
 import com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO;
-import com.yishou.liuyao.analysis.service.AnalysisContextFactory;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionEnvelope;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionMode;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionService;
 import com.yishou.liuyao.casecenter.domain.CaseChartSnapshot;
-import com.yishou.liuyao.analysis.service.OrchestratedAnalysisService;
 import com.yishou.liuyao.calendar.service.VerificationEventService;
 import com.yishou.liuyao.casecenter.repository.CaseChartSnapshotRepository;
 import com.yishou.liuyao.casecenter.service.CaseCenterService;
@@ -17,14 +17,9 @@ import com.yishou.liuyao.common.exception.ErrorCode;
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
-import com.yishou.liuyao.divination.mapper.DivinationMapper;
-import com.yishou.liuyao.divination.service.ChartBuilderService;
-import com.yishou.liuyao.infrastructure.ratelimit.RateLimiter;
-import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
+import com.yishou.liuyao.ops.ratelimit.PersistentRateLimiter;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
-import com.yishou.liuyao.rule.service.RuleEvaluationResult;
-import com.yishou.liuyao.rule.service.RuleEngineService;
 import com.yishou.liuyao.session.domain.ChatMessage;
 import com.yishou.liuyao.session.domain.ChatSession;
 import com.yishou.liuyao.session.dto.*;
@@ -40,7 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,19 +53,13 @@ public class SessionService {
 
     private static final Logger log = LoggerFactory.getLogger(SessionService.class);
 
-    private final DivinationMapper divinationMapper;
-    private final ChartBuilderService chartBuilderService;
-    private final RuleEngineService ruleEngineService;
-    private final KnowledgeSearchService knowledgeSearchService;
-    private final OrchestratedAnalysisService analysisService;
-    private final AnalysisService legacyAnalysisService;
-    private final AnalysisContextFactory analysisContextFactory;
+    private final AnalysisExecutionService analysisExecutionService;
     private final VerificationEventService verificationEventService;
     private final CaseCenterService caseCenterService;
     private final CaseChartSnapshotRepository caseChartSnapshotRepository;
     private final ChatSessionRepository sessionRepo;
     private final ChatMessageRepository messageRepo;
-    private final RateLimiter rateLimiter;
+    private final PersistentRateLimiter rateLimiter;
     private final ObjectMapper objectMapper;
 
     @Value("${liuyao.session.max-messages-per-session:50}")
@@ -80,27 +68,15 @@ public class SessionService {
     @Value("${liuyao.session.max-inactive-hours:24}")
     private int maxInactiveHours;
 
-    public SessionService(DivinationMapper divinationMapper,
-                          ChartBuilderService chartBuilderService,
-                          RuleEngineService ruleEngineService,
-                          KnowledgeSearchService knowledgeSearchService,
-                          OrchestratedAnalysisService analysisService,
-                          AnalysisService legacyAnalysisService,
-                          AnalysisContextFactory analysisContextFactory,
+    public SessionService(AnalysisExecutionService analysisExecutionService,
                           VerificationEventService verificationEventService,
                           CaseCenterService caseCenterService,
                           CaseChartSnapshotRepository caseChartSnapshotRepository,
                           ChatSessionRepository sessionRepo,
                           ChatMessageRepository messageRepo,
-                          RateLimiter rateLimiter,
+                          PersistentRateLimiter rateLimiter,
                           ObjectMapper objectMapper) {
-        this.divinationMapper = divinationMapper;
-        this.chartBuilderService = chartBuilderService;
-        this.ruleEngineService = ruleEngineService;
-        this.knowledgeSearchService = knowledgeSearchService;
-        this.analysisService = analysisService;
-        this.legacyAnalysisService = legacyAnalysisService;
-        this.analysisContextFactory = analysisContextFactory;
+        this.analysisExecutionService = analysisExecutionService;
         this.verificationEventService = verificationEventService;
         this.caseCenterService = caseCenterService;
         this.caseChartSnapshotRepository = caseChartSnapshotRepository;
@@ -118,33 +94,21 @@ public class SessionService {
                 truncate(request.getQuestionText(), 30));
         rateLimiter.acquire(request.getUserId());
 
-        // 1. 排盘
         DivinationAnalyzeRequest divRequest = toAnalyzeRequest(request);
-        ChartSnapshot chart = chartBuilderService.buildChart(divinationMapper.toInput(divRequest));
-
-        // 2. 规则引擎
-        RuleEvaluationResult evalResult = ruleEngineService.evaluateResult(chart);
-        List<RuleHit> ruleHits = evalResult.getHits();
-        int effectiveScore = evalResult.getEffectiveScore() != null ? evalResult.getEffectiveScore() : 0;
-        String resultLevel = evalResult.getEffectiveResultLevel();
-        StructuredAnalysisResultDTO structuredResult = toStructuredResultDto(evalResult);
-
-        // 3. RAG 知识检索
-        List<String> snippets = safeSearchKnowledge(chart, ruleHits);
+        AnalysisExecutionEnvelope execution = analysisExecutionService.executeInitial(divRequest, AnalysisExecutionMode.INITIAL);
+        ChartSnapshot chart = execution.getChartSnapshot();
+        List<RuleHit> ruleHits = execution.getRuleHits();
         List<RuleHitDTO> ruleHitDtos = toRuleHitDtos(ruleHits);
-        AnalysisContextDTO analysisContext = buildAnalysisContext(
-                request.getQuestionText(), chart, ruleHits, ruleHitDtos, structuredResult, snippets);
-
-        // 4. 编排 LLM
-        AnalysisOutputDTO analysis = analysisService.analyzeInitial(
-                chart, ruleHits, effectiveScore, resultLevel, snippets);
+        AnalysisContextDTO analysisContext = execution.getAnalysisContext();
+        StructuredAnalysisResultDTO structuredResult = execution.getStructuredResult();
+        AnalysisOutputDTO analysis = execution.getAnalysisOutput();
 
         // 5. 持久化卦例（保留向后兼容）
         Long caseId = null;
         Long snapshotId = null;
         try {
             CaseCenterService.RecordedAnalysisRefs caseRecord = caseCenterService.recordAnalysis(
-                    divRequest, chart, ruleHits, analysisContext, structuredResult, buildCaseAnalysisText(analysisContext, analysis));
+                    divRequest, chart, ruleHits, analysisContext, structuredResult, execution.getLegacyAnalysisText());
             caseId = caseRecord != null ? caseRecord.caseId() : null;
             snapshotId = caseRecord != null ? caseRecord.snapshotId() : null;
         } catch (Exception e) {
@@ -174,6 +138,7 @@ public class SessionService {
         // 8. 构建响应
         SessionCreateResponse response = new SessionCreateResponse();
         response.setSessionId(session.getId());
+        response.setExecutionId(execution.getExecutionId());
         response.setStatus(session.getStatus());
         response.setChartSnapshot(toChartSnapshotDto(chart));
         response.setRuleHits(ruleHitDtos);
@@ -181,7 +146,7 @@ public class SessionService {
         response.setStructuredResult(structuredResult);
         response.setAnalysis(analysis);
         response.setSmartPrompts(analysis.getSmartPrompts() != null
-                ? analysis.getSmartPrompts() : Collections.emptyList());
+                ? analysis.getSmartPrompts() : List.of());
         response.setMessageCount(session.getMessageCount());
         return response;
     }
@@ -219,21 +184,13 @@ public class SessionService {
 
         // 加载卦例上下文
         ChartSnapshot chart = loadChartFromSession(session);
-        RuleEvaluationResult evalResult = ruleEngineService.evaluateResult(chart);
-        List<RuleHit> ruleHits = evalResult.getHits();
-        int effectiveScore = evalResult.getEffectiveScore() != null ? evalResult.getEffectiveScore() : 0;
-        String resultLevel = evalResult.getEffectiveResultLevel();
 
         // 加载历史消息
         List<ChatMessage> history = messageRepo.findBySessionIdOrderByCreatedAtAsc(sessionId);
 
-        // RAG 检索（针对追问内容）
-        List<String> snippets = safeSearchKnowledgeByQuestion(request.getContent(), chart);
-
-        // 编排 LLM 追问
-        AnalysisOutputDTO analysis = analysisService.analyzeFollowUp(
-                chart, ruleHits, effectiveScore, resultLevel,
-                history, snippets, request.getContent());
+        AnalysisExecutionEnvelope execution = analysisExecutionService.executeFollowUp(
+                chart, history, request.getContent());
+        AnalysisOutputDTO analysis = execution.getAnalysisOutput();
 
         // 持久化消息
         ChatMessage userMsg = ChatMessage.userMessage(session.getId(), request.getContent());
@@ -253,9 +210,10 @@ public class SessionService {
         MessageResponse response = new MessageResponse();
         response.setMessageId(aiMsg.getId());
         response.setSessionId(sessionId);
+        response.setExecutionId(execution.getExecutionId());
         response.setAnalysis(analysis);
         response.setSmartPrompts(analysis.getSmartPrompts() != null
-                ? analysis.getSmartPrompts() : Collections.emptyList());
+                ? analysis.getSmartPrompts() : List.of());
         response.setCreatedAt(aiMsg.getCreatedAt());
         response.setSessionMessageCount(session.getMessageCount());
         return response;
@@ -326,32 +284,6 @@ public class SessionService {
 
     // ---- Private Helpers ----
 
-    private List<String> safeSearchKnowledge(ChartSnapshot chart, List<RuleHit> ruleHits) {
-        try {
-            List<String> ruleCodes = ruleHits.stream()
-                    .filter(h -> Boolean.TRUE.equals(h.getHit()))
-                    .map(RuleHit::getRuleCode)
-                    .toList();
-            return knowledgeSearchService.suggestKnowledgeSnippets(
-                    chart.getQuestionCategory(), chart.getUseGod(), ruleCodes, 6);
-        } catch (Exception e) {
-            log.warn("RAG知识检索失败（不影响主流程）: {}", e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
-    private List<String> safeSearchKnowledgeByQuestion(String question, ChartSnapshot chart) {
-        try {
-            // 追问时用问题内容作为语义查询，结合卦象类别做过滤
-            return knowledgeSearchService.suggestKnowledgeSnippets(
-                    chart.getQuestionCategory(), chart.getUseGod(),
-                    List.of(), 4);
-        } catch (Exception e) {
-            log.warn("追问RAG检索失败: {}", e.getMessage());
-            return Collections.emptyList();
-        }
-    }
-
     private ChartSnapshot loadChartFromSession(ChatSession session) {
         CaseChartSnapshot storedSnapshot = null;
         if (session.getChartSnapshotId() != null) {
@@ -395,20 +327,6 @@ public class SessionService {
         return session.getLastActiveAt().isBefore(cutoff);
     }
 
-    private AnalysisContextDTO buildAnalysisContext(String question,
-                                                    ChartSnapshot chartSnapshot,
-                                                    List<RuleHit> ruleHits,
-                                                    List<RuleHitDTO> ruleHitDtos,
-                                                    StructuredAnalysisResultDTO structuredResult,
-                                                    List<String> knowledgeSnippets) {
-        AnalysisContextDTO context = analysisContextFactory.create(question, chartSnapshot, ruleHits);
-        context.setChartSnapshot(toChartSnapshotDto(chartSnapshot));
-        context.setRuleHits(ruleHitDtos);
-        context.setStructuredResult(structuredResult);
-        context.setKnowledgeSnippets(knowledgeSnippets != null ? knowledgeSnippets : List.of());
-        return context;
-    }
-
     private ChartSnapshotDTO toChartSnapshotDto(ChartSnapshot chartSnapshot) {
         return objectMapper.convertValue(chartSnapshot, ChartSnapshotDTO.class);
     }
@@ -432,90 +350,10 @@ public class SessionService {
         return dto;
     }
 
-    private StructuredAnalysisResultDTO toStructuredResultDto(RuleEvaluationResult evaluationResult) {
-        StructuredAnalysisResultDTO dto = new StructuredAnalysisResultDTO();
-        dto.setScore(evaluationResult.getScore());
-        dto.setResultLevel(evaluationResult.getResultLevel());
-        dto.setEffectiveScore(evaluationResult.getEffectiveScore());
-        dto.setEffectiveResultLevel(evaluationResult.getEffectiveResultLevel());
-        dto.setTags(evaluationResult.getTags() != null ? evaluationResult.getTags() : List.of());
-        dto.setEffectiveRuleCodes(evaluationResult.getEffectiveRuleCodes() != null
-                ? evaluationResult.getEffectiveRuleCodes() : List.of());
-        dto.setSuppressedRuleCodes(evaluationResult.getSuppressedRuleCodes() != null
-                ? evaluationResult.getSuppressedRuleCodes() : List.of());
-        dto.setSummary(evaluationResult.getSummary());
-        dto.setCategorySummaries(evaluationResult.getCategorySummaries().stream().map(this::toCategorySummaryDto).toList());
-        dto.setConflictSummaries(evaluationResult.getConflictSummaries().stream().map(this::toConflictSummaryDto).toList());
-        return dto;
-    }
-
-    private com.yishou.liuyao.analysis.dto.RuleCategorySummaryDTO toCategorySummaryDto(java.util.Map<String, Object> item) {
-        com.yishou.liuyao.analysis.dto.RuleCategorySummaryDTO dto =
-                new com.yishou.liuyao.analysis.dto.RuleCategorySummaryDTO();
-        dto.setCategory(String.valueOf(item.getOrDefault("category", "GENERAL")));
-        dto.setHitCount(asInteger(item.get("hitCount")));
-        dto.setScore(asInteger(item.get("score")));
-        dto.setEffectiveHitCount(asInteger(item.get("effectiveHitCount")));
-        dto.setEffectiveScore(asInteger(item.get("effectiveScore")));
-        dto.setStageOrder(asInteger(item.get("stageOrder")));
-        return dto;
-    }
-
-    private com.yishou.liuyao.analysis.dto.RuleConflictSummaryDTO toConflictSummaryDto(java.util.Map<String, Object> item) {
-        com.yishou.liuyao.analysis.dto.RuleConflictSummaryDTO dto =
-                new com.yishou.liuyao.analysis.dto.RuleConflictSummaryDTO();
-        dto.setCategory(String.valueOf(item.getOrDefault("category", "GENERAL")));
-        dto.setPositiveCount(asInteger(item.get("positiveCount")));
-        dto.setNegativeCount(asInteger(item.get("negativeCount")));
-        dto.setPositiveScore(asInteger(item.get("positiveScore")));
-        dto.setNegativeScore(asInteger(item.get("negativeScore")));
-        dto.setNetScore(asInteger(item.get("netScore")));
-        dto.setDecision(String.valueOf(item.getOrDefault("decision", "MIXED")));
-        dto.setPositiveRules(asStringList(item.get("positiveRules")));
-        dto.setNegativeRules(asStringList(item.get("negativeRules")));
-        dto.setEffectiveRules(asStringList(item.get("effectiveRules")));
-        dto.setSuppressedRules(asStringList(item.get("suppressedRules")));
-        return dto;
-    }
-
-    private Integer asInteger(Object value) {
-        if (value instanceof Integer integer) {
-            return integer;
-        }
-        if (value instanceof Number number) {
-            return number.intValue();
-        }
-        if (value == null) {
-            return null;
-        }
-        return Integer.parseInt(String.valueOf(value));
-    }
-
-    private List<String> asStringList(Object value) {
-        if (value instanceof List<?> list) {
-            return list.stream().map(String::valueOf).toList();
-        }
-        return List.of();
-    }
-
     private String extractConclusion(AnalysisOutputDTO dto) {
         if (dto == null || dto.getAnalysis() == null) return "";
         String c = dto.getAnalysis().getConclusion();
         return c != null ? c : "";
-    }
-
-    private String buildCaseAnalysisText(AnalysisContextDTO analysisContext, AnalysisOutputDTO analysisOutput) {
-        if (analysisContext != null) {
-            try {
-                String legacyAnalysis = legacyAnalysisService.analyze(analysisContext);
-                if (legacyAnalysis != null && !legacyAnalysis.isBlank()) {
-                    return legacyAnalysis;
-                }
-            } catch (Exception exception) {
-                log.warn("生成案例基线分析文本失败，回退为结论摘要: {}", exception.getMessage());
-            }
-        }
-        return extractConclusion(analysisOutput);
     }
 
     private void createVerificationEventIfNeeded(ChatSession session, AnalysisOutputDTO analysisOutput) {

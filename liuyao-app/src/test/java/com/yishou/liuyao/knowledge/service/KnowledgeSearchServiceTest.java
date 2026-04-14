@@ -3,6 +3,7 @@ package com.yishou.liuyao.knowledge.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.book.domain.Book;
 import com.yishou.liuyao.book.repository.BookRepository;
+import com.yishou.liuyao.evaluation.service.EvaluationRunService;
 import com.yishou.liuyao.knowledge.domain.BookChunk;
 import com.yishou.liuyao.knowledge.dto.BookChunkQueryResponse;
 import com.yishou.liuyao.knowledge.mapper.KnowledgeMapper;
@@ -47,6 +48,9 @@ class KnowledgeSearchServiceTest {
     @Mock
     private BookChunkHybridSearchRepository bookChunkHybridSearchRepository;
 
+    @Mock
+    private EvaluationRunService evaluationRunService;
+
     @Test
     void shouldPreferSemanticAndTxtSnippetsWhenAvailable() {
         KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
@@ -58,7 +62,8 @@ class KnowledgeSearchServiceTest {
                 bookChunkVectorSearchRepository,
                 bookChunkHybridSearchRepository,
                 new QuestionCategoryNormalizer(),
-                new ObjectMapper()
+                new ObjectMapper(),
+                evaluationRunService
         );
         Book txtBook = new Book();
         txtBook.setTitle("增删卜易");
@@ -120,7 +125,8 @@ class KnowledgeSearchServiceTest {
                 bookChunkVectorSearchRepository,
                 bookChunkHybridSearchRepository,
                 new QuestionCategoryNormalizer(),
-                new ObjectMapper()
+                new ObjectMapper(),
+                evaluationRunService
         );
         when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(false);
         when(bookRepository.findAllById(any())).thenReturn(List.of());
@@ -144,7 +150,8 @@ class KnowledgeSearchServiceTest {
                 bookChunkVectorSearchRepository,
                 bookChunkHybridSearchRepository,
                 new QuestionCategoryNormalizer(),
-                new ObjectMapper()
+                new ObjectMapper(),
+                evaluationRunService
         );
         when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(true);
         when(knowledgeQueryEmbeddingService.embed(contains("房屋 手续 文书 成交"))).thenReturn(List.of(0.3D, 0.4D));
@@ -170,7 +177,8 @@ class KnowledgeSearchServiceTest {
                 bookChunkVectorSearchRepository,
                 bookChunkHybridSearchRepository,
                 new QuestionCategoryNormalizer(),
-                new ObjectMapper()
+                new ObjectMapper(),
+                evaluationRunService
         );
         when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(true);
         when(knowledgeQueryEmbeddingService.embed("用神判断")).thenReturn(List.of(0.1D, 0.2D));

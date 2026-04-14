@@ -3,6 +3,9 @@ package com.yishou.liuyao.session.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
 import com.yishou.liuyao.analysis.dto.AnalysisOutputDTO;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionEnvelope;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionMode;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionService;
 import com.yishou.liuyao.analysis.service.AnalysisContextFactory;
 import com.yishou.liuyao.analysis.service.AnalysisService;
 import com.yishou.liuyao.analysis.service.OrchestratedAnalysisService;
@@ -17,7 +20,7 @@ import com.yishou.liuyao.divination.domain.DivinationInput;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.mapper.DivinationMapper;
 import com.yishou.liuyao.divination.service.ChartBuilderService;
-import com.yishou.liuyao.infrastructure.ratelimit.RateLimiter;
+import com.yishou.liuyao.ops.ratelimit.PersistentRateLimiter;
 import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.service.RuleEngineService;
@@ -74,6 +77,8 @@ class SessionServiceTest {
     @Mock
     private OrchestratedAnalysisService analysisService;
     @Mock
+    private AnalysisExecutionService analysisExecutionService;
+    @Mock
     private AnalysisService legacyAnalysisService;
     @Mock
     private AnalysisContextFactory analysisContextFactory;
@@ -88,7 +93,7 @@ class SessionServiceTest {
     @Mock
     private ChatMessageRepository messageRepository;
     @Mock
-    private RateLimiter rateLimiter;
+    private PersistentRateLimiter rateLimiter;
 
     private SessionService sessionService;
     private ObjectMapper objectMapper;
@@ -97,13 +102,7 @@ class SessionServiceTest {
     void setUp() {
         objectMapper = new ObjectMapper().findAndRegisterModules();
         sessionService = new SessionService(
-                divinationMapper,
-                chartBuilderService,
-                ruleEngineService,
-                knowledgeSearchService,
-                analysisService,
-                legacyAnalysisService,
-                analysisContextFactory,
+                analysisExecutionService,
                 verificationEventService,
                 caseCenterService,
                 caseChartSnapshotRepository,
@@ -127,21 +126,15 @@ class SessionServiceTest {
         request.setRawLines(List.of("少阳", "少阴", "少阳", "少阴", "少阳", "少阴"));
         request.setMovingLines(List.of(2, 5));
 
-        DivinationInput input = new DivinationInput();
         ChartSnapshot chartSnapshot = sampleChartSnapshot();
         RuleEvaluationResult evaluationResult = sampleEvaluationResult();
         AnalysisContextDTO analysisContext = sampleAnalysisContext();
         AnalysisOutputDTO analysisOutput = sampleAnalysisOutput("综合来看，事情有推进空间。");
+        AnalysisExecutionEnvelope executionEnvelope = sampleExecutionEnvelope(
+                AnalysisExecutionMode.INITIAL, chartSnapshot, evaluationResult, analysisContext, analysisOutput, "兼容文本");
 
-        when(divinationMapper.toInput(any(DivinationAnalyzeRequest.class))).thenReturn(input);
-        when(chartBuilderService.buildChart(input)).thenReturn(chartSnapshot);
-        when(ruleEngineService.evaluateResult(any(ChartSnapshot.class))).thenReturn(evaluationResult);
-        when(analysisContextFactory.create(request.getQuestionText(), chartSnapshot, evaluationResult.getHits()))
-                .thenReturn(analysisContext);
-        when(knowledgeSearchService.suggestKnowledgeSnippets(anyString(), anyString(), anyList(), anyInt()))
-                .thenReturn(List.of("《增删卜易》：用神得地则事可成"));
-        when(analysisService.analyzeInitial(eq(chartSnapshot), anyList(), eq(8), eq("POSITIVE"), anyList()))
-                .thenReturn(analysisOutput);
+        when(analysisExecutionService.executeInitial(any(DivinationAnalyzeRequest.class), eq(AnalysisExecutionMode.INITIAL)))
+                .thenReturn(executionEnvelope);
         when(caseCenterService.recordAnalysis(any(), eq(chartSnapshot), anyList(), eq(analysisContext), any(), anyString()))
                 .thenReturn(new CaseCenterService.RecordedAnalysisRefs(101L, 202L));
         when(sessionRepository.save(any(ChatSession.class))).thenAnswer(invocation -> {
@@ -156,6 +149,7 @@ class SessionServiceTest {
         SessionCreateResponse response = sessionService.createSession(request);
 
         assertNotNull(response.getSessionId());
+        assertEquals(executionEnvelope.getExecutionId(), response.getExecutionId());
         assertNotNull(response.getChartSnapshot());
         assertEquals("地火明夷", response.getChartSnapshot().getMainHexagram());
         assertSame(analysisContext, response.getAnalysisContext());
@@ -186,16 +180,16 @@ class SessionServiceTest {
 
         RuleEvaluationResult evaluationResult = sampleEvaluationResult();
         AnalysisOutputDTO followUpOutput = sampleAnalysisOutput("追问来看，结果仍偏正面。");
+        AnalysisExecutionEnvelope executionEnvelope = sampleExecutionEnvelope(
+                AnalysisExecutionMode.FOLLOW_UP, chartSnapshot, evaluationResult, null, followUpOutput,
+                "追问来看，结果仍偏正面。");
 
         when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
         when(caseChartSnapshotRepository.findByCaseId(101L)).thenReturn(Optional.of(storedSnapshot));
-        when(ruleEngineService.evaluateResult(any(ChartSnapshot.class))).thenReturn(evaluationResult);
         when(messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId))
                 .thenReturn(List.of(ChatMessage.userMessage(sessionId, "我这个月面试结果如何")));
-        when(knowledgeSearchService.suggestKnowledgeSnippets(anyString(), anyString(), anyList(), anyInt()))
-                .thenReturn(List.of());
-        when(analysisService.analyzeFollowUp(any(ChartSnapshot.class), anyList(), eq(8), eq("POSITIVE"), anyList(), anyList(), eq("还需要注意什么？")))
-                .thenReturn(followUpOutput);
+        when(analysisExecutionService.executeFollowUp(any(ChartSnapshot.class), anyList(), eq("还需要注意什么？")))
+                .thenReturn(executionEnvelope);
         when(messageRepository.save(any(ChatMessage.class))).thenAnswer(invocation -> {
             ChatMessage message = invocation.getArgument(0);
             if (message.getId() == null) {
@@ -212,11 +206,12 @@ class SessionServiceTest {
 
         assertEquals(sessionId, response.getSessionId());
         assertNotNull(response.getMessageId());
+        assertEquals(executionEnvelope.getExecutionId(), response.getExecutionId());
         assertSame(followUpOutput, response.getAnalysis());
         assertEquals(2, response.getSessionMessageCount());
 
         ArgumentCaptor<ChartSnapshot> chartCaptor = ArgumentCaptor.forClass(ChartSnapshot.class);
-        verify(analysisService).analyzeFollowUp(chartCaptor.capture(), anyList(), eq(8), eq("POSITIVE"), anyList(), anyList(), eq("还需要注意什么？"));
+        verify(analysisExecutionService).executeFollowUp(chartCaptor.capture(), anyList(), eq("还需要注意什么？"));
         assertEquals("地火明夷", chartCaptor.getValue().getMainHexagram());
         assertEquals("官鬼", chartCaptor.getValue().getUseGod());
         verify(rateLimiter).acquire(7L);
@@ -225,7 +220,6 @@ class SessionServiceTest {
     @Test
     void createSessionFollowUpThreeRoundsAndCloseShouldMaintainLifecycle() throws Exception {
         SessionCreateRequest request = buildCreateRequest();
-        DivinationInput input = new DivinationInput();
         ChartSnapshot chartSnapshot = sampleChartSnapshot();
         RuleEvaluationResult evaluationResult = sampleEvaluationResult();
         AnalysisContextDTO analysisContext = sampleAnalysisContext();
@@ -233,6 +227,14 @@ class SessionServiceTest {
         AnalysisOutputDTO followUp1 = sampleAnalysisOutput("第二轮结论");
         AnalysisOutputDTO followUp2 = sampleAnalysisOutput("第三轮结论");
         AnalysisOutputDTO followUp3 = sampleAnalysisOutput("第四轮结论");
+        AnalysisExecutionEnvelope initialEnvelope = sampleExecutionEnvelope(
+                AnalysisExecutionMode.INITIAL, chartSnapshot, evaluationResult, analysisContext, initialOutput, "第一轮结论");
+        AnalysisExecutionEnvelope followUpEnvelope1 = sampleExecutionEnvelope(
+                AnalysisExecutionMode.FOLLOW_UP, chartSnapshot, evaluationResult, null, followUp1, "第二轮结论");
+        AnalysisExecutionEnvelope followUpEnvelope2 = sampleExecutionEnvelope(
+                AnalysisExecutionMode.FOLLOW_UP, chartSnapshot, evaluationResult, null, followUp2, "第三轮结论");
+        AnalysisExecutionEnvelope followUpEnvelope3 = sampleExecutionEnvelope(
+                AnalysisExecutionMode.FOLLOW_UP, chartSnapshot, evaluationResult, null, followUp3, "第四轮结论");
         CaseChartSnapshot storedSnapshot = new CaseChartSnapshot();
         storedSnapshot.setCaseId(101L);
         storedSnapshot.setChartJson(objectMapper.writeValueAsString(chartSnapshot));
@@ -241,17 +243,10 @@ class SessionServiceTest {
         AtomicInteger messageIdSequence = new AtomicInteger(1);
         List<ChatMessage> persistedMessages = new ArrayList<>();
 
-        when(divinationMapper.toInput(any(DivinationAnalyzeRequest.class))).thenReturn(input);
-        when(chartBuilderService.buildChart(input)).thenReturn(chartSnapshot);
-        when(ruleEngineService.evaluateResult(any(ChartSnapshot.class))).thenReturn(evaluationResult);
-        when(analysisContextFactory.create(request.getQuestionText(), chartSnapshot, evaluationResult.getHits()))
-                .thenReturn(analysisContext);
-        when(knowledgeSearchService.suggestKnowledgeSnippets(anyString(), anyString(), anyList(), anyInt()))
-                .thenReturn(List.of("《增删卜易》：用神得地则事可成"));
-        when(analysisService.analyzeInitial(eq(chartSnapshot), anyList(), eq(8), eq("POSITIVE"), anyList()))
-                .thenReturn(initialOutput);
-        when(analysisService.analyzeFollowUp(any(ChartSnapshot.class), anyList(), eq(8), eq("POSITIVE"), anyList(), anyList(), anyString()))
-                .thenReturn(followUp1, followUp2, followUp3);
+        when(analysisExecutionService.executeInitial(any(DivinationAnalyzeRequest.class), eq(AnalysisExecutionMode.INITIAL)))
+                .thenReturn(initialEnvelope);
+        when(analysisExecutionService.executeFollowUp(any(ChartSnapshot.class), anyList(), anyString()))
+                .thenReturn(followUpEnvelope1, followUpEnvelope2, followUpEnvelope3);
         when(caseCenterService.recordAnalysis(any(), eq(chartSnapshot), anyList(), eq(analysisContext), any(), anyString()))
                 .thenReturn(new CaseCenterService.RecordedAnalysisRefs(101L, 202L));
         when(caseChartSnapshotRepository.findById(202L)).thenReturn(Optional.of(storedSnapshot));
@@ -311,7 +306,7 @@ class SessionServiceTest {
         assertEquals(ErrorCode.SESSION_ALREADY_CLOSED, exception.getErrorCode());
         assertEquals("CLOSED", session.getStatus());
         verify(sessionRepository).save(session);
-        verifyNoInteractions(analysisService);
+        verifyNoInteractions(analysisExecutionService);
     }
 
     @Test
@@ -327,7 +322,7 @@ class SessionServiceTest {
                 () -> sessionService.addMessage(sessionId, new MessageRequest("还能继续吗")));
 
         assertEquals(ErrorCode.SESSION_MESSAGE_LIMIT_EXCEEDED, exception.getErrorCode());
-        verifyNoInteractions(messageRepository, analysisService);
+        verifyNoInteractions(messageRepository, analysisExecutionService);
     }
 
     @Test
@@ -344,7 +339,7 @@ class SessionServiceTest {
                 () -> sessionService.addMessage(sessionId, new MessageRequest("还能继续吗")));
 
         assertEquals(ErrorCode.RATE_LIMIT_EXCEEDED, exception.getErrorCode());
-        verifyNoInteractions(messageRepository, analysisService);
+        verifyNoInteractions(messageRepository, analysisExecutionService);
     }
 
     @Test
@@ -424,6 +419,44 @@ class SessionServiceTest {
         AnalysisOutputDTO dto = new AnalysisOutputDTO();
         dto.setAnalysis(analysis);
         dto.setSmartPrompts(List.of("何时有结果", "还有什么风险"));
+        return dto;
+    }
+
+    private AnalysisExecutionEnvelope sampleExecutionEnvelope(AnalysisExecutionMode mode,
+                                                              ChartSnapshot chartSnapshot,
+                                                              RuleEvaluationResult evaluationResult,
+                                                              AnalysisContextDTO analysisContext,
+                                                              AnalysisOutputDTO analysisOutput,
+                                                              String legacyAnalysisText) {
+        AnalysisExecutionEnvelope envelope = new AnalysisExecutionEnvelope();
+        envelope.setExecutionId(UUID.randomUUID());
+        envelope.setMode(mode);
+        envelope.setChartSnapshot(chartSnapshot);
+        envelope.setRuleHits(evaluationResult.getHits());
+        envelope.setStructuredResult(sessionServiceTestStructuredResult(evaluationResult));
+        envelope.setAnalysisContext(analysisContext);
+        envelope.setAnalysisOutput(analysisOutput);
+        envelope.setLegacyAnalysisText(legacyAnalysisText);
+        envelope.setKnowledgeSnippets(List.of("《增删卜易》：用神得地则事可成"));
+        return envelope;
+    }
+
+    private com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO sessionServiceTestStructuredResult(
+            RuleEvaluationResult evaluationResult) {
+        com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO dto =
+                new com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO();
+        dto.setScore(evaluationResult.getScore());
+        dto.setResultLevel(evaluationResult.getResultLevel());
+        dto.setEffectiveScore(evaluationResult.getEffectiveScore());
+        dto.setEffectiveResultLevel(evaluationResult.getEffectiveResultLevel());
+        dto.setTags(evaluationResult.getTags() != null ? evaluationResult.getTags() : List.of());
+        dto.setEffectiveRuleCodes(evaluationResult.getEffectiveRuleCodes() != null
+                ? evaluationResult.getEffectiveRuleCodes() : List.of());
+        dto.setSuppressedRuleCodes(evaluationResult.getSuppressedRuleCodes() != null
+                ? evaluationResult.getSuppressedRuleCodes() : List.of());
+        dto.setSummary(evaluationResult.getSummary());
+        dto.setCategorySummaries(List.of());
+        dto.setConflictSummaries(List.of());
         return dto;
     }
 }

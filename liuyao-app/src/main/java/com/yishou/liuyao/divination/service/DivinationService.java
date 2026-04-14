@@ -1,31 +1,19 @@
 package com.yishou.liuyao.divination.service;
 
-import com.yishou.liuyao.analysis.service.AnalysisService;
-import com.yishou.liuyao.analysis.service.AnalysisContextFactory;
-import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
-import com.yishou.liuyao.analysis.dto.RuleConflictSummaryDTO;
-import com.yishou.liuyao.analysis.dto.RuleCategorySummaryDTO;
-import com.yishou.liuyao.analysis.dto.StructuredAnalysisResultDTO;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionEnvelope;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionMode;
+import com.yishou.liuyao.analysis.runtime.AnalysisExecutionService;
 import com.yishou.liuyao.casecenter.service.CaseCenterService;
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
-import com.yishou.liuyao.divination.domain.DivinationInput;
 import com.yishou.liuyao.divination.domain.LineInfo;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeResponse;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
 import com.yishou.liuyao.divination.dto.LineInfoDTO;
-import com.yishou.liuyao.divination.mapper.DivinationMapper;
-import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
-import com.yishou.liuyao.rule.service.RuleEvaluationResult;
-import com.yishou.liuyao.rule.service.RuleEngineService;
-import com.yishou.liuyao.session.dto.SessionCreateRequest;
-import com.yishou.liuyao.session.dto.SessionCreateResponse;
-import com.yishou.liuyao.session.service.SessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -35,124 +23,47 @@ public class DivinationService {
 
     private static final Logger log = LoggerFactory.getLogger(DivinationService.class);
 
-    private final DivinationMapper divinationMapper;
-    private final ChartBuilderService chartBuilderService;
-    private final RuleEngineService ruleEngineService;
-    private final AnalysisService analysisService;
-    private final AnalysisContextFactory analysisContextFactory;
+    private final AnalysisExecutionService analysisExecutionService;
     private final CaseCenterService caseCenterService;
-    private final KnowledgeSearchService knowledgeSearchService;
-    private final SessionService sessionService;
 
-    @Value("${liuyao.feature.session-api-enabled:true}")
-    private boolean sessionApiEnabled;
-
-    public DivinationService(DivinationMapper divinationMapper,
-                             ChartBuilderService chartBuilderService,
-                             RuleEngineService ruleEngineService,
-                             AnalysisService analysisService,
-                             AnalysisContextFactory analysisContextFactory,
-                             CaseCenterService caseCenterService,
-                             KnowledgeSearchService knowledgeSearchService,
-                             SessionService sessionService) {
-        this.divinationMapper = divinationMapper;
-        this.chartBuilderService = chartBuilderService;
-        this.ruleEngineService = ruleEngineService;
-        this.analysisService = analysisService;
-        this.analysisContextFactory = analysisContextFactory;
+    public DivinationService(AnalysisExecutionService analysisExecutionService,
+                             CaseCenterService caseCenterService) {
+        this.analysisExecutionService = analysisExecutionService;
         this.caseCenterService = caseCenterService;
-        this.knowledgeSearchService = knowledgeSearchService;
-        this.sessionService = sessionService;
     }
 
     public DivinationAnalyzeResponse analyze(DivinationAnalyzeRequest request) {
-        if (sessionApiEnabled) {
-            return analyzeThroughSessionApi(request);
-        }
-        return analyzeLegacy(request);
-    }
-
-    private DivinationAnalyzeResponse analyzeThroughSessionApi(DivinationAnalyzeRequest request) {
-        log.info("旧版分析接口转发到Session编排: category={}, time={}, rawLineCount={}, movingLineCount={}",
+        log.info("旧版分析接口转发到统一 execution runtime: category={}, time={}, rawLineCount={}, movingLineCount={}",
                 request.getQuestionCategory(),
                 request.getDivinationTime(),
                 request.getRawLines() == null ? 0 : request.getRawLines().size(),
                 request.getMovingLines() == null ? 0 : request.getMovingLines().size());
-        SessionCreateResponse response = sessionService.createSession(toSessionCreateRequest(request));
-        String legacyAnalysis = response.getAnalysisContext() == null
-                ? ""
-                : analysisService.analyze(response.getAnalysisContext());
-        return new DivinationAnalyzeResponse(
-                response.getChartSnapshot(),
-                response.getRuleHits(),
-                legacyAnalysis,
-                response.getAnalysisContext(),
-                response.getStructuredResult()
+        AnalysisExecutionEnvelope execution = analysisExecutionService.executeInitial(request, AnalysisExecutionMode.LEGACY_COMPAT);
+        recordCaseIfPossible(request, execution);
+        DivinationAnalyzeResponse response = new DivinationAnalyzeResponse(
+                toChartSnapshotDto(execution.getChartSnapshot()),
+                toRuleHitDtos(execution.getRuleHits()),
+                execution.getLegacyAnalysisText(),
+                execution.getAnalysisContext(),
+                execution.getStructuredResult()
         );
+        response.setExecutionId(execution.getExecutionId());
+        return response;
     }
 
-    private DivinationAnalyzeResponse analyzeLegacy(DivinationAnalyzeRequest request) {
-        log.info("开始分析六爻请求: category={}, time={}, rawLineCount={}, movingLineCount={}",
-                request.getQuestionCategory(),
-                request.getDivinationTime(),
-                request.getRawLines() == null ? 0 : request.getRawLines().size(),
-                request.getMovingLines() == null ? 0 : request.getMovingLines().size());
-        DivinationInput input = divinationMapper.toInput(request);
-        ChartSnapshot chartSnapshot = chartBuilderService.buildChart(input);
-        RuleEvaluationResult evaluationResult = ruleEngineService.evaluateResult(chartSnapshot);
-        List<RuleHit> ruleHits = evaluationResult.getHits();
-        StructuredAnalysisResultDTO structuredResult = toStructuredResultDto(evaluationResult);
-        AnalysisContextDTO analysisContext = buildAnalysisContext(request.getQuestionText(), chartSnapshot, ruleHits, structuredResult);
-        if (log.isDebugEnabled()) {
-            log.debug("分析上下文摘要: question={}, useGod={}, ruleCodes={}",
-                    analysisContext.getQuestion(),
-                    analysisContext.getChartSnapshot() == null ? "" : analysisContext.getChartSnapshot().getUseGod(),
-                    analysisContext.getRuleHits().stream().map(RuleHitDTO::getRuleCode).toList());
+    private void recordCaseIfPossible(DivinationAnalyzeRequest request, AnalysisExecutionEnvelope execution) {
+        try {
+            caseCenterService.recordAnalysis(
+                    request,
+                    execution.getChartSnapshot(),
+                    execution.getRuleHits(),
+                    execution.getAnalysisContext(),
+                    execution.getStructuredResult(),
+                    execution.getLegacyAnalysisText()
+            );
+        } catch (Exception exception) {
+            log.warn("旧版分析接口留痕失败（不影响主流程）: {}", exception.getMessage());
         }
-        String analysis = analysisService.analyze(analysisContext);
-        caseCenterService.recordAnalysis(request, chartSnapshot, ruleHits, analysisContext, structuredResult, analysis);
-        log.info("六爻分析完成: mainHexagram={}, changedHexagram={}, useGod={}, ruleHitCount={}",
-                chartSnapshot.getMainHexagram(),
-                chartSnapshot.getChangedHexagram(),
-                chartSnapshot.getUseGod(),
-                ruleHits.size());
-        return new DivinationAnalyzeResponse(
-                toChartSnapshotDto(chartSnapshot),
-                toRuleHitDtos(ruleHits),
-                analysis,
-                analysisContext,
-                structuredResult
-        );
-    }
-
-    private SessionCreateRequest toSessionCreateRequest(DivinationAnalyzeRequest request) {
-        SessionCreateRequest sessionRequest = new SessionCreateRequest();
-        sessionRequest.setQuestionText(request.getQuestionText());
-        sessionRequest.setQuestionCategory(request.getQuestionCategory());
-        sessionRequest.setDivinationMethod(request.getDivinationMethod());
-        sessionRequest.setRawLines(request.getRawLines());
-        sessionRequest.setMovingLines(request.getMovingLines());
-        if (request.getDivinationTime() != null) {
-            sessionRequest.setDivinationTime(request.getDivinationTime().toString());
-        }
-        return sessionRequest;
-    }
-
-    private AnalysisContextDTO buildAnalysisContext(String question,
-                                                    ChartSnapshot chartSnapshot,
-                                                    List<RuleHit> ruleHits,
-                                                    StructuredAnalysisResultDTO structuredResult) {
-        AnalysisContextDTO context = analysisContextFactory.create(question, chartSnapshot, ruleHits);
-        context.setChartSnapshot(toChartSnapshotDto(chartSnapshot));
-        context.setRuleHits(toRuleHitDtos(ruleHits));
-        context.setStructuredResult(structuredResult);
-        context.setKnowledgeSnippets(knowledgeSearchService.suggestKnowledgeSnippets(
-                chartSnapshot.getQuestionCategory(),
-                chartSnapshot.getUseGod(),
-                context.getRuleCodes(),
-                6
-        ));
-        return context;
     }
 
     private List<RuleHitDTO> toRuleHitDtos(List<RuleHit> ruleHits) {
@@ -172,68 +83,6 @@ public class DivinationService {
         dto.setTags(ruleHit.getTags());
         dto.setEvidence(ruleHit.getEvidence());
         return dto;
-    }
-
-    private StructuredAnalysisResultDTO toStructuredResultDto(RuleEvaluationResult evaluationResult) {
-        StructuredAnalysisResultDTO dto = new StructuredAnalysisResultDTO();
-        dto.setScore(evaluationResult.getScore());
-        dto.setResultLevel(evaluationResult.getResultLevel());
-        dto.setEffectiveScore(evaluationResult.getEffectiveScore());
-        dto.setEffectiveResultLevel(evaluationResult.getEffectiveResultLevel());
-        dto.setTags(evaluationResult.getTags());
-        dto.setEffectiveRuleCodes(evaluationResult.getEffectiveRuleCodes());
-        dto.setSuppressedRuleCodes(evaluationResult.getSuppressedRuleCodes());
-        dto.setSummary(evaluationResult.getSummary());
-        dto.setCategorySummaries(evaluationResult.getCategorySummaries().stream().map(this::toCategorySummaryDto).toList());
-        dto.setConflictSummaries(evaluationResult.getConflictSummaries().stream().map(this::toConflictSummaryDto).toList());
-        return dto;
-    }
-
-    private RuleCategorySummaryDTO toCategorySummaryDto(java.util.Map<String, Object> item) {
-        RuleCategorySummaryDTO dto = new RuleCategorySummaryDTO();
-        dto.setCategory(String.valueOf(item.getOrDefault("category", "GENERAL")));
-        dto.setHitCount(asInteger(item.get("hitCount")));
-        dto.setScore(asInteger(item.get("score")));
-        dto.setEffectiveHitCount(asInteger(item.get("effectiveHitCount")));
-        dto.setEffectiveScore(asInteger(item.get("effectiveScore")));
-        dto.setStageOrder(asInteger(item.get("stageOrder")));
-        return dto;
-    }
-
-    private Integer asInteger(Object value) {
-        if (value instanceof Integer integer) {
-            return integer;
-        }
-        if (value instanceof Number number) {
-            return number.intValue();
-        }
-        if (value == null) {
-            return null;
-        }
-        return Integer.parseInt(String.valueOf(value));
-    }
-
-    private RuleConflictSummaryDTO toConflictSummaryDto(java.util.Map<String, Object> item) {
-        RuleConflictSummaryDTO dto = new RuleConflictSummaryDTO();
-        dto.setCategory(String.valueOf(item.getOrDefault("category", "GENERAL")));
-        dto.setPositiveCount(asInteger(item.get("positiveCount")));
-        dto.setNegativeCount(asInteger(item.get("negativeCount")));
-        dto.setPositiveScore(asInteger(item.get("positiveScore")));
-        dto.setNegativeScore(asInteger(item.get("negativeScore")));
-        dto.setNetScore(asInteger(item.get("netScore")));
-        dto.setDecision(String.valueOf(item.getOrDefault("decision", "MIXED")));
-        dto.setPositiveRules(asStringList(item.get("positiveRules")));
-        dto.setNegativeRules(asStringList(item.get("negativeRules")));
-        dto.setEffectiveRules(asStringList(item.get("effectiveRules")));
-        dto.setSuppressedRules(asStringList(item.get("suppressedRules")));
-        return dto;
-    }
-
-    private List<String> asStringList(Object value) {
-        if (value instanceof List<?> list) {
-            return list.stream().map(String::valueOf).toList();
-        }
-        return List.of();
     }
 
     private ChartSnapshotDTO toChartSnapshotDto(ChartSnapshot chartSnapshot) {

@@ -62,6 +62,10 @@ public class PromptTemplateEngine {
         return loadTemplate(currentVersion, templateKey);
     }
 
+    public String getCurrentVersion() {
+        return currentVersion;
+    }
+
     // ---- Private ----
 
     private String loadTemplate(String version, String key) {

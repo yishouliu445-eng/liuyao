@@ -110,7 +110,7 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("问出行")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")));
 
-        org.junit.jupiter.api.Assertions.assertEquals(initialSessionCount + 1, chatSessionRepository.count());
+        org.junit.jupiter.api.Assertions.assertEquals(initialSessionCount, chatSessionRepository.count());
     }
 
     @Test
@@ -175,9 +175,12 @@ class DivinationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.executionId").isNotEmpty())
                 .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets").isArray())
                 .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets[0]").value(org.hamcrest.Matchers.containsString("《")))
                 .andExpect(jsonPath("$.data.analysisContext.knowledgeSnippets[0]").value(org.hamcrest.Matchers.containsString("用神宜旺相")))
+                .andExpect(jsonPath("$.data.analysisContext.evidenceHits").isArray())
+                .andExpect(jsonPath("$.data.analysisContext.evidenceHits[0].citationId").value(org.hamcrest.Matchers.containsString("chunk:")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("用神宜旺相")));
     }
 

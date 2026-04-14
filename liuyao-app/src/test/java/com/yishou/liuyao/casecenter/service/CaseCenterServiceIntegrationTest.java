@@ -10,6 +10,7 @@ import com.yishou.liuyao.casecenter.dto.CaseReplayRunStatsDTO;
 import com.yishou.liuyao.casecenter.dto.CaseSummaryDTO;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.service.DivinationService;
+import com.yishou.liuyao.evaluation.dto.EvaluationScenario;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -180,6 +181,11 @@ class CaseCenterServiceIntegrationTest {
         assertNotNull(replay.getReplayStructuredResult());
         assertFalse(replay.getReplayRuleHits().isEmpty());
         assertTrue(replay.getReplayAnalysis().contains("合作"));
+
+        EvaluationScenario scenario = caseCenterService.buildEvaluationScenario(caseId);
+        assertEquals("case:" + caseId, scenario.getScenarioId());
+        assertEquals("CASE_REPLAY", scenario.getScenarioType());
+        assertEquals("合作", scenario.getQuestionCategory());
     }
 
     @Test
@@ -270,17 +276,22 @@ class CaseCenterServiceIntegrationTest {
                 .orElseThrow()
                 .getCaseId();
 
-        caseCenterService.createReplayRun(coopCaseId);
+        CaseReplayRunDTO coopReplayRun = caseCenterService.createReplayRun(coopCaseId);
         caseCenterService.createReplayRun(travelCaseId);
 
-        CaseReplayRunListDTO filtered = caseCenterService.listReplayRuns("合作", false, 1, 10);
+        CaseReplayRunListDTO filtered = caseCenterService.listReplayRuns(
+                "合作",
+                coopReplayRun.getRecommendPersistReplay(),
+                1,
+                10
+        );
 
         assertEquals(1, filtered.getPage());
         assertEquals(10, filtered.getSize());
         assertTrue(filtered.getTotal() >= 1);
         assertFalse(filtered.getItems().isEmpty());
         assertEquals("合作", filtered.getItems().get(0).getQuestionCategory());
-        assertEquals(Boolean.FALSE, filtered.getItems().get(0).getRecommendPersistReplay());
+        assertEquals(coopReplayRun.getRecommendPersistReplay(), filtered.getItems().get(0).getRecommendPersistReplay());
         assertNotNull(filtered.getItems().get(0).getReplayRunId());
     }
 

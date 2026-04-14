@@ -1,6 +1,7 @@
 package com.yishou.liuyao.analysis.dto;
 
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
+import com.yishou.liuyao.evidence.dto.EvidenceHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ public class AnalysisContextDTO {
     private Integer ruleCount;
     private List<String> ruleCodes = new ArrayList<>();
     private List<String> knowledgeSnippets = new ArrayList<>();
+    private List<EvidenceHit> evidenceHits = new ArrayList<>();
     private List<RuleHitDTO> ruleHits = new ArrayList<>();
     private StructuredAnalysisResultDTO structuredResult;
 
@@ -101,6 +103,14 @@ public class AnalysisContextDTO {
 
     public void setKnowledgeSnippets(List<String> knowledgeSnippets) {
         this.knowledgeSnippets = knowledgeSnippets;
+    }
+
+    public List<EvidenceHit> getEvidenceHits() {
+        return evidenceHits;
+    }
+
+    public void setEvidenceHits(List<EvidenceHit> evidenceHits) {
+        this.evidenceHits = evidenceHits;
     }
 
     public List<RuleHitDTO> getRuleHits() {

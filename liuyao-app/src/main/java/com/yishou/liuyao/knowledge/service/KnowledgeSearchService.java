@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.book.domain.Book;
 import com.yishou.liuyao.book.repository.BookRepository;
+import com.yishou.liuyao.evaluation.dto.EvaluationScoreCard;
+import com.yishou.liuyao.evaluation.service.EvaluationRunService;
 import com.yishou.liuyao.knowledge.domain.BookChunk;
 import com.yishou.liuyao.knowledge.dto.BookChunkQueryResponse;
 import com.yishou.liuyao.knowledge.dto.KnowledgeReferenceQueryResponse;
@@ -37,6 +39,7 @@ public class KnowledgeSearchService {
     private final BookChunkHybridSearchRepository bookChunkHybridSearchRepository;
     private final QuestionCategoryNormalizer questionCategoryNormalizer;
     private final ObjectMapper objectMapper;
+    private final EvaluationRunService evaluationRunService;
 
     @Value("${liuyao.knowledge.similarity-threshold:0.65}")
     private double similarityThreshold = 0.65D;
@@ -49,7 +52,8 @@ public class KnowledgeSearchService {
                                   BookChunkVectorSearchRepository bookChunkVectorSearchRepository,
                                   BookChunkHybridSearchRepository bookChunkHybridSearchRepository,
                                   QuestionCategoryNormalizer questionCategoryNormalizer,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  EvaluationRunService evaluationRunService) {
         this.bookChunkRepository = bookChunkRepository;
         this.bookRepository = bookRepository;
         this.knowledgeImportService = knowledgeImportService;
@@ -59,6 +63,7 @@ public class KnowledgeSearchService {
         this.bookChunkHybridSearchRepository = bookChunkHybridSearchRepository;
         this.questionCategoryNormalizer = questionCategoryNormalizer;
         this.objectMapper = objectMapper;
+        this.evaluationRunService = evaluationRunService;
     }
 
     public KnowledgeSearchResponse buildImportTopicsPreview() {
@@ -250,6 +255,18 @@ public class KnowledgeSearchService {
                 null,
                 knowledgeType,
                 limit
+        );
+    }
+
+    public EvaluationScoreCard buildRetrievalScoreCard(String scenarioId,
+                                                       int hitCount,
+                                                       int citationCount,
+                                                       int matchedCitationCount) {
+        return evaluationRunService.evaluateRetrievalSelection(
+                scenarioId,
+                hitCount,
+                citationCount,
+                matchedCitationCount
         );
     }
 

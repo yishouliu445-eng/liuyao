@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(properties = "spring.flyway.enabled=true")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 class SessionApiIntegrationTest {
 
     @Autowired
@@ -47,6 +49,7 @@ class SessionApiIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.sessionId").value(notNullValue()))
+                .andExpect(jsonPath("$.data.executionId").value(notNullValue()))
                 .andExpect(jsonPath("$.data.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.data.messageCount").value(1))
                 .andExpect(jsonPath("$.data.chartSnapshot.mainHexagram").isNotEmpty())
@@ -64,6 +67,7 @@ class SessionApiIntegrationTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.sessionId").value(sessionId.toString()))
                 .andExpect(jsonPath("$.data.messageId").value(notNullValue()))
+                .andExpect(jsonPath("$.data.executionId").value(notNullValue()))
                 .andExpect(jsonPath("$.data.sessionMessageCount").value(2))
                 .andExpect(jsonPath("$.data.analysis.analysis.conclusion").isNotEmpty())
                 .andExpect(jsonPath("$.data.smartPrompts").isArray());

@@ -203,6 +203,9 @@ class DivinationServiceIntegrationTest {
                         .anyMatch(item -> item.contains("用神宜旺相"))
         );
         org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysisContext().getKnowledgeSnippets().get(0).contains("《"));
+        org.junit.jupiter.api.Assertions.assertFalse(response.getAnalysisContext().getEvidenceHits().isEmpty());
+        assertEquals("chunk:" + response.getAnalysisContext().getEvidenceHits().get(0).getChunkId(),
+                response.getAnalysisContext().getEvidenceHits().get(0).getCitationId());
         org.junit.jupiter.api.Assertions.assertTrue(response.getAnalysis().contains("用神宜旺相"));
     }
 

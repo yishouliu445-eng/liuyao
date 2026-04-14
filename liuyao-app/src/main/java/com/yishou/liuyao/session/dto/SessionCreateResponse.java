@@ -13,6 +13,7 @@ import java.util.UUID;
 public class SessionCreateResponse {
 
     private UUID sessionId;
+    private UUID executionId;
     private String status;
     private ChartSnapshotDTO chartSnapshot;
     private List<RuleHitDTO> ruleHits;
@@ -24,6 +25,8 @@ public class SessionCreateResponse {
 
     public UUID getSessionId() { return sessionId; }
     public void setSessionId(UUID sessionId) { this.sessionId = sessionId; }
+    public UUID getExecutionId() { return executionId; }
+    public void setExecutionId(UUID executionId) { this.executionId = executionId; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public ChartSnapshotDTO getChartSnapshot() { return chartSnapshot; }
