@@ -4,19 +4,25 @@ import com.yishou.liuyao.common.exception.BusinessException;
 import com.yishou.liuyao.common.exception.ErrorCode;
 import com.yishou.liuyao.ops.ratelimit.domain.RateLimitBucket;
 import com.yishou.liuyao.ops.ratelimit.repository.RateLimitBucketRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 @Component
 public class PersistentRateLimiter {
 
+    private static final Logger log = LoggerFactory.getLogger(PersistentRateLimiter.class);
+
     private final RateLimitBucketRepository rateLimitBucketRepository;
     private final Supplier<LocalDate> currentDateSupplier;
+    private final AtomicBoolean persistenceEnabled = new AtomicBoolean(true);
 
     @Value("${liuyao.rate-limit.anonymous-per-day:5}")
     private int anonymousPerDay = 5;
@@ -37,6 +43,11 @@ public class PersistentRateLimiter {
 
     @Transactional
     public void acquire(Long userId) {
+        if (!persistenceEnabled.get()) {
+            return;
+        }
+
+        try {
         LocalDate today = currentDateSupplier.get();
         rateLimitBucketRepository.deleteByBucketDateBefore(today);
 
@@ -57,6 +68,13 @@ public class PersistentRateLimiter {
         bucket.setLimitValue(limit);
         bucket.setRequestCount(nextCount);
         rateLimitBucketRepository.save(bucket);
+        } catch (RuntimeException exception) {
+            if (!isMissingBucketTable(exception)) {
+                throw exception;
+            }
+            persistenceEnabled.set(false);
+            log.warn("持久化限流不可用，已降级为放行模式: {}", exception.getMessage());
+        }
     }
 
     private RateLimitBucket newBucket(LocalDate today, String principal, int limit) {
@@ -74,5 +92,19 @@ public class PersistentRateLimiter {
 
     private int resolveLimit(Long userId) {
         return userId == null ? anonymousPerDay : authenticatedPerDay;
+    }
+
+    private boolean isMissingBucketTable(RuntimeException exception) {
+        Throwable current = exception;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && (message.contains("relation \"rate_limit_bucket\" does not exist")
+                    || message.contains("relation rate_limit_bucket does not exist")
+                    || message.contains("Table \"RATE_LIMIT_BUCKET\" not found"))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }

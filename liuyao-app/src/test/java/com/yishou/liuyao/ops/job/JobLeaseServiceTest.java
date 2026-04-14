@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @TestPropertySource(properties = "spring.flyway.enabled=true")
@@ -58,5 +60,21 @@ class JobLeaseServiceTest {
 
         JobLease lease = jobLeaseRepository.findByJobName("session.closeInactiveSessions").orElseThrow();
         assertEquals("node-b", lease.getOwnerId());
+    }
+
+    @Test
+    void shouldFailOpenWhenLeaseTableIsUnavailable() {
+        JobLeaseRepository repository = mock(JobLeaseRepository.class);
+        doThrow(new RuntimeException("relation job_lease does not exist"))
+                .when(repository)
+                .findByJobName("session.closeInactiveSessions");
+        JobLeaseService service = new JobLeaseService(
+                repository,
+                () -> LocalDateTime.of(2026, 4, 14, 12, 0),
+                "node-a",
+                Duration.ofMinutes(5)
+        );
+
+        assertTrue(service.tryAcquire("session.closeInactiveSessions"));
     }
 }

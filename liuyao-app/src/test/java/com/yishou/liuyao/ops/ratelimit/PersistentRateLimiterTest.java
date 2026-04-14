@@ -16,7 +16,10 @@ import java.time.LocalDate;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @TestPropertySource(properties = "spring.flyway.enabled=true")
@@ -53,6 +56,17 @@ class PersistentRateLimiterTest {
         RateLimitBucket bucket = rateLimitBucketRepository.findByBucketDateAndPrincipal(currentDate.get(), "anonymous")
                 .orElseThrow();
         assertEquals(5, bucket.getRequestCount());
+    }
+
+    @Test
+    void shouldSkipPersistenceWhenRateLimitTableIsUnavailable() {
+        RateLimitBucketRepository repository = mock(RateLimitBucketRepository.class);
+        doThrow(new RuntimeException("relation rate_limit_bucket does not exist"))
+                .when(repository)
+                .deleteByBucketDateBefore(LocalDate.of(2026, 4, 14));
+        PersistentRateLimiter limiter = new PersistentRateLimiter(repository, () -> LocalDate.of(2026, 4, 14));
+
+        assertDoesNotThrow(() -> limiter.acquire(null));
     }
 
     private PersistentRateLimiter buildRateLimiter(AtomicReference<LocalDate> currentDate) {
