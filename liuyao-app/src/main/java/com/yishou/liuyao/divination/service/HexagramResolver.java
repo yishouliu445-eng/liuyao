@@ -43,6 +43,18 @@ public class HexagramResolver {
         );
     }
 
+    public HexagramDescriptor describeCode(String hexagramCode) {
+        if (hexagramCode == null || hexagramCode.length() != 6) {
+            return new HexagramDescriptor("未知卦", "", "坤", "坤");
+        }
+        return new HexagramDescriptor(
+                HEXAGRAM_NAMES.getOrDefault(hexagramCode, "未知卦"),
+                hexagramCode,
+                trigramName(hexagramCode.substring(0, 3)),
+                trigramName(hexagramCode.substring(3, 6))
+        );
+    }
+
     private String toHexagramCode(List<String> rawLines, boolean changed) {
         StringBuilder lower = new StringBuilder();
         StringBuilder upper = new StringBuilder();
@@ -103,5 +115,8 @@ public class HexagramResolver {
 
     private String trigramName(String trigramCode) {
         return TRIGRAM_CODE_TO_NAME.getOrDefault(trigramCode, "坤");
+    }
+
+    public record HexagramDescriptor(String name, String code, String upperTrigram, String lowerTrigram) {
     }
 }

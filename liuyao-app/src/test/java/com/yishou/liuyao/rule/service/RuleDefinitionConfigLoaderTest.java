@@ -20,6 +20,7 @@ class RuleDefinitionConfigLoaderTest {
         assertTrue(new ClassPathResource("rules/v1/shi_rules.json").exists());
         assertTrue(new ClassPathResource("rules/v1/moving_rules.json").exists());
         assertTrue(new ClassPathResource("rules/v1/composite_rules.json").exists());
+        assertTrue(new ClassPathResource("rules/v1/phase_two_rules.json").exists());
 
         RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
 
@@ -27,6 +28,9 @@ class RuleDefinitionConfigLoaderTest {
         assertNotNull(loader.getRule("R014"));
         assertNotNull(loader.getRule("R028"));
         assertNotNull(loader.getRule("R019"));
+        assertNotNull(loader.getRule("R201"));
+        assertNotNull(loader.getRule("R205"));
+        assertNotNull(loader.getRule("R212"));
     }
 
     @Test
@@ -38,7 +42,7 @@ class RuleDefinitionConfigLoaderTest {
         assertEquals("v1", loader.getVersion());
         assertFalse(definitions.isEmpty());
         assertTrue(definitions.stream().map(RuleDefinition::getId).toList()
-                .containsAll(List.of("R003", "R004", "R009", "R013", "R014", "R015", "R016", "R018", "R019", "R020", "R021", "R022", "R023", "R024", "R025", "R026", "R027", "R028", "R029", "R030", "R031", "R032")));
+                .containsAll(List.of("R003", "R004", "R009", "R013", "R014", "R015", "R016", "R018", "R019", "R020", "R021", "R022", "R023", "R024", "R025", "R026", "R027", "R028", "R029", "R030", "R031", "R032", "R201", "R202", "R203", "R204", "R205", "R206", "R207", "R208", "R209", "R210", "R211", "R212")));
 
         RuleDefinition compositeRule = loader.getRule("R019");
         assertNotNull(compositeRule);
@@ -88,5 +92,17 @@ class RuleDefinitionConfigLoaderTest {
         RuleDefinition chongSanRule = loader.getRule("R032");
         assertNotNull(chongSanRule);
         assertEquals("USE_GOD_CHONG_SAN", chongSanRule.getCondition().getTarget());
+
+        RuleDefinition fanYinRule = loader.getRule("R203");
+        assertNotNull(fanYinRule);
+        assertEquals("HAS_FAN_YIN", fanYinRule.getCondition().getTarget());
+
+        RuleDefinition noblemanRule = loader.getRule("R205");
+        assertNotNull(noblemanRule);
+        assertEquals("USE_GOD_WITH_NOBLEMAN", noblemanRule.getCondition().getTarget());
+
+        RuleDefinition wenChangRule = loader.getRule("R208");
+        assertNotNull(wenChangRule);
+        assertEquals(2, wenChangRule.getCondition().getAllOf().size());
     }
 }

@@ -1,0 +1,301 @@
+{
+  "rules": [
+    {
+      "id": "R201",
+      "name": "局部伏吟",
+      "category": "MOVING_CHANGE",
+      "priority": 52,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_FU_YIN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "伏吟"
+        ],
+        "conclusionHints": [
+          "动化伏吟，事情更容易盘桓、迟滞，推进感不强。"
+        ]
+      },
+      "description": "动爻与变爻同支，按伏吟处理。"
+    },
+    {
+      "id": "R202",
+      "name": "全局伏吟",
+      "category": "MOVING_CHANGE",
+      "priority": 53,
+      "enabled": true,
+      "condition": {
+        "target": "CHART_FU_YIN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "全局伏吟"
+        ],
+        "conclusionHints": [
+          "全局伏吟，局势像在原地打转，外表虽动，实则难快进。"
+        ]
+      },
+      "description": "全部动爻都化伏吟时，按全局停滞处理。"
+    },
+    {
+      "id": "R203",
+      "name": "局部反吟",
+      "category": "MOVING_CHANGE",
+      "priority": 54,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_FAN_YIN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "反吟"
+        ],
+        "conclusionHints": [
+          "动化反吟，事情来回折腾，容易出现反复与折返。"
+        ]
+      },
+      "description": "动爻与变爻相冲，按反吟处理。"
+    },
+    {
+      "id": "R204",
+      "name": "全局反吟",
+      "category": "MOVING_CHANGE",
+      "priority": 55,
+      "enabled": true,
+      "condition": {
+        "target": "CHART_FAN_YIN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "全局反复"
+        ],
+        "conclusionHints": [
+          "全局反吟，事情整体节奏更不稳，常见反复、推倒重来或折腾往返。"
+        ]
+      },
+      "description": "全部动爻都化反吟时，按全局反复处理。"
+    },
+    {
+      "id": "R205",
+      "name": "贵人临用",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 56,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_WITH_NOBLEMAN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "贵人助力"
+        ],
+        "conclusionHints": [
+          "贵人落在用神线上，事情推进时更容易得到帮助或转圜。"
+        ]
+      },
+      "description": "首批神煞里，贵人落到用神上时记为辅助信号。"
+    },
+    {
+      "id": "R206",
+      "name": "驿马发动",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 57,
+      "enabled": true,
+      "condition": {
+        "target": "MOVING_WITH_TRAVEL_HORSE",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "驿马动"
+        ],
+        "conclusionHints": [
+          "驿马所在之爻又见发动，出行、调动、消息往来与节奏变化更明显。"
+        ]
+      },
+      "description": "驿马逢动，按节奏加快或外向变动的辅助象处理。"
+    },
+    {
+      "id": "R207",
+      "name": "桃花临用",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 58,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_WITH_PEACH_BLOSSOM",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 0,
+        "tags": [
+          "桃花信号"
+        ],
+        "conclusionHints": [
+          "桃花落到用神线上，人情牵连、关注度或情感互动会更显眼。"
+        ]
+      },
+      "description": "桃花临用只做提示性信号，不单独主导吉凶。"
+    },
+    {
+      "id": "R208",
+      "name": "文昌临用",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 59,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "QUESTION_TYPE",
+            "operator": "IN",
+            "value": ["考试", "成长"]
+          },
+          {
+            "target": "USE_GOD_WITH_WEN_CHANG",
+            "operator": "IS_TRUE"
+          }
+        ]
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "文昌助学"
+        ],
+        "conclusionHints": [
+          "文昌落到主事用神，学习、考试、材料理解与文书发挥更占优。"
+        ]
+      },
+      "description": "文昌临用时，对考试与成长类问题记为正向辅助。"
+    },
+    {
+      "id": "R209",
+      "name": "将星临用",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 60,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "QUESTION_TYPE",
+            "operator": "IN",
+            "value": ["工作", "求职", "升职", "合作"]
+          },
+          {
+            "target": "USE_GOD_WITH_GENERAL_STAR",
+            "operator": "IS_TRUE"
+          }
+        ]
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "将星得位"
+        ],
+        "conclusionHints": [
+          "将星临用，更容易体现主导权、职位感或场面上的号召与担当。"
+        ]
+      },
+      "description": "将星命中用神时，对事业与合作类问题记为正向辅助。"
+    },
+    {
+      "id": "R210",
+      "name": "感情桃花入局",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 61,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "QUESTION_TYPE",
+            "operator": "IN",
+            "value": ["感情", "婚姻", "复合"]
+          },
+          {
+            "target": "USE_GOD_WITH_PEACH_BLOSSOM",
+            "operator": "IS_TRUE"
+          }
+        ]
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "桃花入局"
+        ],
+        "conclusionHints": [
+          "感情类问题里桃花临用，互动、吸引力与关注度通常更强。"
+        ]
+      },
+      "description": "桃花临用在感情场景里提升互动与牵引意味。"
+    },
+    {
+      "id": "R211",
+      "name": "灾煞发动",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 62,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "QUESTION_TYPE",
+            "operator": "IN",
+            "value": ["出行", "健康", "压力"]
+          },
+          {
+            "target": "MOVING_WITH_DISASTER_SHA",
+            "operator": "IS_TRUE"
+          }
+        ]
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "谨防波折"
+        ],
+        "conclusionHints": [
+          "灾煞所在之爻又发动，当前问事更易出现波折、惊扰或临时风险。"
+        ]
+      },
+      "description": "灾煞逢动时，对出行与风险类问题记为负向辅助。"
+    },
+    {
+      "id": "R212",
+      "name": "劫煞发动",
+      "category": "SCENARIO_WEIGHT",
+      "priority": 63,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "QUESTION_TYPE",
+            "operator": "IN",
+            "value": ["收入", "财运", "合作"]
+          },
+          {
+            "target": "MOVING_WITH_JIE_SHA",
+            "operator": "IS_TRUE"
+          }
+        ]
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "防竞争夺耗"
+        ],
+        "conclusionHints": [
+          "劫煞逢动，常见竞争、分耗、争夺或利益被截流的迹象。"
+        ]
+      },
+      "description": "劫煞逢动时，对财务与合作类问题记为风险信号。"
+    }
+  ]
+}

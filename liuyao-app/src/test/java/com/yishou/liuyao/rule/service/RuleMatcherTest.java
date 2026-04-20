@@ -297,4 +297,133 @@ class RuleMatcherTest {
         assertTrue(matcher.matches(chongKaiCondition, context));
         assertTrue(matcher.matches(chongSanCondition, context));
     }
+
+    @Test
+    void shouldMatchAdvanceAndHiddenUseGodTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGodAdvance(true);
+        context.setHasMovingAffectShi(true);
+        context.setHiddenUseGodFound(true);
+        context.setFlyShenSuppress(true);
+        context.setHiddenUseGodSupported(true);
+        context.setHiddenUseGodBroken(true);
+
+        RuleCondition advanceCondition = new RuleCondition();
+        advanceCondition.setTarget("USE_GOD_ADVANCE");
+        advanceCondition.setOperator("IS_TRUE");
+
+        RuleCondition movingAffectShiCondition = new RuleCondition();
+        movingAffectShiCondition.setTarget("HAS_MOVING_AFFECT_SHI");
+        movingAffectShiCondition.setOperator("IS_TRUE");
+
+        RuleCondition hiddenUseGodFoundCondition = new RuleCondition();
+        hiddenUseGodFoundCondition.setTarget("HIDDEN_USE_GOD_FOUND");
+        hiddenUseGodFoundCondition.setOperator("IS_TRUE");
+
+        RuleCondition flyShenSuppressCondition = new RuleCondition();
+        flyShenSuppressCondition.setTarget("FLY_SHEN_SUPPRESS");
+        flyShenSuppressCondition.setOperator("IS_TRUE");
+
+        RuleCondition hiddenUseGodSupportedCondition = new RuleCondition();
+        hiddenUseGodSupportedCondition.setTarget("HIDDEN_USE_GOD_SUPPORTED");
+        hiddenUseGodSupportedCondition.setOperator("IS_TRUE");
+
+        RuleCondition hiddenUseGodBrokenCondition = new RuleCondition();
+        hiddenUseGodBrokenCondition.setTarget("HIDDEN_USE_GOD_BROKEN");
+        hiddenUseGodBrokenCondition.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(advanceCondition, context));
+        assertTrue(matcher.matches(movingAffectShiCondition, context));
+        assertTrue(matcher.matches(hiddenUseGodFoundCondition, context));
+        assertTrue(matcher.matches(flyShenSuppressCondition, context));
+        assertTrue(matcher.matches(hiddenUseGodSupportedCondition, context));
+        assertTrue(matcher.matches(hiddenUseGodBrokenCondition, context));
+    }
+
+    @Test
+    void shouldMatchFanFuYinTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setHasFuYin(true);
+        context.setChartFuYin(true);
+        context.setHasFanYin(true);
+        context.setChartFanYin(true);
+
+        RuleCondition hasFuYinCondition = new RuleCondition();
+        hasFuYinCondition.setTarget("HAS_FU_YIN");
+        hasFuYinCondition.setOperator("IS_TRUE");
+
+        RuleCondition chartFuYinCondition = new RuleCondition();
+        chartFuYinCondition.setTarget("CHART_FU_YIN");
+        chartFuYinCondition.setOperator("IS_TRUE");
+
+        RuleCondition hasFanYinCondition = new RuleCondition();
+        hasFanYinCondition.setTarget("HAS_FAN_YIN");
+        hasFanYinCondition.setOperator("IS_TRUE");
+
+        RuleCondition chartFanYinCondition = new RuleCondition();
+        chartFanYinCondition.setTarget("CHART_FAN_YIN");
+        chartFanYinCondition.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(hasFuYinCondition, context));
+        assertTrue(matcher.matches(chartFuYinCondition, context));
+        assertTrue(matcher.matches(hasFanYinCondition, context));
+        assertTrue(matcher.matches(chartFanYinCondition, context));
+    }
+
+    @Test
+    void shouldMatchShenShaTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setHasNobleman(true);
+        context.setUseGodWithNobleman(true);
+        context.setHasTravelHorse(true);
+        context.setMovingWithTravelHorse(true);
+        context.setHasPeachBlossom(true);
+        context.setUseGodWithPeachBlossom(false);
+
+        RuleCondition noblemanCondition = new RuleCondition();
+        noblemanCondition.setTarget("USE_GOD_WITH_NOBLEMAN");
+        noblemanCondition.setOperator("IS_TRUE");
+
+        RuleCondition travelHorseCondition = new RuleCondition();
+        travelHorseCondition.setTarget("MOVING_WITH_TRAVEL_HORSE");
+        travelHorseCondition.setOperator("IS_TRUE");
+
+        RuleCondition peachCondition = new RuleCondition();
+        peachCondition.setTarget("HAS_PEACH_BLOSSOM");
+        peachCondition.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(noblemanCondition, context));
+        assertTrue(matcher.matches(travelHorseCondition, context));
+        assertTrue(matcher.matches(peachCondition, context));
+    }
+
+    @Test
+    void shouldMatchExpandedShenShaTargets() {
+        RuleEvaluationContext context = new RuleEvaluationContext();
+        context.setUseGodWithWenChang(true);
+        context.setUseGodWithGeneralStar(true);
+        context.setMovingWithJieSha(true);
+        context.setMovingWithDisasterSha(true);
+
+        RuleCondition wenChangCondition = new RuleCondition();
+        wenChangCondition.setTarget("USE_GOD_WITH_WEN_CHANG");
+        wenChangCondition.setOperator("IS_TRUE");
+
+        RuleCondition generalStarCondition = new RuleCondition();
+        generalStarCondition.setTarget("USE_GOD_WITH_GENERAL_STAR");
+        generalStarCondition.setOperator("IS_TRUE");
+
+        RuleCondition jieShaCondition = new RuleCondition();
+        jieShaCondition.setTarget("MOVING_WITH_JIE_SHA");
+        jieShaCondition.setOperator("IS_TRUE");
+
+        RuleCondition disasterCondition = new RuleCondition();
+        disasterCondition.setTarget("MOVING_WITH_DISASTER_SHA");
+        disasterCondition.setOperator("IS_TRUE");
+
+        assertTrue(matcher.matches(wenChangCondition, context));
+        assertTrue(matcher.matches(generalStarCondition, context));
+        assertTrue(matcher.matches(jieShaCondition, context));
+        assertTrue(matcher.matches(disasterCondition, context));
+    }
 }

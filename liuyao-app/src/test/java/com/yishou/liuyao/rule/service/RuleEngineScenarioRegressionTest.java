@@ -3,6 +3,7 @@ package com.yishou.liuyao.rule.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.domain.DivinationInput;
+import com.yishou.liuyao.divination.domain.LineInfo;
 import com.yishou.liuyao.divination.service.CalendarFacade;
 import com.yishou.liuyao.divination.service.ChartBuilderService;
 import com.yishou.liuyao.divination.service.HexagramResolver;
@@ -13,12 +14,19 @@ import com.yishou.liuyao.divination.service.PalaceResolver;
 import com.yishou.liuyao.divination.service.ShiYingResolver;
 import com.yishou.liuyao.rule.Rule;
 import com.yishou.liuyao.rule.RuleHit;
+import com.yishou.liuyao.rule.advanced.FuShenFlyShenRule;
 import com.yishou.liuyao.rule.advanced.ShiYingRelationRule;
+import com.yishou.liuyao.rule.advanced.UseGodEmptyRule;
+import com.yishou.liuyao.rule.advanced.UseGodMonthBreakRule;
 import com.yishou.liuyao.rule.basic.MovingLineExistsRule;
+import com.yishou.liuyao.rule.batch.MovingLineAffectUseGodRule;
+import com.yishou.liuyao.rule.batch.UseGodDayBreakRule;
+import com.yishou.liuyao.rule.batch.UseGodStrengthRule;
 import com.yishou.liuyao.rule.usegod.QuestionIntentResolver;
 import com.yishou.liuyao.rule.usegod.UseGodRule;
 import com.yishou.liuyao.rule.usegod.UseGodRuleConfigLoader;
 import com.yishou.liuyao.rule.usegod.UseGodSelector;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -45,7 +53,13 @@ class RuleEngineScenarioRegressionTest {
     private final RuleEngineService ruleEngineService = new RuleEngineService(List.of(
             buildUseGodRule(),
             new MovingLineExistsRule(),
-            new ShiYingRelationRule()
+            new ShiYingRelationRule(),
+            new UseGodEmptyRule(),
+            new UseGodMonthBreakRule(),
+            new UseGodDayBreakRule(),
+            new UseGodStrengthRule(),
+            new MovingLineAffectUseGodRule(),
+            new FuShenFlyShenRule()
     ));
 
     @ParameterizedTest
@@ -58,7 +72,7 @@ class RuleEngineScenarioRegressionTest {
                                            String expectedPalace,
                                            int expectedShi,
                                            int expectedYing,
-                                           int expectedHitCount,
+                                           int expectedMinimumHitCount,
                                            boolean shouldHitUseGodSelection) {
         DivinationInput input = new DivinationInput();
         input.setQuestion(question);
@@ -76,10 +90,42 @@ class RuleEngineScenarioRegressionTest {
         assertEquals(expectedPalace, chartSnapshot.getPalace());
         assertEquals(expectedShi, chartSnapshot.getShi());
         assertEquals(expectedYing, chartSnapshot.getYing());
-        assertEquals(expectedHitCount, hits.size());
+        assertTrue(hits.size() >= expectedMinimumHitCount);
         assertEquals(shouldHitUseGodSelection, hits.stream().anyMatch(hit -> "USE_GOD_SELECTION".equals(hit.getRuleCode())));
         assertTrue(hits.stream().anyMatch(hit -> "MOVING_LINE_EXISTS".equals(hit.getRuleCode())));
         assertTrue(hits.stream().anyMatch(hit -> "SHI_YING_RELATION".equals(hit.getRuleCode())));
+    }
+
+    @Test
+    void shouldLetHiddenUseGodChangeRuleOutputWhenSurfaceLineIsMissing() {
+        ChartSnapshot chartSnapshot = new ChartSnapshot();
+        chartSnapshot.setQuestion("这次财运何时见起色");
+        chartSnapshot.setQuestionCategory("收入");
+        chartSnapshot.setUseGod("妻财");
+        chartSnapshot.setYueJian("寅");
+        chartSnapshot.setRiChen("甲子日");
+
+        LineInfo line = new LineInfo();
+        line.setIndex(2);
+        line.setBranch("亥");
+        line.setWuXing("水");
+        line.setLiuQin("子孙");
+        line.setFuShenBranch("寅");
+        line.setFuShenWuXing("木");
+        line.setFuShenLiuQin("妻财");
+        line.setFlyShenBranch("亥");
+        line.setFlyShenWuXing("水");
+        line.setFlyShenLiuQin("子孙");
+        chartSnapshot.setLines(List.of(line));
+        chartSnapshot.setExt(new java.util.LinkedHashMap<>());
+        chartSnapshot.getExt().put("useGod", "妻财");
+
+        List<RuleHit> hits = ruleEngineService.evaluate(chartSnapshot);
+
+        assertTrue(hits.stream().anyMatch(hit -> "FU_SHEN_FLY_SHEN".equals(hit.getRuleCode())));
+        RuleHit hiddenHit = hits.stream().filter(hit -> "FU_SHEN_FLY_SHEN".equals(hit.getRuleCode())).findFirst().orElseThrow();
+        assertEquals(true, hiddenHit.getEvidence().get("hiddenUseGodFound"));
+        assertEquals(true, hiddenHit.getEvidence().get("hiddenUseGodSupported"));
     }
 
     private static Stream<Arguments> cases() {

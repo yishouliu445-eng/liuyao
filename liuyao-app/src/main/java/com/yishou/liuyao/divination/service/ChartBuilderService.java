@@ -6,6 +6,7 @@ import com.yishou.liuyao.divination.domain.DivinationInput;
 import com.yishou.liuyao.divination.domain.LineInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,6 +24,9 @@ public class ChartBuilderService {
     private final PalaceResolver palaceResolver;
     private final NaJiaResolver naJiaResolver;
     private final LiuQinResolver liuQinResolver;
+    private final FuShenResolver fuShenResolver;
+    private final DerivedHexagramResolver derivedHexagramResolver;
+    private final ShenShaResolver shenShaResolver;
 
     public ChartBuilderService(CalendarFacade calendarFacade,
                                HexagramResolver hexagramResolver,
@@ -31,6 +35,29 @@ public class ChartBuilderService {
                                PalaceResolver palaceResolver,
                                NaJiaResolver naJiaResolver,
                                LiuQinResolver liuQinResolver) {
+        this(calendarFacade,
+                hexagramResolver,
+                shiYingResolver,
+                liuShenResolver,
+                palaceResolver,
+                naJiaResolver,
+                liuQinResolver,
+                new FuShenResolver(naJiaResolver, liuQinResolver),
+                new DerivedHexagramResolver(hexagramResolver),
+                new ShenShaResolver());
+    }
+
+    @Autowired
+    public ChartBuilderService(CalendarFacade calendarFacade,
+                               HexagramResolver hexagramResolver,
+                               ShiYingResolver shiYingResolver,
+                               LiuShenResolver liuShenResolver,
+                               PalaceResolver palaceResolver,
+                               NaJiaResolver naJiaResolver,
+                               LiuQinResolver liuQinResolver,
+                               FuShenResolver fuShenResolver,
+                               DerivedHexagramResolver derivedHexagramResolver,
+                               ShenShaResolver shenShaResolver) {
         this.calendarFacade = calendarFacade;
         this.hexagramResolver = hexagramResolver;
         this.shiYingResolver = shiYingResolver;
@@ -38,6 +65,9 @@ public class ChartBuilderService {
         this.palaceResolver = palaceResolver;
         this.naJiaResolver = naJiaResolver;
         this.liuQinResolver = liuQinResolver;
+        this.fuShenResolver = fuShenResolver;
+        this.derivedHexagramResolver = derivedHexagramResolver;
+        this.shenShaResolver = shenShaResolver;
     }
 
     public ChartSnapshot buildChart(DivinationInput input) {
@@ -61,6 +91,13 @@ public class ChartBuilderService {
         chartSnapshot.setMainLowerTrigram(hexagramResult.getMainLowerTrigram());
         chartSnapshot.setChangedUpperTrigram(hexagramResult.getChangedUpperTrigram());
         chartSnapshot.setChangedLowerTrigram(hexagramResult.getChangedLowerTrigram());
+        DerivedHexagramResolver.DerivedHexagramSet derivedHexagrams = derivedHexagramResolver.resolve(hexagramResult.getMainHexagramCode());
+        chartSnapshot.setMutualHexagram(derivedHexagrams.mutual().name());
+        chartSnapshot.setMutualHexagramCode(derivedHexagrams.mutual().code());
+        chartSnapshot.setOppositeHexagram(derivedHexagrams.opposite().name());
+        chartSnapshot.setOppositeHexagramCode(derivedHexagrams.opposite().code());
+        chartSnapshot.setReversedHexagram(derivedHexagrams.reversed().name());
+        chartSnapshot.setReversedHexagramCode(derivedHexagrams.reversed().code());
         chartSnapshot.setPalace(palaceInfo.getPalace());
         chartSnapshot.setPalaceWuXing(palaceInfo.getWuXing());
         chartSnapshot.setShi(shiYingPosition.getShiIndex());
@@ -77,17 +114,26 @@ public class ChartBuilderService {
                 calendarSnapshot,
                 naJiaBranches,
                 changedNaJiaBranches,
+                palaceInfo.getPalace(),
                 palaceInfo.getWuXing()
         ));
+        chartSnapshot.setShenShaHits(shenShaResolver.resolve(chartSnapshot.getRiChen(), chartSnapshot.getLines()));
         chartSnapshot.getExt().put("rawLines", input.getRawLines());
         chartSnapshot.getExt().put("palace", palaceInfo.getPalace());
         chartSnapshot.getExt().put("palaceWuXing", palaceInfo.getWuXing());
         chartSnapshot.getExt().put("mainHexagramCode", hexagramResult.getMainHexagramCode());
         chartSnapshot.getExt().put("changedHexagramCode", hexagramResult.getChangedHexagramCode());
+        chartSnapshot.getExt().put("mutualHexagram", chartSnapshot.getMutualHexagram());
+        chartSnapshot.getExt().put("mutualHexagramCode", chartSnapshot.getMutualHexagramCode());
+        chartSnapshot.getExt().put("oppositeHexagram", chartSnapshot.getOppositeHexagram());
+        chartSnapshot.getExt().put("oppositeHexagramCode", chartSnapshot.getOppositeHexagramCode());
+        chartSnapshot.getExt().put("reversedHexagram", chartSnapshot.getReversedHexagram());
+        chartSnapshot.getExt().put("reversedHexagramCode", chartSnapshot.getReversedHexagramCode());
         chartSnapshot.getExt().put("mainUpperTrigram", hexagramResult.getMainUpperTrigram());
         chartSnapshot.getExt().put("mainLowerTrigram", hexagramResult.getMainLowerTrigram());
         chartSnapshot.getExt().put("changedUpperTrigram", hexagramResult.getChangedUpperTrigram());
         chartSnapshot.getExt().put("changedLowerTrigram", hexagramResult.getChangedLowerTrigram());
+        chartSnapshot.getExt().put("shenShaHits", chartSnapshot.getShenShaHits());
         log.info("排盘完成: category={}, mainHexagram={}({}/{}) changedHexagram={}({}/{}), shi={}, ying={}, movingLineCount={}",
                 input.getQuestionCategory(),
                 chartSnapshot.getMainHexagram(),
@@ -108,6 +154,7 @@ public class ChartBuilderService {
                                       CalendarSnapshot calendarSnapshot,
                                       List<String> naJiaBranches,
                                       List<String> changedNaJiaBranches,
+                                      String palace,
                                       String palaceWuXing) {
         List<LineInfo> lines = new ArrayList<>();
         for (int index = 1; index <= 6; index++) {
@@ -134,7 +181,7 @@ public class ChartBuilderService {
             lineInfo.setYing(index == shiYingPosition.getYingIndex());
             lines.add(lineInfo);
         }
-        return lines;
+        return fuShenResolver.resolve(palace, palaceWuXing, lines);
     }
 
     private String resolveYinYang(String rawLine, int index) {

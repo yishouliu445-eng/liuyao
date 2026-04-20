@@ -28,7 +28,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(properties = "spring.flyway.enabled=true")
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:knowledge-import;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.flyway.enabled=false"
+})
 class KnowledgeImportExecutionTest {
 
     @Autowired
@@ -216,6 +223,13 @@ class KnowledgeImportExecutionTest {
         org.junit.jupiter.api.Assertions.assertEquals(0.5D, scoreCard.getSelectedCitationRate());
         org.junit.jupiter.api.Assertions.assertEquals(0.5D, scoreCard.getCitationMismatchRate());
         org.junit.jupiter.api.Assertions.assertNotNull(scoreCard.getSummary());
+    }
+
+    @Test
+    void shouldExposeExpandedKnowledgeImportTopicsPreview() {
+        org.junit.jupiter.api.Assertions.assertTrue(knowledgeSearchService.buildImportTopicsPreview().getTopics().containsAll(
+                List.of("伏神", "飞神", "旬空", "入墓", "冲开", "化进", "化退", "伏吟", "反吟", "应期", "神煞", "驿马", "桃花", "贵人", "文昌", "将星", "劫煞", "灾煞")
+        ));
     }
 
     private long createImportRequest(String sourceType, String filePath, List<String> topicTags) throws Exception {

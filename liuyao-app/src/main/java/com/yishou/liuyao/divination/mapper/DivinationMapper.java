@@ -18,7 +18,10 @@ public class DivinationMapper {
         DivinationInput input = new DivinationInput();
         input.setQuestion(request.getQuestionText());
         // 请求进入领域层前先做问类规范化，避免同义分类把后续规则和模板打散。
-        input.setQuestionCategory(questionCategoryNormalizer.normalize(request.getQuestionCategory()));
+        String finalDirection = request.getFinalDirection() == null || request.getFinalDirection().isBlank()
+                ? request.getQuestionCategory()
+                : request.getFinalDirection();
+        input.setQuestionCategory(questionCategoryNormalizer.normalize(finalDirection));
         input.setRawLines(request.getRawLines());
         input.setMovingLines(request.getMovingLines());
         input.setDivinationTime(request.getDivinationTime());

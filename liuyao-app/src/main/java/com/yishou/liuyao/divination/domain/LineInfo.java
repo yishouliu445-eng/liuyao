@@ -16,6 +16,12 @@ public class LineInfo {
     private String changeBranch;
     private String changeWuXing;
     private String changeLiuQin;
+    private String fuShenBranch;
+    private String fuShenWuXing;
+    private String fuShenLiuQin;
+    private String flyShenBranch;
+    private String flyShenWuXing;
+    private String flyShenLiuQin;
     private Boolean shi;
     private Boolean ying;
 
@@ -105,6 +111,54 @@ public class LineInfo {
 
     public void setChangeLiuQin(String changeLiuQin) {
         this.changeLiuQin = changeLiuQin;
+    }
+
+    public String getFuShenBranch() {
+        return fuShenBranch;
+    }
+
+    public void setFuShenBranch(String fuShenBranch) {
+        this.fuShenBranch = fuShenBranch;
+    }
+
+    public String getFuShenWuXing() {
+        return fuShenWuXing;
+    }
+
+    public void setFuShenWuXing(String fuShenWuXing) {
+        this.fuShenWuXing = fuShenWuXing;
+    }
+
+    public String getFuShenLiuQin() {
+        return fuShenLiuQin;
+    }
+
+    public void setFuShenLiuQin(String fuShenLiuQin) {
+        this.fuShenLiuQin = fuShenLiuQin;
+    }
+
+    public String getFlyShenBranch() {
+        return flyShenBranch;
+    }
+
+    public void setFlyShenBranch(String flyShenBranch) {
+        this.flyShenBranch = flyShenBranch;
+    }
+
+    public String getFlyShenWuXing() {
+        return flyShenWuXing;
+    }
+
+    public void setFlyShenWuXing(String flyShenWuXing) {
+        this.flyShenWuXing = flyShenWuXing;
+    }
+
+    public String getFlyShenLiuQin() {
+        return flyShenLiuQin;
+    }
+
+    public void setFlyShenLiuQin(String flyShenLiuQin) {
+        this.flyShenLiuQin = flyShenLiuQin;
     }
 
     public Boolean getShi() {

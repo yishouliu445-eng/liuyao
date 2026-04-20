@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ChartBuilderRegressionTest {
 
@@ -69,6 +71,67 @@ class ChartBuilderRegressionTest {
         assertEquals(line1LiuQin, chartSnapshot.getLines().get(0).getLiuQin());
         assertEquals(line6Branch, chartSnapshot.getLines().get(5).getBranch());
         assertEquals(line6LiuQin, chartSnapshot.getLines().get(5).getLiuQin());
+    }
+
+    @org.junit.jupiter.api.Test
+    void shouldExposeFuShenDataWhenVisibleSixKinIsMissing() {
+        DivinationInput input = new DivinationInput();
+        input.setQuestion("伏神回归");
+        input.setQuestionCategory("测试");
+        input.setDivinationTime(LocalDateTime.of(2026, 4, 12, 10, 0));
+        input.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        input.setMovingLines(List.of(1, 5));
+
+        ChartSnapshot chartSnapshot = service.buildChart(input);
+
+        assertEquals("山火贲", chartSnapshot.getMainHexagram());
+        assertEquals("艮", chartSnapshot.getPalace());
+        assertNull(chartSnapshot.getLines().get(0).getFuShenLiuQin());
+        assertEquals("父母", chartSnapshot.getLines().get(1).getFuShenLiuQin());
+        assertEquals("午", chartSnapshot.getLines().get(1).getFuShenBranch());
+        assertEquals("火", chartSnapshot.getLines().get(1).getFuShenWuXing());
+        assertEquals("兄弟", chartSnapshot.getLines().get(1).getFlyShenLiuQin());
+        assertEquals("子孙", chartSnapshot.getLines().get(2).getFuShenLiuQin());
+        assertEquals("申", chartSnapshot.getLines().get(2).getFuShenBranch());
+        assertEquals("金", chartSnapshot.getLines().get(2).getFuShenWuXing());
+        assertEquals("妻财", chartSnapshot.getLines().get(2).getFlyShenLiuQin());
+    }
+
+    @org.junit.jupiter.api.Test
+    void shouldExposeMutualOppositeAndReversedHexagrams() {
+        DivinationInput input = new DivinationInput();
+        input.setQuestion("派生卦回归");
+        input.setQuestionCategory("测试");
+        input.setDivinationTime(LocalDateTime.of(2026, 4, 12, 10, 0));
+        input.setRawLines(List.of("老阳", "少阴", "少阳", "少阴", "老阴", "少阳"));
+        input.setMovingLines(List.of(1, 5));
+
+        ChartSnapshot chartSnapshot = service.buildChart(input);
+
+        assertEquals("雷水解", chartSnapshot.getMutualHexagram());
+        assertEquals("100010", chartSnapshot.getMutualHexagramCode());
+        assertEquals("泽水困", chartSnapshot.getOppositeHexagram());
+        assertEquals("110010", chartSnapshot.getOppositeHexagramCode());
+        assertEquals("火雷噬嗑", chartSnapshot.getReversedHexagram());
+        assertEquals("101100", chartSnapshot.getReversedHexagramCode());
+        assertEquals("雷水解", chartSnapshot.getExt().get("mutualHexagram"));
+        assertEquals("泽水困", chartSnapshot.getExt().get("oppositeHexagram"));
+        assertEquals("火雷噬嗑", chartSnapshot.getExt().get("reversedHexagram"));
+    }
+
+    @org.junit.jupiter.api.Test
+    void shouldExposeResolvedShenShaHits() {
+        DivinationInput input = new DivinationInput();
+        input.setQuestion("神煞回归");
+        input.setQuestionCategory("测试");
+        input.setDivinationTime(LocalDateTime.of(1986, 5, 29, 0, 0));
+        input.setRawLines(List.of("少阳", "少阳", "少阳", "少阳", "少阳", "少阳"));
+
+        ChartSnapshot chartSnapshot = service.buildChart(input);
+
+        assertTrue(chartSnapshot.getShenShaHits().stream().anyMatch(hit ->
+                "PEACH_BLOSSOM".equals(hit.getCode()) && "午".equals(hit.getBranch()) && hit.getLineIndexes().equals(List.of(4))));
+        assertEquals(chartSnapshot.getShenShaHits(), chartSnapshot.getExt().get("shenShaHits"));
     }
 
     private static Stream<Arguments> cases() {

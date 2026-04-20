@@ -1,0 +1,90 @@
+<h2>问事升级方案</h2>
+<p class="subtitle">默认给新手“逐爻引导”，同时保留“模拟掷铜钱”。两条路径最终汇合到同一套起卦结果与会话链路。</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">默认路径：逐爻引导</div>
+    <div class="mockup-body">
+      <div class="label">推荐默认</div>
+      <h3 style="margin:8px 0 10px;">像向导，不像术语面板</h3>
+      <div class="placeholder" style="height:62px;margin-bottom:10px;">先写下所问之事</div>
+      <div class="placeholder" style="height:48px;margin-bottom:10px;">问题方向（自动判断，可手动改）</div>
+      <div class="placeholder" style="height:52px;margin-bottom:10px;">问事时间</div>
+      <div style="display:grid;gap:8px;margin-bottom:10px;">
+        <div class="placeholder" style="height:58px;">第一步：请定初爻</div>
+        <div class="placeholder" style="height:58px;">第二步：请定二爻</div>
+        <div class="placeholder" style="height:58px;">……直到上爻</div>
+      </div>
+      <div class="placeholder" style="height:54px;">进度条 + 当前爻说明 + 上一步 / 下一步</div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">补充路径：模拟掷铜钱</div>
+    <div class="mockup-body">
+      <div class="label">仪式感更强</div>
+      <h3 style="margin:8px 0 10px;">适合想“顺手摇一卦”的用户</h3>
+      <div class="placeholder" style="height:62px;margin-bottom:10px;">先写下所问之事</div>
+      <div class="placeholder" style="height:48px;margin-bottom:10px;">问题方向（自动判断，可手动改）</div>
+      <div class="placeholder" style="height:52px;margin-bottom:10px;">问事时间</div>
+      <div class="placeholder" style="height:160px;margin-bottom:10px;">三枚铜钱动画 / 摇卦按钮 / 当前结果</div>
+      <div class="placeholder" style="height:54px;">重复 6 次生成六爻，并可回看每一爻结果</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>推荐信息架构</h3>
+  <div class="mockup">
+    <div class="mockup-header">问事入口里的三级结构</div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="placeholder" style="height:96px;">第一级：所问之事 / 方向 / 时间</div>
+        <div class="placeholder" style="height:96px;">第二级：起卦方式切换<br>逐爻引导 / 模拟掷铜钱</div>
+        <div class="placeholder" style="height:96px;">第三级：生成完整六爻后，进入问事结果页</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>为什么推荐这套</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>优点</h4>
+      <ul>
+        <li>新手默认不必直接理解“少阴少阳、动爻”整套术语</li>
+        <li>想要仪式感的人仍然有模拟掷铜钱入口</li>
+        <li>后端链路不用重写，仍然产出同一套 rawLines / movingLines</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>代价</h4>
+      <ul>
+        <li>前端状态机会变复杂，要保存 6 爻过程</li>
+        <li>需要一套“当前到第几爻”的引导文案与回退机制</li>
+        <li>模拟掷铜钱比逐爻引导更花时间实现</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>建议本轮落地范围</h3>
+  <div class="options">
+    <div class="option" data-choice="ship-both" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>两条路径一起上</h3>
+        <p>完整实现你要的“做到最好”，但这轮工程量明显更大。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="stepwise" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>先逐爻引导，再补铜钱</h3>
+        <p>体验最稳，适合快速交付，但不完全满足你刚才定的完整双路径。</p>
+      </div>
+    </div>
+  </div>
+</div>

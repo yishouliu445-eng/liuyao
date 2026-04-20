@@ -41,4 +41,11 @@ class QuestionIntentResolverTest {
         assertEquals(QuestionIntent.RELOCATION, resolver.resolve("这次搬迁会顺利吗", "迁居"));
         assertEquals(QuestionIntent.LOST_ITEM, resolver.resolve("丢的证件还能找到吗", "失物"));
     }
+
+    @Test
+    void shouldExposeCanonicalDirectionFromQuestionText() {
+        assertEquals("感情", resolver.detectDirectionFromText("我和前任还有机会复合吗"));
+        assertEquals("出行", resolver.detectDirectionFromText("这趟旅行路上顺利吗"));
+        assertEquals("", resolver.detectDirectionFromText("这件事后面会怎样"));
+    }
 }

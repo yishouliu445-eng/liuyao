@@ -157,6 +157,90 @@
         ]
       },
       "description": "存在动爻五行克用神。"
+    },
+    {
+      "id": "R035",
+      "name": "变爻生用神",
+      "category": "MOVING_CHANGE",
+      "priority": 47,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_CHANGED_SHENG_USE_GOD",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "后势转扶"
+        ],
+        "conclusionHints": [
+          "变爻转而生用神，说明后续走势还有转强和补益的空间。"
+        ]
+      },
+      "description": "存在变爻五行生用神。"
+    },
+    {
+      "id": "R037",
+      "name": "变爻克用神",
+      "category": "MOVING_CHANGE",
+      "priority": 48,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_CHANGED_KE_USE_GOD",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "后势转压"
+        ],
+        "conclusionHints": [
+          "变爻后续反来克用神，说明事情往后更容易显出压力。"
+        ]
+      },
+      "description": "存在变爻五行克用神。"
+    },
+    {
+      "id": "R038",
+      "name": "用神化进",
+      "category": "MOVING_CHANGE",
+      "priority": 49,
+      "enabled": true,
+      "condition": {
+        "target": "USE_GOD_ADVANCE",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 2,
+        "tags": [
+          "后势渐进"
+        ],
+        "conclusionHints": [
+          "用神发动而化进，事情后续更有推进和递增之象。"
+        ]
+      },
+      "description": "主用神发动后呈化进走势。"
+    },
+    {
+      "id": "R039",
+      "name": "动爻牵动世位",
+      "category": "MOVING_CHANGE",
+      "priority": 50,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_MOVING_AFFECT_SHI",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "己身受扰"
+        ],
+        "conclusionHints": [
+          "动爻直接牵动世位，自己这一方更难按原节奏推进。"
+        ]
+      },
+      "description": "动爻或用神位变化直接牵动世爻。"
     }
   ]
 }

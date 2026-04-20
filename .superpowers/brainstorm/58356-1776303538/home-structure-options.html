@@ -1,0 +1,100 @@
+<h2>首页方向对比</h2>
+<p class="subtitle">先定结构和主任务，再细化视觉。推荐先走 A：更像专业六爻起卦工具。</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">A. 工具优先</div>
+        <div class="mockup-body">
+          <div class="label">推荐</div>
+          <h3 style="margin: 8px 0 12px;">一句问题 + 六爻操作区做主角</h3>
+          <div class="mock-input" style="margin-bottom:12px;">输入你想问的问题</div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px;">
+            <div class="placeholder">初爻</div>
+            <div class="placeholder">二爻</div>
+            <div class="placeholder">三爻</div>
+            <div class="placeholder">四爻</div>
+            <div class="placeholder">五爻</div>
+            <div class="placeholder">上爻</div>
+          </div>
+          <div style="display:flex;gap:10px;margin-bottom:12px;">
+            <div class="placeholder" style="flex:1;">起卦时间</div>
+            <div class="placeholder" style="flex:1;">起卦方式</div>
+          </div>
+          <div class="placeholder" style="margin-bottom:12px;">问题方向（可选，用于帮助系统更快聚焦）</div>
+          <button class="mock-button" style="width:100%;">开始起卦</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>专业工具感最强</h3>
+      <p>用户一眼知道这是六爻排卦系统。分类降级为可选提示，不再抢主流程。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">B. 仪式感优先</div>
+        <div class="mockup-body">
+          <div class="label">东方气质更强</div>
+          <h3 style="margin: 8px 0 12px;">六爻起卦，观势而断</h3>
+          <div class="placeholder" style="height:120px;margin-bottom:12px;">卦象 / 干支 / 纹理主视觉</div>
+          <div class="mock-input" style="margin-bottom:12px;">先写下所问之事</div>
+          <div style="display:flex;gap:10px;margin-bottom:12px;">
+            <div class="placeholder" style="flex:1;">六爻操作入口</div>
+            <div class="placeholder" style="flex:1;">补充信息</div>
+          </div>
+          <button class="mock-button" style="width:100%;">进入起卦流程</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>品牌感更强</h3>
+      <p>更有仪式感和东方气质，但首屏效率稍弱，工具属性没有 A 直接。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">C. 助手优先</div>
+        <div class="mockup-body">
+          <div class="label">更像 AI 对话产品</div>
+          <h3 style="margin: 8px 0 12px;">你想占问什么？我先帮你聚焦</h3>
+          <div class="mock-input" style="margin-bottom:12px;">例如：这段感情还有机会吗？</div>
+          <div class="placeholder" style="margin-bottom:12px;">系统自动识别问题方向</div>
+          <div class="placeholder" style="margin-bottom:12px;">推荐补充信息 / 追问</div>
+          <button class="mock-button" style="width:100%;">进入会话</button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>最像 AI 产品</h3>
+      <p>适合聊天式体验，但会继续稀释“六爻排卦系统”的专业识别度。</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>三个方案里，问题分类的统一处理</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>推荐机制</h4>
+      <ul>
+        <li>先看用户问题文本，自动识别意图</li>
+        <li>分类只做可选提示，不再强绑定主流程</li>
+        <li>如果“用户选择”和“系统识别”冲突，提交前做一次轻确认</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>避免的问题</h4>
+      <ul>
+        <li>用户误点“出行”，系统整盘按出行解释</li>
+        <li>分类按钮比真实问题还重要</li>
+        <li>首页像标签筛选器，不像起卦入口</li>
+      </ul>
+    </div>
+  </div>
+</div>

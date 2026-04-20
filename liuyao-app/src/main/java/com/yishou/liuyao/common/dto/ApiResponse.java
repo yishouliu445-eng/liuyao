@@ -17,10 +17,15 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> failure(String code, String message) {
+        return failure(code, message, null);
+    }
+
+    public static <T> ApiResponse<T> failure(String code, String message, T data) {
         ApiResponse<T> response = new ApiResponse<>();
         response.setSuccess(false);
         response.setCode(code);
         response.setMessage(message);
+        response.setData(data);
         return response;
     }
 

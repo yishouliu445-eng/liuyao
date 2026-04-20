@@ -1,0 +1,111 @@
+<h2>问事 / 手工起卦 详细设计</h2>
+<p class="subtitle">这一屏把双入口和“问题方向纠偏”放到一起。目标是：普通人能用，懂六爻的人也不觉得被简化。</p>
+
+<div class="mockup">
+  <div class="mockup-header">首页首屏：双入口但不抢重心</div>
+  <div class="mockup-body">
+    <div style="display:grid;grid-template-columns:1.05fr .95fr;gap:20px;">
+      <div style="border:1px solid rgba(212,175,55,.18);border-radius:22px;padding:22px;background:linear-gradient(180deg, rgba(20,18,16,.96), rgba(12,12,14,.98));">
+        <div class="label">主入口</div>
+        <div style="display:flex;gap:8px;margin:8px 0 16px;">
+          <div style="padding:10px 16px;border-radius:999px;background:rgba(214,173,55,.18);border:1px solid rgba(214,173,55,.35);">问事</div>
+          <div style="padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);">手工起卦</div>
+        </div>
+
+        <h3 style="margin:0 0 8px;font-size:30px;">所问之事，先定其意</h3>
+        <p style="margin:0 0 16px;color:#a8a29e;line-height:1.7;">
+          先写问题，系统帮你聚焦方向；如需自行排六爻，可切换到手工起卦。
+        </p>
+
+        <div style="height:74px;border:1px solid rgba(212,175,55,.16);border-radius:18px;background:rgba(255,255,255,.02);padding:16px;margin-bottom:14px;color:#8f8a82;">
+          例如：我和前任还有没有机会复合？
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid rgba(212,175,55,.14);border-radius:16px;padding:12px 14px;margin-bottom:14px;background:rgba(214,173,55,.05);">
+          <div>
+            <div class="label">问题方向</div>
+            <div style="font-size:15px;margin-top:4px;">系统识别：感情</div>
+          </div>
+          <div style="font-size:13px;color:#a8a29e;">可手动修改</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="placeholder" style="height:54px;">问事时间</div>
+          <div class="placeholder" style="height:54px;">补充信息（可选）</div>
+        </div>
+
+        <button class="mock-button" style="width:100%;height:56px;font-size:18px;">进入问事</button>
+      </div>
+
+      <div style="display:grid;gap:12px;">
+        <div style="border:1px solid rgba(212,175,55,.14);border-radius:18px;padding:16px;background:rgba(255,255,255,.018);">
+          <div class="label">切到手工起卦后</div>
+          <p style="margin:8px 0 10px;color:#a8a29e;line-height:1.7;">
+            首屏下半区替换为六爻操作区，保留问题输入，但把排盘权重提高。
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;">
+            <div class="placeholder" style="height:60px;">初</div>
+            <div class="placeholder" style="height:60px;">二</div>
+            <div class="placeholder" style="height:60px;">三</div>
+            <div class="placeholder" style="height:60px;">四</div>
+            <div class="placeholder" style="height:60px;">五</div>
+            <div class="placeholder" style="height:60px;">上</div>
+          </div>
+        </div>
+
+        <div style="border:1px solid rgba(212,175,55,.14);border-radius:18px;padding:16px;background:rgba(255,255,255,.018);">
+          <div class="label">文案气质</div>
+          <p style="margin:8px 0 0;color:#a8a29e;line-height:1.7;">
+            不用“智能”“AI 占卦”之类词，保留工具可信度，只用淡仪式感语言。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>问题方向纠偏流程</h3>
+  <div class="mockup">
+    <div class="mockup-header">提交前只做轻确认，不打断主流程</div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div class="placeholder" style="height:90px;">1. 用户输入问题</div>
+        <div class="placeholder" style="height:90px;">2. 系统识别方向</div>
+        <div class="placeholder" style="height:90px;">3. 若用户手改且冲突，弹轻确认</div>
+        <div class="placeholder" style="height:90px;">4. 生成最终解读方向</div>
+      </div>
+
+      <div style="margin-top:16px;border:1px solid rgba(212,175,55,.14);border-radius:16px;padding:14px;background:rgba(214,173,55,.04);">
+        <div class="label">冲突示例</div>
+        <p style="margin:8px 0 6px;">你选择的是“出行”，但问题更像“感情”，是否按“感情”解读？</p>
+        <div style="display:flex;gap:8px;">
+          <div style="padding:8px 12px;border-radius:999px;background:rgba(214,173,55,.18);">按感情解读</div>
+          <div style="padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.03);">仍按出行</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>命名与入口原则</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>保留的内容</h4>
+      <ul>
+        <li>入口名：问事 / 手工起卦</li>
+        <li>首页仍有东方气质，但以工具可信度为先</li>
+        <li>分类改叫“问题方向”，且默认由系统识别</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>避免的内容</h4>
+      <ul>
+        <li>“智能起卦”“AI 起卦”之类包装词</li>
+        <li>分类默认值直接写死为某一项</li>
+        <li>普通用户一上来就看到少阴少阳、动爻术语</li>
+      </ul>
+    </div>
+  </div>
+</div>

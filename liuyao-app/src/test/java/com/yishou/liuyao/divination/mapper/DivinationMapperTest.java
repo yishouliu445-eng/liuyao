@@ -19,4 +19,16 @@ class DivinationMapperTest {
 
         assertEquals("收入", input.getQuestionCategory());
     }
+
+    @Test
+    void shouldPreferFinalDirectionWhenPresent() {
+        DivinationMapper mapper = new DivinationMapper(new QuestionCategoryNormalizer());
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionCategory("出行");
+        request.setFinalDirection("感情");
+
+        DivinationInput input = mapper.toInput(request);
+
+        assertEquals("感情", input.getQuestionCategory());
+    }
 }

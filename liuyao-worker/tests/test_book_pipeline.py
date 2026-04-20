@@ -192,6 +192,40 @@ class BookPipelineTest(unittest.TestCase):
         self.assertEqual("CASE", metadata["knowledge_type"])
         self.assertTrue(metadata["has_timing_prediction"])
 
+    def test_normalizes_extended_rule_topics_before_serializing_records(self):
+        fake_embedder = _FakeEmbedder()
+        draft = ChunkDraft(
+            content="伏神、飞神、旬空、化进、化退皆要参看。",
+            topic_tags=["伏神", "飞神", "旬空", "化进", "化退", "伏神", " "],
+            focus_topic=None,
+            metadata={"topic_tags": ["旧标签"]}
+        )
+
+        with patch("app.pipeline.book_pipeline.create_embedder", return_value=fake_embedder), \
+                patch("app.pipeline.book_pipeline.parse_txt", return_value="raw"), \
+                patch("app.pipeline.book_pipeline.clean_text", return_value="cleaned"), \
+                patch("app.pipeline.book_pipeline.CaseExampleChunker.chunk", return_value=[draft]):
+            pipeline = BookPipeline(
+                embedding_dim=None,
+                embedding_batch_size=8,
+                embedding_provider="mock",
+                embedding_model="mock-8d-v1",
+                embedding_base_url=None,
+                embedding_api_key=None,
+                embedding_timeout_seconds=30,
+                vector_store_dim=4,
+            )
+            records = pipeline.process(
+                TaskRecord(task_id=1, book_id=1, status="PENDING", payload_json="{}"),
+                BookRecord(book_id=1, title="卜筮正宗", author="王洪绪", source_type="TXT", file_path="/tmp/x.txt", file_size=1),
+            )
+
+        self.assertEqual("伏神", records[0].focus_topic)
+        self.assertEqual(["伏神", "飞神", "旬空", "化进", "化退"], json.loads(records[0].topic_tags_json))
+        metadata = json.loads(records[0].metadata_json)
+        self.assertEqual(["伏神", "飞神", "旬空", "化进", "化退"], metadata["topic_tags"])
+        self.assertEqual("伏神", metadata["focus_topic"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -124,6 +124,7 @@ public class RuleEngineService {
         evidence.put("useGodToShiRelation", context.getUseGodToShiRelation() == null ? "" : context.getUseGodToShiRelation());
         evidence.put("useGodHeShi", Boolean.TRUE.equals(context.getUseGodHeShi()));
         evidence.put("useGodRetreat", Boolean.TRUE.equals(context.getUseGodRetreat()));
+        evidence.put("useGodAdvance", Boolean.TRUE.equals(context.getUseGodAdvance()));
         evidence.put("shiState", context.getShiState() == null ? "" : context.getShiState());
         evidence.put("shiYingRelation", context.getShiYingRelation() == null ? "" : context.getShiYingRelation());
         evidence.put("shiYingExists", Boolean.TRUE.equals(context.getShiYingExists()));
@@ -131,6 +132,29 @@ public class RuleEngineService {
         evidence.put("shiMoving", Boolean.TRUE.equals(context.getShiMoving()));
         evidence.put("shiEmpty", Boolean.TRUE.equals(context.getShiEmpty()));
         evidence.put("movingCount", context.getMovingCount());
+        evidence.put("hasMovingAffectShi", Boolean.TRUE.equals(context.getHasMovingAffectShi()));
+        evidence.put("hiddenUseGodFound", Boolean.TRUE.equals(context.getHiddenUseGodFound()));
+        evidence.put("flyShenSuppress", Boolean.TRUE.equals(context.getFlyShenSuppress()));
+        evidence.put("hiddenUseGodSupported", Boolean.TRUE.equals(context.getHiddenUseGodSupported()));
+        evidence.put("hiddenUseGodBroken", Boolean.TRUE.equals(context.getHiddenUseGodBroken()));
+        evidence.put("hasFuYin", Boolean.TRUE.equals(context.getHasFuYin()));
+        evidence.put("chartFuYin", Boolean.TRUE.equals(context.getChartFuYin()));
+        evidence.put("hasFanYin", Boolean.TRUE.equals(context.getHasFanYin()));
+        evidence.put("chartFanYin", Boolean.TRUE.equals(context.getChartFanYin()));
+        evidence.put("hasNobleman", Boolean.TRUE.equals(context.getHasNobleman()));
+        evidence.put("useGodWithNobleman", Boolean.TRUE.equals(context.getUseGodWithNobleman()));
+        evidence.put("hasTravelHorse", Boolean.TRUE.equals(context.getHasTravelHorse()));
+        evidence.put("movingWithTravelHorse", Boolean.TRUE.equals(context.getMovingWithTravelHorse()));
+        evidence.put("hasPeachBlossom", Boolean.TRUE.equals(context.getHasPeachBlossom()));
+        evidence.put("useGodWithPeachBlossom", Boolean.TRUE.equals(context.getUseGodWithPeachBlossom()));
+        evidence.put("hasWenChang", Boolean.TRUE.equals(context.getHasWenChang()));
+        evidence.put("useGodWithWenChang", Boolean.TRUE.equals(context.getUseGodWithWenChang()));
+        evidence.put("hasGeneralStar", Boolean.TRUE.equals(context.getHasGeneralStar()));
+        evidence.put("useGodWithGeneralStar", Boolean.TRUE.equals(context.getUseGodWithGeneralStar()));
+        evidence.put("hasJieSha", Boolean.TRUE.equals(context.getHasJieSha()));
+        evidence.put("movingWithJieSha", Boolean.TRUE.equals(context.getMovingWithJieSha()));
+        evidence.put("hasDisasterSha", Boolean.TRUE.equals(context.getHasDisasterSha()));
+        evidence.put("movingWithDisasterSha", Boolean.TRUE.equals(context.getMovingWithDisasterSha()));
         evidence.put("kongWangBranches", context.getKongWangBranches() == null ? List.of() : context.getKongWangBranches());
         evidence.put("ruleVersion", ruleDefinitionConfigLoader.getVersion());
         hit.setEvidence(evidence);
@@ -206,9 +230,10 @@ public class RuleEngineService {
             return "GENERAL";
         }
         return switch (ruleCode) {
-            case "USE_GOD_SELECTION", "USE_GOD_STRENGTH", "USE_GOD_EMPTY", "USE_GOD_MONTH_BREAK", "USE_GOD_DAY_BREAK" -> "YONGSHEN_STATE";
+            case "USE_GOD_SELECTION", "USE_GOD_STRENGTH", "USE_GOD_EMPTY", "USE_GOD_MONTH_BREAK", "USE_GOD_DAY_BREAK", "FU_SHEN_FLY_SHEN" -> "YONGSHEN_STATE";
             case "SHI_YING_EXISTS", "SHI_YING_RELATION" -> "SHI_YING";
-            case "MOVING_LINE_EXISTS", "MOVING_LINE_AFFECT_USE_GOD" -> "MOVING_CHANGE";
+            case "MOVING_LINE_EXISTS", "MOVING_LINE_AFFECT_USE_GOD", "FAN_FU_YIN" -> "MOVING_CHANGE";
+            case "TIMING_SIGNAL", "SHEN_SHA" -> "SCENARIO_WEIGHT";
             default -> "GENERAL";
         };
     }
@@ -230,6 +255,8 @@ public class RuleEngineService {
             case "USE_GOD_STRENGTH" -> resolveUseGodStrengthScore(hit);
             case "SHI_YING_RELATION" -> resolveShiYingScore(hit);
             case "MOVING_LINE_AFFECT_USE_GOD" -> resolveMovingEffectScore(hit);
+            case "FU_SHEN_FLY_SHEN" -> 1;
+            case "FAN_FU_YIN", "TIMING_SIGNAL", "SHEN_SHA" -> 0;
             default -> 0;
         };
     }
@@ -301,6 +328,8 @@ public class RuleEngineService {
             case "MOVING_LINE_EXISTS" -> List.of("有变化");
             case "MOVING_LINE_AFFECT_USE_GOD" -> List.of("动变影响");
             case "USE_GOD_SELECTION" -> List.of("确定用神");
+            case "TIMING_SIGNAL" -> List.of("应期信号");
+            case "SHEN_SHA" -> List.of("神煞信号");
             default -> List.of();
         };
     }

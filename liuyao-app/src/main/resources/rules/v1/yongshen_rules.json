@@ -156,6 +156,25 @@
       "description": "综合月建、日辰、空亡与动变判断用神强弱。"
     },
     {
+      "id": "R100",
+      "ruleCode": "FU_SHEN_FLY_SHEN",
+      "name": "伏神飞神",
+      "category": "YONGSHEN_STATE",
+      "priority": 33,
+      "enabled": true,
+      "effect": {
+        "score": 1,
+        "tags": [
+          "伏神",
+          "隐象"
+        ],
+        "conclusionHints": [
+          "用神不上卦时，需要转看伏神与飞神关系。"
+        ]
+      },
+      "description": "当用神不上卦时，转看伏神与飞神的关系。"
+    },
+    {
       "id": "R023",
       "name": "用神多现",
       "category": "YONGSHEN_STATE",
@@ -302,6 +321,90 @@
         ]
       },
       "description": "用神未受束时遇冲，按冲散处理。"
+    },
+    {
+      "id": "R043",
+      "name": "伏中取用",
+      "category": "YONGSHEN_STATE",
+      "priority": 48,
+      "enabled": true,
+      "condition": {
+        "target": "HIDDEN_USE_GOD_FOUND",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 0,
+        "tags": [
+          "伏中取用"
+        ],
+        "conclusionHints": [
+          "用神不上卦，当前判断已转从伏神入手。"
+        ]
+      },
+      "description": "用神不上卦时，转看伏神。"
+    },
+    {
+      "id": "R044",
+      "name": "飞神压伏",
+      "category": "YONGSHEN_STATE",
+      "priority": 49,
+      "enabled": true,
+      "condition": {
+        "target": "FLY_SHEN_SUPPRESS",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "飞压伏神"
+        ],
+        "conclusionHints": [
+          "飞神压伏，说明隐伏的主线暂时难以顺畅显出。"
+        ]
+      },
+      "description": "飞神克伏神，主伏神受制。"
+    },
+    {
+      "id": "R045",
+      "name": "伏得生扶",
+      "category": "YONGSHEN_STATE",
+      "priority": 50,
+      "enabled": true,
+      "condition": {
+        "target": "HIDDEN_USE_GOD_SUPPORTED",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "伏得生扶"
+        ],
+        "conclusionHints": [
+          "伏神得月日生扶，说明隐伏之象并非全无根气。"
+        ]
+      },
+      "description": "伏神得到月建或日辰生扶。"
+    },
+    {
+      "id": "R046",
+      "name": "伏被冲破",
+      "category": "YONGSHEN_STATE",
+      "priority": 51,
+      "enabled": true,
+      "condition": {
+        "target": "HIDDEN_USE_GOD_BROKEN",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -2,
+        "tags": [
+          "伏被冲破"
+        ],
+        "conclusionHints": [
+          "伏神受月日冲破，说明隐伏的主线更难稳定成事。"
+        ]
+      },
+      "description": "伏神被月建或日辰冲破。"
     }
   ]
 }

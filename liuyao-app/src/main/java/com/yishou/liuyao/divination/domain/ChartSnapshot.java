@@ -26,6 +26,13 @@ public class ChartSnapshot {
     private String mainLowerTrigram;
     private String changedUpperTrigram;
     private String changedLowerTrigram;
+    // Phase two: 互卦/错卦/综卦作为显式快照字段，后续规则和解释直接消费。
+    private String mutualHexagram;
+    private String mutualHexagramCode;
+    private String oppositeHexagram;
+    private String oppositeHexagramCode;
+    private String reversedHexagram;
+    private String reversedHexagramCode;
     // 卦宫与宫五行会参与六亲判断和后续解释。
     private String palace;
     private String palaceWuXing;
@@ -37,6 +44,7 @@ public class ChartSnapshot {
     private String riChen;
     private String yueJian;
     private List<String> kongWang = new ArrayList<>();
+    private List<ShenShaHit> shenShaHits = new ArrayList<>();
     private List<LineInfo> lines = new ArrayList<>();
     private Map<String, Object> ext = new LinkedHashMap<>();
     private String snapshotVersion;
@@ -138,6 +146,54 @@ public class ChartSnapshot {
         this.changedLowerTrigram = changedLowerTrigram;
     }
 
+    public String getMutualHexagram() {
+        return mutualHexagram;
+    }
+
+    public void setMutualHexagram(String mutualHexagram) {
+        this.mutualHexagram = mutualHexagram;
+    }
+
+    public String getMutualHexagramCode() {
+        return mutualHexagramCode;
+    }
+
+    public void setMutualHexagramCode(String mutualHexagramCode) {
+        this.mutualHexagramCode = mutualHexagramCode;
+    }
+
+    public String getOppositeHexagram() {
+        return oppositeHexagram;
+    }
+
+    public void setOppositeHexagram(String oppositeHexagram) {
+        this.oppositeHexagram = oppositeHexagram;
+    }
+
+    public String getOppositeHexagramCode() {
+        return oppositeHexagramCode;
+    }
+
+    public void setOppositeHexagramCode(String oppositeHexagramCode) {
+        this.oppositeHexagramCode = oppositeHexagramCode;
+    }
+
+    public String getReversedHexagram() {
+        return reversedHexagram;
+    }
+
+    public void setReversedHexagram(String reversedHexagram) {
+        this.reversedHexagram = reversedHexagram;
+    }
+
+    public String getReversedHexagramCode() {
+        return reversedHexagramCode;
+    }
+
+    public void setReversedHexagramCode(String reversedHexagramCode) {
+        this.reversedHexagramCode = reversedHexagramCode;
+    }
+
     public String getPalace() {
         return palace;
     }
@@ -200,6 +256,14 @@ public class ChartSnapshot {
 
     public void setKongWang(List<String> kongWang) {
         this.kongWang = kongWang;
+    }
+
+    public List<ShenShaHit> getShenShaHits() {
+        return shenShaHits;
+    }
+
+    public void setShenShaHits(List<ShenShaHit> shenShaHits) {
+        this.shenShaHits = shenShaHits;
     }
 
     public List<LineInfo> getLines() {

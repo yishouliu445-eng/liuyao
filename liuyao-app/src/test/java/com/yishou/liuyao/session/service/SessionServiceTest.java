@@ -20,6 +20,8 @@ import com.yishou.liuyao.divination.domain.DivinationInput;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.mapper.DivinationMapper;
 import com.yishou.liuyao.divination.service.ChartBuilderService;
+import com.yishou.liuyao.rule.usegod.QuestionDirectionResolution;
+import com.yishou.liuyao.rule.usegod.QuestionDirectionResolutionService;
 import com.yishou.liuyao.ops.ratelimit.PersistentRateLimiter;
 import com.yishou.liuyao.knowledge.service.KnowledgeSearchService;
 import com.yishou.liuyao.rule.RuleHit;
@@ -94,6 +96,8 @@ class SessionServiceTest {
     private ChatMessageRepository messageRepository;
     @Mock
     private PersistentRateLimiter rateLimiter;
+    @Mock
+    private QuestionDirectionResolutionService directionResolutionService;
 
     private SessionService sessionService;
     private ObjectMapper objectMapper;
@@ -109,6 +113,7 @@ class SessionServiceTest {
                 sessionRepository,
                 messageRepository,
                 rateLimiter,
+                directionResolutionService,
                 objectMapper
         );
         ReflectionTestUtils.setField(sessionService, "maxMessagesPerSession", 50);
@@ -121,6 +126,7 @@ class SessionServiceTest {
         request.setUserId(7L);
         request.setQuestionText("我这个月面试结果如何");
         request.setQuestionCategory("事业");
+        request.setUserSelectedDirection("事业");
         request.setDivinationMethod("手工起卦");
         request.setDivinationTime("2026-04-12T10:00:00");
         request.setRawLines(List.of("少阳", "少阴", "少阳", "少阴", "少阳", "少阴"));
@@ -135,6 +141,10 @@ class SessionServiceTest {
 
         when(analysisExecutionService.executeInitial(any(DivinationAnalyzeRequest.class), eq(AnalysisExecutionMode.INITIAL)))
                 .thenReturn(executionEnvelope);
+        when(directionResolutionService.resolve("我这个月面试结果如何", "事业", null))
+                .thenReturn(new QuestionDirectionResolution(
+                        "我这个月面试结果如何", "工作", "事业", "事业", false, "工作", "user_selected", 1.0
+                ));
         when(caseCenterService.recordAnalysis(any(), eq(chartSnapshot), anyList(), eq(analysisContext), any(), anyString()))
                 .thenReturn(new CaseCenterService.RecordedAnalysisRefs(101L, 202L));
         when(sessionRepository.save(any(ChatSession.class))).thenAnswer(invocation -> {
@@ -156,14 +166,39 @@ class SessionServiceTest {
         assertSame(analysisOutput, response.getAnalysis());
         assertEquals(1, response.getMessageCount());
         assertEquals(1, response.getRuleHits().size());
+        assertEquals("工作", response.getDetectedDirection());
+        assertEquals("事业", response.getFinalDirection());
+        assertEquals("事业", response.getUserSelectedDirection());
 
+        ArgumentCaptor<DivinationAnalyzeRequest> analyzeCaptor = ArgumentCaptor.forClass(DivinationAnalyzeRequest.class);
         ArgumentCaptor<ChatSession> sessionCaptor = ArgumentCaptor.forClass(ChatSession.class);
+        verify(analysisExecutionService).executeInitial(analyzeCaptor.capture(), eq(AnalysisExecutionMode.INITIAL));
+        assertEquals("事业", analyzeCaptor.getValue().getQuestionCategory());
         verify(sessionRepository, times(2)).save(sessionCaptor.capture());
         List<ChatSession> savedSessions = sessionCaptor.getAllValues();
         ChatSession savedSession = savedSessions.get(savedSessions.size() - 1);
         assertEquals(101L, savedSession.getCaseId());
         assertEquals(202L, savedSession.getChartSnapshotId());
         verify(rateLimiter).acquire(7L);
+    }
+
+    @Test
+    void createSessionShouldRejectWhenDirectionConfirmationIsRequired() {
+        SessionCreateRequest request = buildCreateRequest();
+        request.setQuestionCategory("出行");
+        request.setUserSelectedDirection("出行");
+
+        when(directionResolutionService.resolve("我这个月面试结果如何", "出行", null))
+                .thenReturn(new QuestionDirectionResolution(
+                        "我这个月面试结果如何", "工作", "出行", "出行", true, "工作", "conflict", 1.0
+                ));
+
+        BusinessException exception = assertThrows(BusinessException.class,
+                () -> sessionService.createSession(request));
+
+        assertEquals(ErrorCode.DIRECTION_CONFIRMATION_REQUIRED, exception.getErrorCode());
+        assertNotNull(exception.getData());
+        verifyNoInteractions(analysisExecutionService, messageRepository, sessionRepository);
     }
 
     @Test
@@ -245,6 +280,10 @@ class SessionServiceTest {
 
         when(analysisExecutionService.executeInitial(any(DivinationAnalyzeRequest.class), eq(AnalysisExecutionMode.INITIAL)))
                 .thenReturn(initialEnvelope);
+        when(directionResolutionService.resolve("我这个月面试结果如何", "事业", null))
+                .thenReturn(new QuestionDirectionResolution(
+                        "我这个月面试结果如何", "工作", "事业", "事业", false, "工作", "user_selected", 1.0
+                ));
         when(analysisExecutionService.executeFollowUp(any(ChartSnapshot.class), anyList(), anyString()))
                 .thenReturn(followUpEnvelope1, followUpEnvelope2, followUpEnvelope3);
         when(caseCenterService.recordAnalysis(any(), eq(chartSnapshot), anyList(), eq(analysisContext), any(), anyString()))
@@ -360,6 +399,7 @@ class SessionServiceTest {
         request.setUserId(7L);
         request.setQuestionText("我这个月面试结果如何");
         request.setQuestionCategory("事业");
+        request.setUserSelectedDirection("事业");
         request.setDivinationMethod("手工起卦");
         request.setDivinationTime("2026-04-12T10:00:00");
         request.setRawLines(List.of("少阳", "少阴", "少阳", "少阴", "少阳", "少阴"));

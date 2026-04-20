@@ -4,6 +4,7 @@
     "yongshen_rules.json",
     "shi_rules.json",
     "moving_rules.json",
-    "composite_rules.json"
+    "composite_rules.json",
+    "phase_two_rules.json"
   ]
 }

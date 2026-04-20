@@ -5,7 +5,7 @@ interface Props {
   onToggleMoving: (index: number) => void;
 }
 
-const YAO_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '六爻'];
+const YAO_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
 
 export default function LineInput({ lines, movingLines, onToggleLine, onToggleMoving }: Props) {
   return (

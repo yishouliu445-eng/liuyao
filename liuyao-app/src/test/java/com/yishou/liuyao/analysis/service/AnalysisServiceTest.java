@@ -17,7 +17,8 @@ class AnalysisServiceTest {
                 new AnalysisSectionComposer(
                         new AnalysisKnowledgeEvidenceService(),
                         new AnalysisCategoryTextResolver(),
-                        new AnalysisOutcomeTextResolver()
+                        new AnalysisOutcomeTextResolver(),
+                        new AnalysisPhaseTwoSignalFormatter()
                 ),
                 null
         );

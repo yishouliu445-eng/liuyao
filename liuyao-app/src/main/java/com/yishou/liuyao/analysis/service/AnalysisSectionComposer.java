@@ -1,6 +1,7 @@
 package com.yishou.liuyao.analysis.service;
 
 import com.yishou.liuyao.analysis.dto.AnalysisContextDTO;
+import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,13 +12,16 @@ public class AnalysisSectionComposer {
     private final AnalysisKnowledgeEvidenceService knowledgeEvidenceService;
     private final AnalysisCategoryTextResolver categoryTextResolver;
     private final AnalysisOutcomeTextResolver outcomeTextResolver;
+    private final AnalysisPhaseTwoSignalFormatter phaseTwoSignalFormatter;
 
     public AnalysisSectionComposer(AnalysisKnowledgeEvidenceService knowledgeEvidenceService,
                                    AnalysisCategoryTextResolver categoryTextResolver,
-                                   AnalysisOutcomeTextResolver outcomeTextResolver) {
+                                   AnalysisOutcomeTextResolver outcomeTextResolver,
+                                   AnalysisPhaseTwoSignalFormatter phaseTwoSignalFormatter) {
         this.knowledgeEvidenceService = knowledgeEvidenceService;
         this.categoryTextResolver = categoryTextResolver;
         this.outcomeTextResolver = outcomeTextResolver;
+        this.phaseTwoSignalFormatter = phaseTwoSignalFormatter;
     }
 
     public String compose(AnalysisContextDTO context) {
@@ -30,6 +34,7 @@ public class AnalysisSectionComposer {
                         buildUseGodSection(context, ruleCount),
                         buildCategoryObservation(context),
                         buildMovingObservation(context),
+                        buildPhaseTwoObservation(context),
                         buildRiskObservation(context),
                         buildConclusion(context),
                         buildActionSuggestion(context),
@@ -47,7 +52,10 @@ public class AnalysisSectionComposer {
         String changedHexagram = context.getChangedHexagram() == null || context.getChangedHexagram().isBlank()
                 ? "未见明显变卦"
                 : context.getChangedHexagram();
-        return String.format("卦象概览：%s，本卦%s，变卦%s。", questionLead, mainHexagram, changedHexagram);
+        ChartSnapshotDTO chartSnapshot = context.getChartSnapshot();
+        String derivedHexagrams = phaseTwoSignalFormatter.renderDerivedHexagrams(chartSnapshot);
+        String suffix = derivedHexagrams.isBlank() ? "" : " " + derivedHexagrams + "。";
+        return String.format("卦象概览：%s，本卦%s，变卦%s。", questionLead, mainHexagram, changedHexagram) + suffix;
     }
 
     private String buildUseGodSection(AnalysisContextDTO context, int ruleCount) {
@@ -147,6 +155,14 @@ public class AnalysisSectionComposer {
             return "可参考资料：当前暂未检索到直接匹配资料，先以盘面结构和规则信号为主。";
         }
         return "可参考资料：" + knowledgeHint;
+    }
+
+    private String buildPhaseTwoObservation(AnalysisContextDTO context) {
+        String phaseTwoSignals = phaseTwoSignalFormatter.renderPhaseTwoSignals(context);
+        if (phaseTwoSignals.isBlank()) {
+            return "";
+        }
+        return "象义补充：" + phaseTwoSignals + "。";
     }
 
     private String firstKnowledgeHint(List<String> knowledgeSnippets) {

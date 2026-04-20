@@ -4,7 +4,11 @@ import type { RuleHitDTO, StructuredAnalysisResultDTO, AnalysisContextDTO } from
 /** 分析请求 */
 export interface DivinationAnalyzeRequest {
   questionText: string;
-  questionCategory: string;
+  questionCategory?: string;
+  userSelectedDirection?: string;
+  detectedDirection?: string;
+  finalDirection?: string;
+  suggestedDirection?: string;
   divinationTime: string;
   divinationMethod: string;
   rawLines: string[];

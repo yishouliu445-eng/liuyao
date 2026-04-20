@@ -81,6 +81,9 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.chartSnapshot.mainHexagramCode").isNotEmpty())
                 .andExpect(jsonPath("$.data.chartSnapshot.mainUpperTrigram").isNotEmpty())
                 .andExpect(jsonPath("$.data.chartSnapshot.changedLowerTrigram").isNotEmpty())
+                .andExpect(jsonPath("$.data.chartSnapshot.mutualHexagram").value("雷水解"))
+                .andExpect(jsonPath("$.data.chartSnapshot.oppositeHexagram").value("泽水困"))
+                .andExpect(jsonPath("$.data.chartSnapshot.reversedHexagram").value("火雷噬嗑"))
                 .andExpect(jsonPath("$.data.ruleHits[0].ruleCode").value("USE_GOD_SELECTION"))
                 .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='SHI_YING_RELATION')].evidence.mainUpperTrigram").isNotEmpty())
                 .andExpect(jsonPath("$.data.ruleHits[?(@.ruleCode=='SHI_YING_RELATION')].evidence.targetCount").value(org.hamcrest.Matchers.hasItem(2)))
@@ -89,6 +92,9 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.analysisContext.useGod").value("父母"))
                 .andExpect(jsonPath("$.data.analysisContext.mainHexagram").value("山火贲"))
                 .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.mainHexagram").value("山火贲"))
+                .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.mutualHexagram").value("雷水解"))
+                .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.oppositeHexagram").value("泽水困"))
+                .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.reversedHexagram").value("火雷噬嗑"))
                 .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.lines[0].changeBranch").value("辰"))
                 .andExpect(jsonPath("$.data.analysisContext.ruleCodes").isArray())
                 .andExpect(jsonPath("$.data.analysisContext.structuredResult").exists())
@@ -108,7 +114,10 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("卦象概览")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("用神判断")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("问出行")))
-                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")));
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("互卦雷水解")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("错卦泽水困")))
+                .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("综卦火雷噬嗑")));
 
         org.junit.jupiter.api.Assertions.assertEquals(initialSessionCount, chatSessionRepository.count());
     }
@@ -203,5 +212,23 @@ class DivinationControllerTest {
                 .andExpect(jsonPath("$.data.analysisContext.questionCategory").value("房产"))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("问房产")))
                 .andExpect(jsonPath("$.data.analysis").value(org.hamcrest.Matchers.containsString("以父母为用神")));
+    }
+
+    @Test
+    void shouldExposeShenShaHitsThroughHttpEndpoint() throws Exception {
+        DivinationAnalyzeRequest request = new DivinationAnalyzeRequest();
+        request.setQuestionText("这次考试发挥如何");
+        request.setQuestionCategory("考试");
+        request.setDivinationMethod("手工起卦");
+        request.setDivinationTime(LocalDateTime.of(1986, 5, 29, 0, 0));
+        request.setRawLines(List.of("少阳", "少阳", "少阳", "少阳", "少阳", "少阳"));
+
+        mockMvc.perform(post("/api/divinations/analyze")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.chartSnapshot.shenShaHits").isArray())
+                .andExpect(jsonPath("$.data.chartSnapshot.shenShaHits[?(@.code=='PEACH_BLOSSOM')].name").value(org.hamcrest.Matchers.hasItem("桃花")))
+                .andExpect(jsonPath("$.data.analysisContext.chartSnapshot.shenShaHits[?(@.code=='PEACH_BLOSSOM')].branch").value(org.hamcrest.Matchers.hasItem("午")));
     }
 }

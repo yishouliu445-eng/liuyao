@@ -105,6 +105,100 @@
         ]
       },
       "description": "主用神与世爻距离较近。"
+    },
+    {
+      "id": "R041",
+      "name": "世应有情但动变扰用",
+      "category": "COMPOSITE",
+      "priority": 64,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "SHI_YING_RELATION",
+            "operator": "IN",
+            "value": [
+              "应生世",
+              "世生应"
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "target": "HAS_MOVING_KE_USE_GOD",
+                "operator": "IS_TRUE"
+              },
+              {
+                "target": "HAS_CHANGED_KE_USE_GOD",
+                "operator": "IS_TRUE"
+              },
+              {
+                "target": "HAS_MOVING_CHONG_USE_GOD",
+                "operator": "IS_TRUE"
+              },
+              {
+                "target": "HAS_MOVING_AFFECT_SHI",
+                "operator": "IS_TRUE"
+              }
+            ]
+          }
+        ]
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "助中有扰"
+        ],
+        "conclusionHints": [
+          "世应关系虽有助力，但动变已经开始扰动主线，不能只按表面和气论吉。"
+        ]
+      },
+      "description": "世应偏和时，仍需防动变对主线的干扰。"
+    },
+    {
+      "id": "R042",
+      "name": "世应相克但动变扶用",
+      "category": "COMPOSITE",
+      "priority": 65,
+      "enabled": true,
+      "condition": {
+        "allOf": [
+          {
+            "target": "SHI_YING_RELATION",
+            "operator": "IN",
+            "value": [
+              "应克世",
+              "世克应"
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "target": "HAS_MOVING_SHENG_USE_GOD",
+                "operator": "IS_TRUE"
+              },
+              {
+                "target": "HAS_CHANGED_SHENG_USE_GOD",
+                "operator": "IS_TRUE"
+              },
+              {
+                "target": "USE_GOD_ADVANCE",
+                "operator": "IS_TRUE"
+              }
+            ]
+          }
+        ]
+      },
+      "effect": {
+        "score": 1,
+        "tags": [
+          "逆势有机"
+        ],
+        "conclusionHints": [
+          "虽然世应相克，但动变并未完全背离主用神，局中仍留有转机。"
+        ]
+      },
+      "description": "世应虽相克，动变仍可能给主线留下回旋空间。"
     }
   ]
 }

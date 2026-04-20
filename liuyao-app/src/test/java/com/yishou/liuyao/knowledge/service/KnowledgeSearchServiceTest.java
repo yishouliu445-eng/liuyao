@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -201,5 +202,165 @@ class KnowledgeSearchServiceTest {
         assertEquals(1, response.getItems().size());
         assertEquals("命中片段", response.getItems().get(0).getChapterTitle());
         assertEquals(0.82, response.getItems().get(0).getSimilarityScore());
+    }
+
+    @Test
+    void shouldExposeExpandedCoreRuleTopicsInPreview() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                bookChunkHybridSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper(),
+                evaluationRunService
+        );
+
+        List<String> topics = knowledgeSearchService.buildImportTopicsPreview().getTopics();
+
+        assertTrue(topics.contains("伏神"));
+        assertTrue(topics.contains("飞神"));
+        assertTrue(topics.contains("旬空"));
+        assertTrue(topics.contains("化进"));
+        assertTrue(topics.contains("化退"));
+        assertTrue(topics.contains("伏吟"));
+        assertTrue(topics.contains("反吟"));
+        assertTrue(topics.contains("应期"));
+        assertTrue(topics.contains("神煞"));
+        assertTrue(topics.contains("驿马"));
+        assertTrue(topics.contains("桃花"));
+        assertTrue(topics.contains("贵人"));
+        assertTrue(topics.contains("文昌"));
+        assertTrue(topics.contains("将星"));
+        assertTrue(topics.contains("劫煞"));
+        assertTrue(topics.contains("灾煞"));
+    }
+
+    @Test
+    void shouldRecallNewRuleTopicsWhenRuleCodesExpand() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                bookChunkHybridSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper(),
+                evaluationRunService
+        );
+        when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(false);
+        when(bookRepository.findAllById(any())).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(any())).thenReturn(List.of());
+
+        List<String> snippets = knowledgeSearchService.suggestKnowledgeSnippets(
+                "收入",
+                "妻财",
+                List.of("FU_SHEN_FLY_SHEN", "USE_GOD_EMPTY"),
+                4
+        );
+
+        assertTrue(snippets.isEmpty());
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("伏神");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("旬空");
+    }
+
+    @Test
+    void shouldRecallPhaseTwoTimingTopicsWhenRuleCodesExpand() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                bookChunkHybridSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper(),
+                evaluationRunService
+        );
+        when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(false);
+        when(bookRepository.findAllById(any())).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(any())).thenReturn(List.of());
+
+        List<String> snippets = knowledgeSearchService.suggestKnowledgeSnippets(
+                "收入",
+                "妻财",
+                List.of("FAN_FU_YIN", "TIMING_SIGNAL"),
+                4
+        );
+
+        assertTrue(snippets.isEmpty());
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("伏吟");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("反吟");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("应期");
+    }
+
+    @Test
+    void shouldRecallShenShaTopicsWhenRuleCodesExpand() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                bookChunkHybridSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper(),
+                evaluationRunService
+        );
+        when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(false);
+        when(bookRepository.findAllById(any())).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(any())).thenReturn(List.of());
+
+        List<String> snippets = knowledgeSearchService.suggestKnowledgeSnippets(
+                "合作",
+                "妻财",
+                List.of("SHEN_SHA", "R205", "R206", "R207"),
+                4
+        );
+
+        assertTrue(snippets.isEmpty());
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("神煞");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("贵人");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("驿马");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("桃花");
+    }
+
+    @Test
+    void shouldRecallExpandedShenShaTopicsWhenRuleCodesExpand() {
+        KnowledgeSearchService knowledgeSearchService = new KnowledgeSearchService(
+                bookChunkRepository,
+                bookRepository,
+                knowledgeImportService,
+                new KnowledgeMapper(),
+                knowledgeQueryEmbeddingService,
+                bookChunkVectorSearchRepository,
+                bookChunkHybridSearchRepository,
+                new QuestionCategoryNormalizer(),
+                new ObjectMapper(),
+                evaluationRunService
+        );
+        when(bookChunkVectorSearchRepository.supportsVectorSearch()).thenReturn(false);
+        when(bookRepository.findAllById(any())).thenReturn(List.of());
+        when(bookChunkRepository.findTop20ByFocusTopicOrderByIdDesc(any())).thenReturn(List.of());
+
+        List<String> snippets = knowledgeSearchService.suggestKnowledgeSnippets(
+                "考试",
+                "妻财",
+                List.of("R208", "R209", "R211", "R212"),
+                4
+        );
+
+        assertTrue(snippets.isEmpty());
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("文昌");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("将星");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("灾煞");
+        verify(bookChunkRepository, atLeastOnce()).findTop20ByFocusTopicOrderByIdDesc("劫煞");
     }
 }

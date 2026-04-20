@@ -8,8 +8,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @Order(32)
@@ -79,7 +81,20 @@ public class MovingLineAffectUseGodRule implements Rule {
                 if (sameLine && moving.getChangeLiuQin() != null && !moving.getChangeLiuQin().isBlank()) {
                     selfTransform = useGod.equals(moving.getChangeLiuQin()) ? "用神发动仍属同类六亲" : "用神发动后转出他亲";
                 }
-                if (relation != null || changeRelation != null || !selfTransform.isBlank()) {
+                boolean affectsShi = Boolean.TRUE.equals(moving.getIsShi())
+                        || (chart.getShi() != null && moving.getIndex() != null && moving.getIndex().equals(chart.getShi()));
+                String transformTrend = UseGodLineLocator.resolveTransformTrend(moving.getBranch(), moving.getChangeBranch());
+                Set<String> movementSignals = new LinkedHashSet<>();
+                if (affectsShi) {
+                    movementSignals.add("世爻发动");
+                }
+                if (!transformTrend.isBlank()) {
+                    movementSignals.add(transformTrend);
+                }
+                if (sameLine) {
+                    movementSignals.add("用神位发动");
+                }
+                if (relation != null || changeRelation != null || !selfTransform.isBlank() || !movementSignals.isEmpty()) {
                     Map<String, Object> effect = UseGodLineLocator.summarizeLine(moving);
                     effect.put("movingWuXing", movingWuXing);
                     effect.put("targetLineIndex", target.getIndex());
@@ -90,6 +105,9 @@ public class MovingLineAffectUseGodRule implements Rule {
                     effect.put("changeRelation", changeRelation == null ? "" : changeRelation);
                     effect.put("sameLineAsUseGod", sameLine);
                     effect.put("selfTransform", selfTransform);
+                    effect.put("transformTrend", transformTrend);
+                    effect.put("affectsShi", affectsShi);
+                    effect.put("movementSignals", List.copyOf(movementSignals));
                     effects.add(effect);
                 }
             }

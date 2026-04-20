@@ -5,6 +5,7 @@ import com.yishou.liuyao.divination.domain.DivinationInput;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -31,6 +32,8 @@ class ChartBuilderServiceCalendarTest {
 
         assertEquals("癸酉", chartSnapshot.getRiChen());
         assertEquals("巳", chartSnapshot.getYueJian());
+        assertEquals(List.of("戌", "亥"), chartSnapshot.getKongWang());
         assertEquals("乾为天", chartSnapshot.getMainHexagram());
+        assertEquals("玄武", chartSnapshot.getLines().get(0).getLiuShen());
     }
 }

@@ -18,6 +18,8 @@ import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
 import com.yishou.liuyao.ops.ratelimit.PersistentRateLimiter;
+import com.yishou.liuyao.rule.usegod.QuestionDirectionResolution;
+import com.yishou.liuyao.rule.usegod.QuestionDirectionResolutionService;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.rule.dto.RuleHitDTO;
 import com.yishou.liuyao.session.domain.ChatMessage;
@@ -60,6 +62,7 @@ public class SessionService {
     private final ChatSessionRepository sessionRepo;
     private final ChatMessageRepository messageRepo;
     private final PersistentRateLimiter rateLimiter;
+    private final QuestionDirectionResolutionService questionDirectionResolutionService;
     private final ObjectMapper objectMapper;
 
     @Value("${liuyao.session.max-messages-per-session:50}")
@@ -75,6 +78,7 @@ public class SessionService {
                           ChatSessionRepository sessionRepo,
                           ChatMessageRepository messageRepo,
                           PersistentRateLimiter rateLimiter,
+                          QuestionDirectionResolutionService questionDirectionResolutionService,
                           ObjectMapper objectMapper) {
         this.analysisExecutionService = analysisExecutionService;
         this.verificationEventService = verificationEventService;
@@ -83,6 +87,7 @@ public class SessionService {
         this.sessionRepo = sessionRepo;
         this.messageRepo = messageRepo;
         this.rateLimiter = rateLimiter;
+        this.questionDirectionResolutionService = questionDirectionResolutionService;
         this.objectMapper = objectMapper;
     }
 
@@ -90,11 +95,25 @@ public class SessionService {
 
     @Transactional
     public SessionCreateResponse createSession(SessionCreateRequest request) {
-        log.info("创建Session: category={}, question={}", request.getQuestionCategory(),
+        String userSelectedDirection = firstNonBlank(request.getUserSelectedDirection(), request.getQuestionCategory());
+        log.info("创建Session: category={}, question={}", userSelectedDirection,
                 truncate(request.getQuestionText(), 30));
         rateLimiter.acquire(request.getUserId());
 
-        DivinationAnalyzeRequest divRequest = toAnalyzeRequest(request);
+        QuestionDirectionResolution directionResolution = questionDirectionResolutionService.resolve(
+                request.getQuestionText(),
+                userSelectedDirection,
+                request.getFinalDirection()
+        );
+        if (directionResolution.requiresConfirmation()) {
+            throw new BusinessException(
+                    ErrorCode.DIRECTION_CONFIRMATION_REQUIRED,
+                    buildDirectionConflictMessage(directionResolution),
+                    directionResolution
+            );
+        }
+
+        DivinationAnalyzeRequest divRequest = toAnalyzeRequest(request, directionResolution.finalDirection());
         AnalysisExecutionEnvelope execution = analysisExecutionService.executeInitial(divRequest, AnalysisExecutionMode.INITIAL);
         ChartSnapshot chart = execution.getChartSnapshot();
         List<RuleHit> ruleHits = execution.getRuleHits();
@@ -118,7 +137,8 @@ public class SessionService {
         // 6. 创建 Session
         ChatSession session = ChatSession.create(
                 request.getUserId(), caseId, snapshotId,
-                request.getQuestionText(), request.getQuestionCategory());
+                request.getQuestionText(), directionResolution.finalDirection());
+        session.setMetadataJson(toJson(directionResolution));
         session = sessionRepo.save(session);
 
         // 7. 保存首条消息（USER + ASSISTANT）
@@ -148,6 +168,10 @@ public class SessionService {
         response.setSmartPrompts(analysis.getSmartPrompts() != null
                 ? analysis.getSmartPrompts() : List.of());
         response.setMessageCount(session.getMessageCount());
+        response.setUserSelectedDirection(directionResolution.userSelectedDirection());
+        response.setDetectedDirection(directionResolution.detectedDirection());
+        response.setFinalDirection(directionResolution.finalDirection());
+        response.setSuggestedDirection(directionResolution.suggestedDirection());
         return response;
     }
 
@@ -304,10 +328,11 @@ public class SessionService {
         }
     }
 
-    private DivinationAnalyzeRequest toAnalyzeRequest(SessionCreateRequest req) {
+    private DivinationAnalyzeRequest toAnalyzeRequest(SessionCreateRequest req, String finalDirection) {
         DivinationAnalyzeRequest r = new DivinationAnalyzeRequest();
         r.setQuestionText(req.getQuestionText());
-        r.setQuestionCategory(req.getQuestionCategory());
+        r.setQuestionCategory(finalDirection);
+        r.setFinalDirection(finalDirection);
         r.setDivinationMethod(req.getDivinationMethod());
         r.setMovingLines(req.getMovingLines());
         r.setRawLines(req.getRawLines());
@@ -317,6 +342,12 @@ public class SessionService {
             r.setDivinationTime(LocalDateTime.now());
         }
         return r;
+    }
+
+    private String buildDirectionConflictMessage(QuestionDirectionResolution directionResolution) {
+        return String.format("你选择的是“%s”，但问题更像“%s”，请先确认解读方向。",
+                directionResolution.userSelectedDirection(),
+                directionResolution.suggestedDirection());
     }
 
     private boolean isExpired(ChatSession session, Duration maxInactiveDuration) {
@@ -375,6 +406,18 @@ public class SessionService {
     private String extractModel(AnalysisOutputDTO dto) {
         if (dto == null || dto.getMetadata() == null) return "unknown";
         return dto.getMetadata().getModelUsed();
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return "";
+        }
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
     }
 
     private int extractTokens(AnalysisOutputDTO dto) {

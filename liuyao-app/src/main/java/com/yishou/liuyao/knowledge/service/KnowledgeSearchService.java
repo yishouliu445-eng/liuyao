@@ -30,6 +30,12 @@ import java.util.Set;
 @Service
 public class KnowledgeSearchService {
 
+    private static final List<String> CORE_IMPORT_TOPICS = List.of(
+            "用神", "世应", "六亲", "月破", "日破", "空亡", "旬空", "动爻",
+            "伏神", "飞神", "入墓", "冲开", "化进", "化退", "伏吟", "反吟", "应期",
+            "神煞", "驿马", "桃花", "贵人", "文昌", "将星", "劫煞", "灾煞"
+    );
+
     private final BookChunkRepository bookChunkRepository;
     private final BookRepository bookRepository;
     private final KnowledgeImportService knowledgeImportService;
@@ -70,7 +76,7 @@ public class KnowledgeSearchService {
         // 当前先返回“首批最值得导入的知识主题”和模块职责，
         // 作为资料导入前的可视化准备结果，暂不提前接复杂检索。
         KnowledgeSearchResponse response = new KnowledgeSearchResponse();
-        response.setTopics(List.of("用神", "世应", "六亲", "月破", "日破", "空亡", "动爻"));
+        response.setTopics(CORE_IMPORT_TOPICS);
 
         Map<String, String> responsibilities = new LinkedHashMap<>();
         responsibilities.put("book", "登记原始资料文件和解析状态，作为资料入口台账。");
@@ -386,11 +392,23 @@ public class KnowledgeSearchService {
         }
         return switch (ruleCode) {
             case "USE_GOD_SELECTION", "USE_GOD_STRENGTH", "R003", "R004", "R018" -> List.of("用神");
-            case "MOVING_LINE_EXISTS", "MOVING_LINE_AFFECT_USE_GOD", "R010" -> List.of("动爻");
+            case "MOVING_LINE_EXISTS", "MOVING_LINE_AFFECT_USE_GOD", "R010" -> List.of("动爻", "化进", "化退");
             case "SHI_YING_EXISTS", "SHI_YING_RELATION", "R013", "R014", "R015" -> List.of("世应");
             case "USE_GOD_MONTH_BREAK" -> List.of("月破");
             case "USE_GOD_DAY_BREAK", "R009" -> List.of("日破");
-            case "USE_GOD_EMPTY", "R011" -> List.of("空亡");
+            case "USE_GOD_EMPTY", "R011" -> List.of("空亡", "旬空");
+            case "FU_SHEN_FLY_SHEN" -> List.of("伏神", "飞神");
+            case "FAN_FU_YIN", "R201", "R202", "R203", "R204" -> List.of("伏吟", "反吟");
+            case "TIMING_SIGNAL" -> List.of("应期");
+            case "SHEN_SHA" -> List.of("神煞", "驿马", "桃花", "贵人", "文昌", "将星", "劫煞", "灾煞");
+            case "R205" -> List.of("神煞", "贵人");
+            case "R206" -> List.of("神煞", "驿马");
+            case "R207" -> List.of("神煞", "桃花");
+            case "R208" -> List.of("神煞", "文昌");
+            case "R209" -> List.of("神煞", "将星");
+            case "R210" -> List.of("神煞", "桃花");
+            case "R211" -> List.of("神煞", "灾煞");
+            case "R212" -> List.of("神煞", "劫煞");
             default -> List.of();
         };
     }

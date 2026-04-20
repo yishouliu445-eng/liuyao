@@ -29,7 +29,11 @@ import java.util.Set;
 public class KnowledgeImportService {
 
     private static final Logger log = LoggerFactory.getLogger(KnowledgeImportService.class);
-    private static final List<String> DEFAULT_TOPICS = List.of("用神", "世应", "六亲", "月破", "日破", "空亡", "动爻");
+    private static final List<String> DEFAULT_TOPICS = List.of(
+            "用神", "世应", "六亲", "月破", "日破", "空亡", "旬空", "动爻",
+            "伏神", "飞神", "入墓", "冲开", "化进", "化退", "伏吟", "反吟", "应期",
+            "神煞", "驿马", "桃花", "贵人", "文昌", "将星", "劫煞", "灾煞"
+    );
     private static final int MAX_HEADING_LENGTH = 32;
 
     private final KnowledgeReferenceRepository knowledgeReferenceRepository;

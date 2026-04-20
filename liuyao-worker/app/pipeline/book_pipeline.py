@@ -54,6 +54,7 @@ class BookPipeline:
         # LLM Enrichment (Task 25)
         for draft in drafts:
             self.enricher.enrich(draft)
+            self._normalize_draft_topics(draft)
             
         records: list[ChunkRecord] = []
         for batch_start in range(0, len(drafts), self.embedding_batch_size):
@@ -89,6 +90,24 @@ class BookPipeline:
         if not records:
             raise RuntimeError("No chunk records produced for book")
         return records
+
+    def _normalize_draft_topics(self, draft) -> None:
+        normalized_tags: list[str] = []
+        for tag in draft.topic_tags or []:
+            if not tag:
+                continue
+            text = str(tag).strip()
+            if text and text not in normalized_tags:
+                normalized_tags.append(text)
+        draft.topic_tags = normalized_tags
+        if (draft.focus_topic is None or not str(draft.focus_topic).strip()) and normalized_tags:
+            draft.focus_topic = normalized_tags[0]
+        if draft.metadata is None:
+            draft.metadata = {}
+        if normalized_tags:
+            draft.metadata["topic_tags"] = list(normalized_tags)
+        if draft.focus_topic:
+            draft.metadata["focus_topic"] = draft.focus_topic
 
     def _read_source_text(self, book: BookRecord) -> str:
         source_type = (book.source_type or "TXT").upper()

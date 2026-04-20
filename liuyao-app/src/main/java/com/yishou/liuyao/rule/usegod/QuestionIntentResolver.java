@@ -15,11 +15,23 @@ public class QuestionIntentResolver {
 
     public QuestionIntent resolve(String questionText, String questionCategory) {
         // 先信任结构化分类，再退回到文本关键词，尽量让外部接入方有可控入口。
-        QuestionIntent byCategory = fromCategory(questionCategoryNormalizer.normalize(questionCategory));
+        QuestionIntent byCategory = resolveFromCategory(questionCategory);
         if (byCategory != QuestionIntent.UNKNOWN) {
             return byCategory;
         }
+        return resolveFromText(questionText);
+    }
+
+    public QuestionIntent resolveFromCategory(String questionCategory) {
+        return fromCategory(questionCategoryNormalizer.normalize(questionCategory));
+    }
+
+    public QuestionIntent resolveFromText(String questionText) {
         return fromText(questionText);
+    }
+
+    public String detectDirectionFromText(String questionText) {
+        return toCanonicalDirection(resolveFromText(questionText));
     }
 
     private QuestionIntent fromCategory(String questionCategory) {
@@ -110,5 +122,26 @@ public class QuestionIntentResolver {
             }
         }
         return false;
+    }
+
+    private String toCanonicalDirection(QuestionIntent intent) {
+        return switch (intent) {
+            case JOB_OPPORTUNITY -> "求职";
+            case JOB_STABILITY -> "工作";
+            case INCOME -> "收入";
+            case PRESSURE -> "压力";
+            case RELATION -> "人际";
+            case GROWTH -> "成长";
+            case EXAM -> "考试";
+            case HEALTH -> "健康";
+            case TRAVEL -> "出行";
+            case EMOTION -> "感情";
+            case COOPERATION -> "合作";
+            case REAL_ESTATE -> "房产";
+            case RELOCATION -> "搬家";
+            case LAWSUIT -> "官司";
+            case LOST_ITEM -> "寻物";
+            case UNKNOWN -> "";
+        };
     }
 }

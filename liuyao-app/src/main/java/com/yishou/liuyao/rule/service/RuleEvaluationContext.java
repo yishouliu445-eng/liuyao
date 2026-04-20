@@ -33,6 +33,7 @@ public class RuleEvaluationContext {
     private String useGodToShiRelation;
     private Boolean useGodHeShi;
     private Boolean useGodRetreat;
+    private Boolean useGodAdvance;
     private String shiState;
     private Boolean shiMoving;
     private Boolean shiEmpty;
@@ -40,6 +41,29 @@ public class RuleEvaluationContext {
     private Integer shiYingDistance;
     private String shiYingRelation;
     private Integer movingCount;
+    private Boolean hasMovingAffectShi;
+    private Boolean hiddenUseGodFound;
+    private Boolean flyShenSuppress;
+    private Boolean hiddenUseGodSupported;
+    private Boolean hiddenUseGodBroken;
+    private Boolean hasFuYin;
+    private Boolean chartFuYin;
+    private Boolean hasFanYin;
+    private Boolean chartFanYin;
+    private Boolean hasNobleman;
+    private Boolean useGodWithNobleman;
+    private Boolean hasTravelHorse;
+    private Boolean movingWithTravelHorse;
+    private Boolean hasPeachBlossom;
+    private Boolean useGodWithPeachBlossom;
+    private Boolean hasWenChang;
+    private Boolean useGodWithWenChang;
+    private Boolean hasGeneralStar;
+    private Boolean useGodWithGeneralStar;
+    private Boolean hasJieSha;
+    private Boolean movingWithJieSha;
+    private Boolean hasDisasterSha;
+    private Boolean movingWithDisasterSha;
     private List<String> kongWangBranches = List.of();
 
     public static RuleEvaluationContext from(ChartSnapshot chartSnapshot, List<RuleHit> hits) {
@@ -68,6 +92,7 @@ public class RuleEvaluationContext {
         context.setUseGodToShiRelation(resolveUseGodToShiRelation(chartSnapshot, context.getUseGod()));
         context.setUseGodHeShi(resolveUseGodHeShi(chartSnapshot, context.getUseGod()));
         context.setUseGodRetreat(resolveUseGodRetreat(chartSnapshot, context.getUseGod()));
+        context.setUseGodAdvance(resolveUseGodAdvance(chartSnapshot, context.getUseGod()));
         context.setShiState(resolveShiState(chartSnapshot));
         context.setShiMoving(resolveShiMoving(chartSnapshot));
         context.setShiEmpty(resolveShiEmpty(chartSnapshot));
@@ -75,6 +100,29 @@ public class RuleEvaluationContext {
         context.setShiYingDistance(resolveShiYingDistance(chartSnapshot));
         context.setShiYingRelation(resolveShiYingRelation(hits));
         context.setMovingCount(resolveMovingCount(chartSnapshot));
+        context.setHasMovingAffectShi(resolveMovingEffectBoolean(hits, "affectsShi"));
+        context.setHiddenUseGodFound(resolveRuleHitEvidenceFlag(hits, "FU_SHEN_FLY_SHEN", "hiddenUseGodFound"));
+        context.setFlyShenSuppress(resolveRuleHitEvidenceFlag(hits, "FU_SHEN_FLY_SHEN", "flyShenSuppress"));
+        context.setHiddenUseGodSupported(resolveRuleHitEvidenceFlag(hits, "FU_SHEN_FLY_SHEN", "hiddenUseGodSupported"));
+        context.setHiddenUseGodBroken(resolveRuleHitEvidenceFlag(hits, "FU_SHEN_FLY_SHEN", "hiddenUseGodBroken"));
+        context.setHasFuYin(resolveRuleHitEvidenceFlag(hits, "FAN_FU_YIN", "hasFuYin"));
+        context.setChartFuYin(resolveRuleHitEvidenceFlag(hits, "FAN_FU_YIN", "chartFuYin"));
+        context.setHasFanYin(resolveRuleHitEvidenceFlag(hits, "FAN_FU_YIN", "hasFanYin"));
+        context.setChartFanYin(resolveRuleHitEvidenceFlag(hits, "FAN_FU_YIN", "chartFanYin"));
+        context.setHasNobleman(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasNobleman"));
+        context.setUseGodWithNobleman(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "useGodWithNobleman"));
+        context.setHasTravelHorse(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasTravelHorse"));
+        context.setMovingWithTravelHorse(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "movingWithTravelHorse"));
+        context.setHasPeachBlossom(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasPeachBlossom"));
+        context.setUseGodWithPeachBlossom(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "useGodWithPeachBlossom"));
+        context.setHasWenChang(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasWenChang"));
+        context.setUseGodWithWenChang(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "useGodWithWenChang"));
+        context.setHasGeneralStar(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasGeneralStar"));
+        context.setUseGodWithGeneralStar(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "useGodWithGeneralStar"));
+        context.setHasJieSha(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasJieSha"));
+        context.setMovingWithJieSha(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "movingWithJieSha"));
+        context.setHasDisasterSha(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "hasDisasterSha"));
+        context.setMovingWithDisasterSha(resolveRuleHitEvidenceFlag(hits, "SHEN_SHA", "movingWithDisasterSha"));
         context.setKongWangBranches(chartSnapshot == null || chartSnapshot.getKongWang() == null ? List.of() : chartSnapshot.getKongWang());
         return context;
     }
@@ -161,6 +209,17 @@ public class RuleEvaluationContext {
                 || "被克".equals(UseGodLineLocator.relationOf(useGodLine.getChangeWuXing(), useGodLine.getWuXing()));
     }
 
+    private static Boolean resolveUseGodAdvance(ChartSnapshot chartSnapshot, String useGod) {
+        if (chartSnapshot == null || chartSnapshot.getLines() == null || useGod == null || useGod.isBlank()) {
+            return false;
+        }
+        LineInfo useGodLine = resolveSelectedUseGodLine(chartSnapshot, useGod);
+        if (useGodLine == null || !Boolean.TRUE.equals(useGodLine.getIsMoving())) {
+            return false;
+        }
+        return "化进".equals(UseGodLineLocator.resolveTransformTrend(useGodLine.getBranch(), useGodLine.getChangeBranch()));
+    }
+
     private static Boolean resolveUseGodMoving(ChartSnapshot chartSnapshot, Integer useGodLineIndex) {
         return resolveLineByIndex(chartSnapshot, useGodLineIndex)
                 .map(line -> Boolean.TRUE.equals(line.getIsMoving()))
@@ -214,6 +273,42 @@ public class RuleEvaluationContext {
             }
         }
         return false;
+    }
+
+    private static Boolean resolveMovingEffectBoolean(List<RuleHit> hits, String field) {
+        if (hits == null || field == null || field.isBlank()) {
+            return false;
+        }
+        for (RuleHit hit : hits) {
+            if (!"MOVING_LINE_AFFECT_USE_GOD".equals(hit.getRuleCode()) || !Boolean.TRUE.equals(hit.getHit())) {
+                continue;
+            }
+            Object effects = hit.getEvidence() == null ? null : hit.getEvidence().get("effects");
+            if (!(effects instanceof List<?> effectList)) {
+                continue;
+            }
+            for (Object item : effectList) {
+                if (!(item instanceof java.util.Map<?, ?> effect)) {
+                    continue;
+                }
+                if (Boolean.TRUE.equals(effect.get(field))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static Boolean resolveRuleHitEvidenceFlag(List<RuleHit> hits, String ruleCode, String evidenceKey) {
+        if (hits == null || ruleCode == null || evidenceKey == null) {
+            return false;
+        }
+        return hits.stream()
+                .filter(hit -> ruleCode.equals(hit.getRuleCode()) && Boolean.TRUE.equals(hit.getHit()))
+                .map(RuleHit::getEvidence)
+                .filter(java.util.Objects::nonNull)
+                .map(evidence -> evidence.get(evidenceKey))
+                .anyMatch(Boolean.TRUE::equals);
     }
 
     private static Boolean resolveRuleHitFlag(List<RuleHit> hits, String ruleCode) {
@@ -618,6 +713,14 @@ public class RuleEvaluationContext {
         this.useGodRetreat = useGodRetreat;
     }
 
+    public Boolean getUseGodAdvance() {
+        return useGodAdvance;
+    }
+
+    public void setUseGodAdvance(Boolean useGodAdvance) {
+        this.useGodAdvance = useGodAdvance;
+    }
+
     public String getShiState() {
         return shiState;
     }
@@ -672,6 +775,190 @@ public class RuleEvaluationContext {
 
     public void setMovingCount(Integer movingCount) {
         this.movingCount = movingCount;
+    }
+
+    public Boolean getHasMovingAffectShi() {
+        return hasMovingAffectShi;
+    }
+
+    public void setHasMovingAffectShi(Boolean hasMovingAffectShi) {
+        this.hasMovingAffectShi = hasMovingAffectShi;
+    }
+
+    public Boolean getHiddenUseGodFound() {
+        return hiddenUseGodFound;
+    }
+
+    public void setHiddenUseGodFound(Boolean hiddenUseGodFound) {
+        this.hiddenUseGodFound = hiddenUseGodFound;
+    }
+
+    public Boolean getFlyShenSuppress() {
+        return flyShenSuppress;
+    }
+
+    public void setFlyShenSuppress(Boolean flyShenSuppress) {
+        this.flyShenSuppress = flyShenSuppress;
+    }
+
+    public Boolean getHiddenUseGodSupported() {
+        return hiddenUseGodSupported;
+    }
+
+    public void setHiddenUseGodSupported(Boolean hiddenUseGodSupported) {
+        this.hiddenUseGodSupported = hiddenUseGodSupported;
+    }
+
+    public Boolean getHiddenUseGodBroken() {
+        return hiddenUseGodBroken;
+    }
+
+    public void setHiddenUseGodBroken(Boolean hiddenUseGodBroken) {
+        this.hiddenUseGodBroken = hiddenUseGodBroken;
+    }
+
+    public Boolean getHasFuYin() {
+        return hasFuYin;
+    }
+
+    public void setHasFuYin(Boolean hasFuYin) {
+        this.hasFuYin = hasFuYin;
+    }
+
+    public Boolean getChartFuYin() {
+        return chartFuYin;
+    }
+
+    public void setChartFuYin(Boolean chartFuYin) {
+        this.chartFuYin = chartFuYin;
+    }
+
+    public Boolean getHasFanYin() {
+        return hasFanYin;
+    }
+
+    public void setHasFanYin(Boolean hasFanYin) {
+        this.hasFanYin = hasFanYin;
+    }
+
+    public Boolean getChartFanYin() {
+        return chartFanYin;
+    }
+
+    public void setChartFanYin(Boolean chartFanYin) {
+        this.chartFanYin = chartFanYin;
+    }
+
+    public Boolean getHasNobleman() {
+        return hasNobleman;
+    }
+
+    public void setHasNobleman(Boolean hasNobleman) {
+        this.hasNobleman = hasNobleman;
+    }
+
+    public Boolean getUseGodWithNobleman() {
+        return useGodWithNobleman;
+    }
+
+    public void setUseGodWithNobleman(Boolean useGodWithNobleman) {
+        this.useGodWithNobleman = useGodWithNobleman;
+    }
+
+    public Boolean getHasTravelHorse() {
+        return hasTravelHorse;
+    }
+
+    public void setHasTravelHorse(Boolean hasTravelHorse) {
+        this.hasTravelHorse = hasTravelHorse;
+    }
+
+    public Boolean getMovingWithTravelHorse() {
+        return movingWithTravelHorse;
+    }
+
+    public void setMovingWithTravelHorse(Boolean movingWithTravelHorse) {
+        this.movingWithTravelHorse = movingWithTravelHorse;
+    }
+
+    public Boolean getHasPeachBlossom() {
+        return hasPeachBlossom;
+    }
+
+    public void setHasPeachBlossom(Boolean hasPeachBlossom) {
+        this.hasPeachBlossom = hasPeachBlossom;
+    }
+
+    public Boolean getUseGodWithPeachBlossom() {
+        return useGodWithPeachBlossom;
+    }
+
+    public void setUseGodWithPeachBlossom(Boolean useGodWithPeachBlossom) {
+        this.useGodWithPeachBlossom = useGodWithPeachBlossom;
+    }
+
+    public Boolean getHasWenChang() {
+        return hasWenChang;
+    }
+
+    public void setHasWenChang(Boolean hasWenChang) {
+        this.hasWenChang = hasWenChang;
+    }
+
+    public Boolean getUseGodWithWenChang() {
+        return useGodWithWenChang;
+    }
+
+    public void setUseGodWithWenChang(Boolean useGodWithWenChang) {
+        this.useGodWithWenChang = useGodWithWenChang;
+    }
+
+    public Boolean getHasGeneralStar() {
+        return hasGeneralStar;
+    }
+
+    public void setHasGeneralStar(Boolean hasGeneralStar) {
+        this.hasGeneralStar = hasGeneralStar;
+    }
+
+    public Boolean getUseGodWithGeneralStar() {
+        return useGodWithGeneralStar;
+    }
+
+    public void setUseGodWithGeneralStar(Boolean useGodWithGeneralStar) {
+        this.useGodWithGeneralStar = useGodWithGeneralStar;
+    }
+
+    public Boolean getHasJieSha() {
+        return hasJieSha;
+    }
+
+    public void setHasJieSha(Boolean hasJieSha) {
+        this.hasJieSha = hasJieSha;
+    }
+
+    public Boolean getMovingWithJieSha() {
+        return movingWithJieSha;
+    }
+
+    public void setMovingWithJieSha(Boolean movingWithJieSha) {
+        this.movingWithJieSha = movingWithJieSha;
+    }
+
+    public Boolean getHasDisasterSha() {
+        return hasDisasterSha;
+    }
+
+    public void setHasDisasterSha(Boolean hasDisasterSha) {
+        this.hasDisasterSha = hasDisasterSha;
+    }
+
+    public Boolean getMovingWithDisasterSha() {
+        return movingWithDisasterSha;
+    }
+
+    public void setMovingWithDisasterSha(Boolean movingWithDisasterSha) {
+        this.movingWithDisasterSha = movingWithDisasterSha;
     }
 
     public List<String> getKongWangBranches() {

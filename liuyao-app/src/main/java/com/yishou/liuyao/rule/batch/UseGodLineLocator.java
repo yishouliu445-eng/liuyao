@@ -6,9 +6,11 @@ import com.yishou.liuyao.divination.service.WuXingSupport;
 import com.yishou.liuyao.rule.usegod.UseGodType;
 
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class UseGodLineLocator {
 
@@ -38,6 +40,15 @@ public final class UseGodLineLocator {
         }
         return chart.getLines().stream()
                 .filter(line -> useGod.equals(line.getLiuQin()))
+                .toList();
+    }
+
+    public static List<LineInfo> findHiddenUseGodLines(ChartSnapshot chart, String useGod) {
+        if (chart == null || chart.getLines() == null || useGod == null || useGod.isBlank()) {
+            return List.of();
+        }
+        return chart.getLines().stream()
+                .filter(line -> useGod.equals(line.getFuShenLiuQin()))
                 .toList();
     }
 
@@ -132,11 +143,20 @@ public final class UseGodLineLocator {
         summary.put("branch", defaultValue(line.getBranch()));
         summary.put("wuXing", defaultValue(line.getWuXing()));
         summary.put("moving", Boolean.TRUE.equals(line.getIsMoving()));
+        if (line.getFuShenLiuQin() != null && !line.getFuShenLiuQin().isBlank()) {
+            summary.put("fuShenLiuQin", defaultValue(line.getFuShenLiuQin()));
+            summary.put("fuShenBranch", defaultValue(line.getFuShenBranch()));
+            summary.put("fuShenWuXing", defaultValue(line.getFuShenWuXing()));
+            summary.put("flyShenLiuQin", defaultValue(line.getFlyShenLiuQin()));
+            summary.put("flyShenBranch", defaultValue(line.getFlyShenBranch()));
+            summary.put("flyShenWuXing", defaultValue(line.getFlyShenWuXing()));
+        }
         if (Boolean.TRUE.equals(line.getIsMoving())) {
             summary.put("changeTo", defaultValue(line.getChangeTo()));
             summary.put("changeBranch", defaultValue(line.getChangeBranch()));
             summary.put("changeWuXing", defaultValue(line.getChangeWuXing()));
             summary.put("changeLiuQin", defaultValue(line.getChangeLiuQin()));
+            summary.put("transformTrend", defaultValue(resolveTransformTrend(line.getBranch(), line.getChangeBranch())));
         }
         return summary;
     }
@@ -166,6 +186,45 @@ public final class UseGodLineLocator {
         evidence.put("targets", safeTargets);
     }
 
+    public static String resolveTransformTrend(String sourceBranch, String changeBranch) {
+        if (sourceBranch == null || changeBranch == null || sourceBranch.isBlank() || changeBranch.isBlank()) {
+            return "";
+        }
+        if (isAdvanceTransform(sourceBranch, changeBranch)) {
+            return "化进";
+        }
+        if (isRetreatTransform(sourceBranch, changeBranch)) {
+            return "化退";
+        }
+        return "";
+    }
+
+    public static boolean isAdvanceTransform(String sourceBranch, String changeBranch) {
+        return matchesTransform(sourceBranch, changeBranch, Map.of(
+                "寅", "卯",
+                "巳", "午",
+                "申", "酉",
+                "亥", "子",
+                "辰", "未",
+                "未", "戌",
+                "戌", "丑",
+                "丑", "辰"
+        ));
+    }
+
+    public static boolean isRetreatTransform(String sourceBranch, String changeBranch) {
+        return matchesTransform(sourceBranch, changeBranch, Map.of(
+                "卯", "寅",
+                "午", "巳",
+                "酉", "申",
+                "子", "亥",
+                "未", "辰",
+                "戌", "未",
+                "丑", "戌",
+                "辰", "丑"
+        ));
+    }
+
     private static String defaultValue(String value) {
         return value == null ? "" : value;
     }
@@ -182,7 +241,7 @@ public final class UseGodLineLocator {
                 reason,
                 false,
                 null,
-                List.of(Map.of("lineIndex", line.getIndex(), "totalScore", 0, "reason", "single candidate")),
+                List.of(Map.of("lineIndex", line.getIndex(), "totalScore", 0, "reason", "single candidate", "stateFlags", List.of("唯一候选"))),
                 Map.of("candidateCount", candidates.size())
         );
     }
@@ -210,37 +269,52 @@ public final class UseGodLineLocator {
 
     private static Map<String, Object> scoreLine(ChartSnapshot chart, LineInfo line) {
         int totalScore = 5;
+        Set<String> stateFlags = new LinkedHashSet<>();
         if (Boolean.TRUE.equals(line.getIsMoving())) {
             totalScore += 2;
+            stateFlags.add("动");
         }
         if (Boolean.TRUE.equals(line.getIsShi())) {
             totalScore += 2;
+            stateFlags.add("世");
         }
         if (Boolean.TRUE.equals(line.getIsYing())) {
             totalScore += 1;
+            stateFlags.add("应");
         }
         if (chart != null && chart.getShi() != null && line.getIndex() != null) {
             int distance = Math.abs(line.getIndex() - chart.getShi());
             if (distance == 0) {
                 totalScore += 2;
+                stateFlags.add("贴世");
             } else if (distance == 1) {
                 totalScore += 1;
+                stateFlags.add("近世");
             }
         }
         if (chart != null && chart.getKongWang() != null && line.getBranch() != null) {
             if (chart.getKongWang().contains(line.getBranch())) {
                 totalScore -= 2;
+                stateFlags.add("空");
             } else {
                 totalScore += 1;
+                stateFlags.add("不空");
             }
         }
-        return Map.of(
-                "lineIndex", line.getIndex(),
-                "totalScore", totalScore,
-                "moving", Boolean.TRUE.equals(line.getIsMoving()),
-                "isShi", Boolean.TRUE.equals(line.getIsShi()),
-                "isYing", Boolean.TRUE.equals(line.getIsYing())
-        );
+        Map<String, Object> detail = new LinkedHashMap<>();
+        detail.put("lineIndex", line.getIndex());
+        detail.put("totalScore", totalScore);
+        detail.put("moving", Boolean.TRUE.equals(line.getIsMoving()));
+        detail.put("isShi", Boolean.TRUE.equals(line.getIsShi()));
+        detail.put("isYing", Boolean.TRUE.equals(line.getIsYing()));
+        detail.put("stateFlags", List.copyOf(stateFlags));
+        return detail;
+    }
+
+    private static boolean matchesTransform(String sourceBranch, String changeBranch, Map<String, String> mapping) {
+        return sourceBranch != null
+                && changeBranch != null
+                && changeBranch.equals(mapping.get(sourceBranch));
     }
 
     public record SelectionResult(

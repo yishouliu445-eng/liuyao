@@ -2,6 +2,7 @@ package com.yishou.liuyao.analysis.service;
 
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.domain.LineInfo;
+import com.yishou.liuyao.divination.service.ShenShaResolver;
 import com.yishou.liuyao.rule.RuleHit;
 import com.yishou.liuyao.session.domain.ChatMessage;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,26 @@ class ContextWindowBuilderTest {
                 .sum();
 
         assertTrue(approxTokens <= 9000, "上下文预算应控制在 9000 token 以内，实际约为 " + approxTokens);
+    }
+
+    @Test
+    void shouldRenderShenShaSummaryInChartSection() {
+        ChartSnapshot chart = sampleChart();
+        chart.getLines().get(0).setBranch("丑");
+        chart.setShenShaHits(new ShenShaResolver().resolve(chart.getRiChen(), chart.getLines()));
+
+        List<LlmClient.ChatMessage> messages = builder.buildInitialContext(
+                "SYSTEM",
+                chart,
+                sampleRuleHits(),
+                8,
+                "POSITIVE",
+                List.of(),
+                chart.getQuestion()
+        );
+
+        assertTrue(messages.get(0).content().contains("神煞："));
+        assertTrue(messages.get(0).content().contains("天乙贵人"));
     }
 
     private List<ChatMessage> buildHistory(int rounds, int repeatLength) {

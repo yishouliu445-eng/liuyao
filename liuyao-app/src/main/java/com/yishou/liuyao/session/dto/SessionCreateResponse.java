@@ -22,6 +22,10 @@ public class SessionCreateResponse {
     private AnalysisOutputDTO analysis;
     private List<String> smartPrompts;
     private int messageCount;
+    private String userSelectedDirection;
+    private String detectedDirection;
+    private String finalDirection;
+    private String suggestedDirection;
 
     public UUID getSessionId() { return sessionId; }
     public void setSessionId(UUID sessionId) { this.sessionId = sessionId; }
@@ -43,4 +47,12 @@ public class SessionCreateResponse {
     public void setSmartPrompts(List<String> smartPrompts) { this.smartPrompts = smartPrompts; }
     public int getMessageCount() { return messageCount; }
     public void setMessageCount(int messageCount) { this.messageCount = messageCount; }
+    public String getUserSelectedDirection() { return userSelectedDirection; }
+    public void setUserSelectedDirection(String userSelectedDirection) { this.userSelectedDirection = userSelectedDirection; }
+    public String getDetectedDirection() { return detectedDirection; }
+    public void setDetectedDirection(String detectedDirection) { this.detectedDirection = detectedDirection; }
+    public String getFinalDirection() { return finalDirection; }
+    public void setFinalDirection(String finalDirection) { this.finalDirection = finalDirection; }
+    public String getSuggestedDirection() { return suggestedDirection; }
+    public void setSuggestedDirection(String suggestedDirection) { this.suggestedDirection = suggestedDirection; }
 }

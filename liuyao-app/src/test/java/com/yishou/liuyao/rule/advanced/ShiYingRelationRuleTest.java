@@ -46,4 +46,33 @@ class ShiYingRelationRuleTest {
         Map<String, Object> shiLine = (Map<String, Object>) hit.getEvidence().get("shiLine");
         assertEquals("卯", shiLine.get("branch"));
     }
+
+    @Test
+    void shouldExposeStructuralDistanceAndMovementFlags() {
+        LineInfo shi = new LineInfo();
+        shi.setIndex(2);
+        shi.setShi(true);
+        shi.setMoving(true);
+        shi.setLiuQin("兄弟");
+        shi.setBranch("寅");
+        shi.setWuXing("木");
+
+        LineInfo ying = new LineInfo();
+        ying.setIndex(5);
+        ying.setYing(true);
+        ying.setMoving(false);
+        ying.setLiuQin("官鬼");
+        ying.setBranch("申");
+        ying.setWuXing("金");
+
+        ChartSnapshot chartSnapshot = new ChartSnapshot();
+        chartSnapshot.setLines(List.of(shi, ying));
+
+        RuleHit hit = new ShiYingRelationRule().evaluate(chartSnapshot);
+
+        assertTrue(Boolean.TRUE.equals(hit.getHit()));
+        assertEquals(3, hit.getEvidence().get("distance"));
+        assertEquals(true, hit.getEvidence().get("shiMoving"));
+        assertEquals(false, hit.getEvidence().get("yingMoving"));
+    }
 }

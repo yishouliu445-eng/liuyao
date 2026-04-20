@@ -43,7 +43,7 @@ cd liuyao-worker
 if [ -d "venv" ]; then
     source venv/bin/activate
 fi
-nohup python app/worker.py > ../worker.log 2>&1 &
+nohup python3 app/main.py > ../worker.log 2>&1 &
 WORKER_PID=$!
 echo $WORKER_PID > ../.liuyao_worker.pid
 cd ..

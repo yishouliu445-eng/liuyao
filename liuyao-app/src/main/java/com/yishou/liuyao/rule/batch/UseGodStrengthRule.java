@@ -8,9 +8,11 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @Order(31)
@@ -56,44 +58,72 @@ public class UseGodStrengthRule implements Rule {
         List<Map<String, Object>> details = new ArrayList<>();
         int bestScore = Integer.MIN_VALUE;
         String bestLevel = "UNKNOWN";
+        Integer selectedLineIndex = null;
+        List<String> bestStateFlags = List.of();
 
         for (LineInfo line : targets) {
-            // 这层评分是“工程化第一版”，核心目标是把月建、日辰、空亡、动变影响收束到统一证据里。
             String lineWuXing = line.getWuXing();
             int score = 0;
             boolean kongWang = chart.getKongWang() != null && line.getBranch() != null && chart.getKongWang().contains(line.getBranch());
             boolean monthBreak = line.getBranch() != null && yueBranch != null && UseGodLineLocator.isChong(line.getBranch(), yueBranch);
             boolean dayBreak = line.getBranch() != null && riBranch != null && UseGodLineLocator.isChong(line.getBranch(), riBranch);
+            String seasonState = resolveSeasonState(yueWuXing, lineWuXing);
+            Set<String> stateFlags = new LinkedHashSet<>();
+            if (!seasonState.isBlank()) {
+                stateFlags.add(seasonState);
+            }
             if (lineWuXing != null && yueWuXing != null) {
-                if (lineWuXing.equals(yueWuXing) || UseGodLineLocator.generates(yueWuXing, lineWuXing)) score += 2;
-                if (UseGodLineLocator.controls(yueWuXing, lineWuXing)) score -= 2;
+                if (lineWuXing.equals(yueWuXing)) {
+                    score += 2;
+                } else if (UseGodLineLocator.generates(yueWuXing, lineWuXing)) {
+                    score += 1;
+                } else if (UseGodLineLocator.controls(yueWuXing, lineWuXing)) {
+                    score -= 2;
+                } else if (UseGodLineLocator.generates(lineWuXing, yueWuXing)) {
+                    score -= 1;
+                }
             }
             if (lineWuXing != null && riWuXing != null) {
-                if (lineWuXing.equals(riWuXing) || UseGodLineLocator.generates(riWuXing, lineWuXing)) score += 1;
-                if (UseGodLineLocator.controls(riWuXing, lineWuXing)) score -= 1;
+                if (lineWuXing.equals(riWuXing) || UseGodLineLocator.generates(riWuXing, lineWuXing)) {
+                    score += 1;
+                }
+                if (UseGodLineLocator.controls(riWuXing, lineWuXing)) {
+                    score -= 1;
+                }
             }
             if (Boolean.TRUE.equals(line.getIsMoving())) {
                 score += 1;
+                stateFlags.add("动");
             }
             if (kongWang) {
                 score -= 1;
+                stateFlags.add("空");
             }
             if (monthBreak) {
                 score -= 2;
+                stateFlags.add("月破");
             }
             if (dayBreak) {
                 score -= 1;
+                stateFlags.add("日破");
+            }
+            if (line.getChangeBranch() != null && !line.getChangeBranch().isBlank()) {
+                stateFlags.add("变");
             }
             String level = toLevel(score);
             if (score > bestScore) {
                 bestScore = score;
                 bestLevel = level;
+                selectedLineIndex = line.getIndex();
+                bestStateFlags = List.copyOf(stateFlags);
             }
             Map<String, Object> detail = new LinkedHashMap<>();
             detail.put("lineIndex", line.getIndex());
             detail.put("liuQin", line.getLiuQin());
             detail.put("branch", line.getBranch() == null ? "" : line.getBranch());
             detail.put("wuXing", lineWuXing == null ? "" : lineWuXing);
+            detail.put("seasonState", seasonState);
+            detail.put("stateFlags", List.copyOf(stateFlags));
             detail.put("moving", Boolean.TRUE.equals(line.getIsMoving()));
             detail.put("kongWang", kongWang);
             detail.put("monthBreak", monthBreak);
@@ -114,11 +144,32 @@ public class UseGodStrengthRule implements Rule {
         evidence.put("riBranch", riBranch == null ? "" : riBranch);
         evidence.put("kongWang", chart.getKongWang());
         UseGodLineLocator.putTargets(evidence, targets.stream().map(UseGodLineLocator::summarizeLine).toList());
+        evidence.put("selectedLineIndex", selectedLineIndex);
         evidence.put("bestScore", bestScore);
         evidence.put("bestLevel", bestLevel);
+        evidence.put("bestStateFlags", bestStateFlags);
         evidence.put("details", details);
         hit.setEvidence(evidence);
         return hit;
+    }
+
+    private String resolveSeasonState(String yueWuXing, String lineWuXing) {
+        if (yueWuXing == null || yueWuXing.isBlank() || lineWuXing == null || lineWuXing.isBlank()) {
+            return "";
+        }
+        if (lineWuXing.equals(yueWuXing)) {
+            return "旺";
+        }
+        if (UseGodLineLocator.generates(yueWuXing, lineWuXing)) {
+            return "相";
+        }
+        if (UseGodLineLocator.generates(lineWuXing, yueWuXing)) {
+            return "休";
+        }
+        if (UseGodLineLocator.controls(yueWuXing, lineWuXing)) {
+            return "囚";
+        }
+        return "";
     }
 
     private String toLevel(int score) {

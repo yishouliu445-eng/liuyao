@@ -241,6 +241,27 @@
         ]
       },
       "description": "世应距离较远，彼此联系不够直接。"
+    },
+    {
+      "id": "R040",
+      "name": "世位受动",
+      "category": "SHI_STATE",
+      "priority": 43,
+      "enabled": true,
+      "condition": {
+        "target": "HAS_MOVING_AFFECT_SHI",
+        "operator": "IS_TRUE"
+      },
+      "effect": {
+        "score": -1,
+        "tags": [
+          "自己起波"
+        ],
+        "conclusionHints": [
+          "世位受动，表示自己这一方已被局中变化卷入，难以完全置身事外。"
+        ]
+      },
+      "description": "动变直接影响世位。"
     }
   ]
 }

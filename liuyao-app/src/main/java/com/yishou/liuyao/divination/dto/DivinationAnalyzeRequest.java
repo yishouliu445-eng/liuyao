@@ -12,6 +12,7 @@ public class DivinationAnalyzeRequest {
     private String questionText;
 
     private String questionCategory;
+    private String finalDirection;
 
     @NotNull
     private LocalDateTime divinationTime;
@@ -34,6 +35,14 @@ public class DivinationAnalyzeRequest {
 
     public void setQuestionCategory(String questionCategory) {
         this.questionCategory = questionCategory;
+    }
+
+    public String getFinalDirection() {
+        return finalDirection;
+    }
+
+    public void setFinalDirection(String finalDirection) {
+        this.finalDirection = finalDirection;
     }
 
     public LocalDateTime getDivinationTime() {

@@ -4,6 +4,16 @@ import type { DivinationAnalyzeRequest } from './divination';
 
 export type SessionRole = 'user' | 'assistant' | 'system';
 
+export interface DirectionResolutionDTO {
+  detectedDirection: string;
+  userSelectedDirection: string;
+  finalDirection: string;
+  suggestedDirection?: string;
+  requiresConfirmation?: boolean;
+  source?: string;
+  confidence?: number;
+}
+
 export interface SessionMessageDTO {
   messageId: string;
   sessionId?: string;
@@ -24,6 +34,10 @@ export interface SessionThreadDTO {
   sessionId: string;
   questionText: string;
   questionCategory: string;
+  detectedDirection?: string;
+  userSelectedDirection?: string;
+  finalDirection?: string;
+  suggestedDirection?: string;
   divinationTime?: string;
   divinationMethod?: string;
   status?: string;

@@ -85,7 +85,23 @@ class ClassicTextChunkerTest(unittest.TestCase):
         chunks = self.chunker.chunk(text, {})
 
         self.assertEqual(1, len(chunks))
-        self.assertEqual(["用神", "世应", "空亡", "动爻"], chunks[0].topic_tags)
+        self.assertEqual(["用神", "世应", "旬空", "动爻"], chunks[0].topic_tags)
+
+    def test_detects_phase_two_and_timing_topics(self):
+        text = "若见伏吟反吟，当参考应期早晚。"
+
+        chunks = self.chunker.chunk(text, {})
+
+        self.assertEqual(1, len(chunks))
+        self.assertEqual(["伏吟", "反吟", "应期"], chunks[0].topic_tags)
+
+    def test_detects_shen_sha_topics(self):
+        text = "天乙贵人与驿马、桃花、文昌、将星、劫煞、灾煞皆可入神煞参考。"
+
+        chunks = self.chunker.chunk(text, {})
+
+        self.assertEqual(1, len(chunks))
+        self.assertEqual(["神煞", "驿马", "桃花", "贵人", "文昌", "将星", "劫煞", "灾煞"], chunks[0].topic_tags)
 
     def test_backfills_topic_from_chapter_title_for_ocr_pdf_blocks(self):
         text = "第二章、用神总论\n这是OCR识别出的正文，但正文里没有明确打出关键字。"

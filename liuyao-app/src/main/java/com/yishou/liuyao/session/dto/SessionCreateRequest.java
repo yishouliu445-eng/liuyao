@@ -7,6 +7,8 @@ public class SessionCreateRequest {
 
     private String questionText;
     private String questionCategory;
+    private String userSelectedDirection;
+    private String finalDirection;
     private String divinationMethod;
     private String divinationTime;
     private List<String> rawLines;
@@ -17,6 +19,10 @@ public class SessionCreateRequest {
     public void setQuestionText(String questionText) { this.questionText = questionText; }
     public String getQuestionCategory() { return questionCategory; }
     public void setQuestionCategory(String questionCategory) { this.questionCategory = questionCategory; }
+    public String getUserSelectedDirection() { return userSelectedDirection; }
+    public void setUserSelectedDirection(String userSelectedDirection) { this.userSelectedDirection = userSelectedDirection; }
+    public String getFinalDirection() { return finalDirection; }
+    public void setFinalDirection(String finalDirection) { this.finalDirection = finalDirection; }
     public String getDivinationMethod() { return divinationMethod; }
     public void setDivinationMethod(String divinationMethod) { this.divinationMethod = divinationMethod; }
     public String getDivinationTime() { return divinationTime; }

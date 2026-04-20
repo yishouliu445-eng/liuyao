@@ -1,7 +1,8 @@
 import { get, post } from './client';
-import type { ChartSnapshotDTO } from '../types/chart';
+import type { ChartSnapshotDTO, ShenShaHitDTO } from '../types/chart';
 import type { RuleHitDTO, StructuredAnalysisResultDTO } from '../types/rule';
 import type {
+  DirectionResolutionDTO,
   SessionCreateRequestDTO,
   SessionListItemDTO,
   SessionListResponseDTO,
@@ -42,6 +43,40 @@ function normalizeRole(value: unknown): SessionRole {
   return 'assistant';
 }
 
+function normalizeDirectionResolution(value: unknown): Partial<DirectionResolutionDTO> {
+  const record = toRecord(value);
+  if (!record) return {};
+  return {
+    detectedDirection: toStringValue(firstDefined(record.detectedDirection, record.detected_direction)),
+    userSelectedDirection: toStringValue(firstDefined(record.userSelectedDirection, record.user_selected_direction)),
+    finalDirection: toStringValue(firstDefined(record.finalDirection, record.final_direction, record.questionCategory, record.category)),
+    suggestedDirection: toStringValue(firstDefined(record.suggestedDirection, record.suggested_direction)),
+    requiresConfirmation: Boolean(firstDefined(record.requiresConfirmation, record.requires_confirmation, false)),
+    source: toStringValue(record.source),
+    confidence: Number(firstDefined(record.confidence, 0)),
+  };
+}
+
+function normalizeShenShaHits(value: unknown): ShenShaHitDTO[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter(isRecord)
+    .map((item) => ({
+      code: toStringValue(firstDefined(item.code, item.id)),
+      name: toStringValue(item.name),
+      scope: toStringValue(item.scope),
+      branch: toStringValue(item.branch),
+      matchedBy: toStringValue(firstDefined(item.matchedBy, item.matched_by)),
+      summary: toStringValue(item.summary),
+      lineIndexes: Array.isArray(firstDefined(item.lineIndexes, item.line_indexes))
+        ? (firstDefined(item.lineIndexes, item.line_indexes) as unknown[])
+            .map((entry) => Number(entry))
+            .filter((entry) => Number.isFinite(entry))
+        : [],
+      evidence: isRecord(item.evidence) ? item.evidence : {},
+    }));
+}
+
 function normalizeChartSnapshot(value: unknown): ChartSnapshotDTO | null {
   const record = toRecord(value);
   if (!record) return null;
@@ -59,6 +94,12 @@ function normalizeChartSnapshot(value: unknown): ChartSnapshotDTO | null {
     mainLowerTrigram: toStringValue(record.mainLowerTrigram),
     changedUpperTrigram: toStringValue(record.changedUpperTrigram),
     changedLowerTrigram: toStringValue(record.changedLowerTrigram),
+    mutualHexagram: toStringValue(firstDefined(record.mutualHexagram, record.mutual_hexagram)),
+    mutualHexagramCode: toStringValue(firstDefined(record.mutualHexagramCode, record.mutual_hexagram_code)),
+    oppositeHexagram: toStringValue(firstDefined(record.oppositeHexagram, record.opposite_hexagram)),
+    oppositeHexagramCode: toStringValue(firstDefined(record.oppositeHexagramCode, record.opposite_hexagram_code)),
+    reversedHexagram: toStringValue(firstDefined(record.reversedHexagram, record.reversed_hexagram)),
+    reversedHexagramCode: toStringValue(firstDefined(record.reversedHexagramCode, record.reversed_hexagram_code)),
     palace: toStringValue(record.palace),
     palaceWuXing: toStringValue(record.palaceWuXing),
     shi: Number(firstDefined(record.shi, 0)),
@@ -69,6 +110,7 @@ function normalizeChartSnapshot(value: unknown): ChartSnapshotDTO | null {
     snapshotVersion: toStringValue(record.snapshotVersion),
     calendarVersion: toStringValue(record.calendarVersion),
     kongWang: Array.isArray(record.kongWang) ? record.kongWang.map((item) => toStringValue(item)) : [],
+    shenShaHits: normalizeShenShaHits(firstDefined(record.shenShaHits, record.shen_sha_hits)),
     lines: Array.isArray(record.lines) ? (record.lines as ChartSnapshotDTO['lines']) : [],
   };
 
@@ -160,11 +202,17 @@ function normalizeMessages(value: unknown): SessionMessageDTO[] {
 function normalizeSessionListItem(value: unknown): SessionListItemDTO | null {
   const record = toRecord(value);
   if (!record) return null;
+  const resolution = normalizeDirectionResolution(record);
+  const questionCategory = toStringValue(firstDefined(
+    resolution.finalDirection,
+    record.questionCategory,
+    record.category,
+  ));
 
   return {
     sessionId: toStringValue(firstDefined(record.sessionId, record.session_id, record.id)),
     questionText: toStringValue(firstDefined(record.questionText, record.originalQuestion, record.question, record.title)),
-    questionCategory: toStringValue(firstDefined(record.questionCategory, record.category)),
+    questionCategory,
     status: toStringValue(firstDefined(record.status, record.sessionStatus)),
     messageCount: Number(firstDefined(record.messageCount, record.message_count, 0)),
     createdAt: toStringValue(firstDefined(record.createdAt, record.created_at)) || undefined,
@@ -208,9 +256,16 @@ function mergeThread(base: Partial<SessionThreadDTO>, raw: unknown, extraMessage
     base.structuredResult,
     normalizeStructuredResult(firstDefined(source.structuredResult, source.structured, source.analysisResult, source.result)),
   );
+  const resolution = normalizeDirectionResolution(firstDefined(source, record));
   const analysis = toStringValue(firstDefined(base.analysis, source.analysis, source.summary, source.message));
   const questionText = toStringValue(firstDefined(base.questionText, source.questionText, source.question, source.title));
-  const questionCategory = toStringValue(firstDefined(base.questionCategory, source.questionCategory, source.category));
+  const questionCategory = toStringValue(firstDefined(
+    base.finalDirection,
+    base.questionCategory,
+    resolution.finalDirection,
+    source.questionCategory,
+    source.category,
+  ));
   const smartPrompts = base.smartPrompts?.length
     ? base.smartPrompts
     : Array.isArray(firstDefined(source.smartPrompts, source.suggestions, source.promptSuggestions, source.followUpPrompts, record.smartPrompts, record.suggestions, record.promptSuggestions, record.followUpPrompts))
@@ -245,6 +300,10 @@ function mergeThread(base: Partial<SessionThreadDTO>, raw: unknown, extraMessage
     sessionId,
     questionText,
     questionCategory,
+    detectedDirection: toStringValue(firstDefined(base.detectedDirection, resolution.detectedDirection)),
+    userSelectedDirection: toStringValue(firstDefined(base.userSelectedDirection, resolution.userSelectedDirection)),
+    finalDirection: questionCategory,
+    suggestedDirection: toStringValue(firstDefined(base.suggestedDirection, resolution.suggestedDirection)),
     divinationTime: toStringValue(firstDefined(base.divinationTime, source.divinationTime, source.divination_time, record.divinationTime)),
     divinationMethod: toStringValue(firstDefined(base.divinationMethod, source.divinationMethod, record.divinationMethod)),
     status: toStringValue(firstDefined(base.status, source.status, source.sessionStatus, record.status, record.sessionStatus)),
@@ -308,6 +367,7 @@ function normalizeSessionThread(value: unknown): SessionThreadDTO {
     sessionId: message?.sessionId || '',
     questionText: message?.role === 'user' ? message.content : '',
     questionCategory: '',
+    finalDirection: '',
     messages: [],
     smartPrompts: [],
   }, value, message ? [message] : []);

@@ -5,3 +5,10 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
+export interface ApiErrorResponse<T = unknown> {
+  success: boolean;
+  code: string;
+  message: string;
+  data?: T;
+}

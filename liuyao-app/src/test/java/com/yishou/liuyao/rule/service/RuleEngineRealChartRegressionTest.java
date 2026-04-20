@@ -409,6 +409,239 @@ class RuleEngineRealChartRegressionTest {
         assertTrue(yingKeShiResult.getTags().contains("外部压制"));
     }
 
+    @Test
+    void shouldApplyConfiguredMixedSignalAndAdvanceRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new MovingLineAffectUseGodRule(),
+                new com.yishou.liuyao.rule.advanced.ShiYingRelationRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot mixedSignalChart = new ChartSnapshot();
+        mixedSignalChart.setShi(1);
+        mixedSignalChart.setYing(4);
+        mixedSignalChart.setUseGod("妻财");
+        mixedSignalChart.setExt(new LinkedHashMap<>());
+        mixedSignalChart.getExt().put("useGod", "妻财");
+        mixedSignalChart.getExt().put("useGodLineIndex", 5);
+        mixedSignalChart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "寅"),
+                buildLine(3, "兄弟", true, "水", "金", "子"),
+                buildYingLine(4, false, "火", "火", "午"),
+                buildUseGodLine(5, false, "火", "火", "巳")
+        )));
+
+        RuleEvaluationResult mixedSignalResult = ruleEngineService.evaluateResult(mixedSignalChart);
+        assertTrue(mixedSignalResult.getHits().stream().anyMatch(hit -> "R034".equals(hit.getRuleId())));
+        assertTrue(mixedSignalResult.getHits().stream().anyMatch(hit -> "R041".equals(hit.getRuleId())));
+        assertTrue(mixedSignalResult.getTags().contains("动来相克"));
+        assertTrue(mixedSignalResult.getTags().contains("助中有扰"));
+
+        ChartSnapshot reversePressureChart = new ChartSnapshot();
+        reversePressureChart.setShi(1);
+        reversePressureChart.setYing(4);
+        reversePressureChart.setUseGod("妻财");
+        reversePressureChart.setExt(new LinkedHashMap<>());
+        reversePressureChart.getExt().put("useGod", "妻财");
+        reversePressureChart.getExt().put("useGodLineIndex", 5);
+        LineInfo advancingUseGod = buildUseGodLine(5, true, "木", "木", "寅");
+        advancingUseGod.setChangeBranch("卯");
+        reversePressureChart.setLines(new ArrayList<>(List.of(
+                buildShiLine(1, false, "木", "木", "卯"),
+                buildYingLine(4, false, "金", "金", "酉"),
+                advancingUseGod
+        )));
+
+        RuleEvaluationResult reversePressureResult = ruleEngineService.evaluateResult(reversePressureChart);
+        assertTrue(reversePressureResult.getHits().stream().anyMatch(hit -> "R038".equals(hit.getRuleId())));
+        assertTrue(reversePressureResult.getHits().stream().anyMatch(hit -> "R042".equals(hit.getRuleId())));
+        assertTrue(reversePressureResult.getTags().contains("后势渐进"));
+        assertTrue(reversePressureResult.getTags().contains("逆势有机"));
+    }
+
+    @Test
+    void shouldApplyConfiguredHiddenUseGodStateRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new com.yishou.liuyao.rule.advanced.FuShenFlyShenRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot supportedHiddenChart = new ChartSnapshot();
+        supportedHiddenChart.setUseGod("妻财");
+        supportedHiddenChart.setYueJian("寅");
+        supportedHiddenChart.setRiChen("甲子日");
+        supportedHiddenChart.setExt(new LinkedHashMap<>());
+        supportedHiddenChart.getExt().put("useGod", "妻财");
+        LineInfo supportedHiddenLine = buildLine(2, "子孙", false, "水", "水", "亥");
+        supportedHiddenLine.setFuShenBranch("寅");
+        supportedHiddenLine.setFuShenWuXing("木");
+        supportedHiddenLine.setFuShenLiuQin("妻财");
+        supportedHiddenLine.setFlyShenBranch("亥");
+        supportedHiddenLine.setFlyShenWuXing("水");
+        supportedHiddenLine.setFlyShenLiuQin("子孙");
+        supportedHiddenChart.setLines(new ArrayList<>(List.of(supportedHiddenLine)));
+
+        RuleEvaluationResult supportedHiddenResult = ruleEngineService.evaluateResult(supportedHiddenChart);
+        assertTrue(supportedHiddenResult.getHits().stream().anyMatch(hit -> "R043".equals(hit.getRuleId())));
+        assertTrue(supportedHiddenResult.getHits().stream().anyMatch(hit -> "R045".equals(hit.getRuleId())));
+        assertTrue(supportedHiddenResult.getTags().contains("伏中取用"));
+        assertTrue(supportedHiddenResult.getTags().contains("伏得生扶"));
+
+        ChartSnapshot brokenHiddenChart = new ChartSnapshot();
+        brokenHiddenChart.setUseGod("妻财");
+        brokenHiddenChart.setYueJian("申");
+        brokenHiddenChart.setRiChen("庚申日");
+        brokenHiddenChart.setExt(new LinkedHashMap<>());
+        brokenHiddenChart.getExt().put("useGod", "妻财");
+        LineInfo brokenHiddenLine = buildLine(5, "官鬼", false, "金", "金", "申");
+        brokenHiddenLine.setFuShenBranch("寅");
+        brokenHiddenLine.setFuShenWuXing("木");
+        brokenHiddenLine.setFuShenLiuQin("妻财");
+        brokenHiddenLine.setFlyShenBranch("申");
+        brokenHiddenLine.setFlyShenWuXing("金");
+        brokenHiddenLine.setFlyShenLiuQin("官鬼");
+        brokenHiddenChart.setLines(new ArrayList<>(List.of(brokenHiddenLine)));
+
+        RuleEvaluationResult brokenHiddenResult = ruleEngineService.evaluateResult(brokenHiddenChart);
+        assertTrue(brokenHiddenResult.getHits().stream().anyMatch(hit -> "R044".equals(hit.getRuleId())));
+        assertTrue(brokenHiddenResult.getHits().stream().anyMatch(hit -> "R046".equals(hit.getRuleId())));
+        assertTrue(brokenHiddenResult.getTags().contains("飞压伏神"));
+        assertTrue(brokenHiddenResult.getTags().contains("伏被冲破"));
+    }
+
+    @Test
+    void shouldApplyConfiguredFanFuYinRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new com.yishou.liuyao.rule.advanced.FanFuYinRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot fuYinChart = new ChartSnapshot();
+        fuYinChart.setLines(new ArrayList<>(List.of(buildMovingLine(2, "寅", "寅"))));
+        RuleEvaluationResult fuYinResult = ruleEngineService.evaluateResult(fuYinChart);
+        assertTrue(fuYinResult.getHits().stream().anyMatch(hit -> "R201".equals(hit.getRuleId())));
+        assertTrue(fuYinResult.getHits().stream().anyMatch(hit -> "R202".equals(hit.getRuleId())));
+        assertTrue(fuYinResult.getTags().contains("伏吟"));
+        assertTrue(fuYinResult.getTags().contains("全局伏吟"));
+
+        ChartSnapshot fanYinChart = new ChartSnapshot();
+        fanYinChart.setLines(new ArrayList<>(List.of(buildMovingLine(5, "子", "午"))));
+        RuleEvaluationResult fanYinResult = ruleEngineService.evaluateResult(fanYinChart);
+        assertTrue(fanYinResult.getHits().stream().anyMatch(hit -> "R203".equals(hit.getRuleId())));
+        assertTrue(fanYinResult.getHits().stream().anyMatch(hit -> "R204".equals(hit.getRuleId())));
+        assertTrue(fanYinResult.getTags().contains("反吟"));
+        assertTrue(fanYinResult.getTags().contains("全局反复"));
+    }
+
+    @Test
+    void shouldExposeDeterministicTimingSignal() {
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new com.yishou.liuyao.rule.advanced.TimingSignalRule()
+        ));
+
+        ChartSnapshot chart = new ChartSnapshot();
+        chart.setUseGod("妻财");
+        chart.setYueJian("寅");
+        chart.setExt(new LinkedHashMap<>());
+        chart.getExt().put("useGod", "妻财");
+        chart.getExt().put("useGodLineIndex", 4);
+        LineInfo movingUseGod = buildUseGodLine(4, true, "木", "木", "寅");
+        movingUseGod.setChangeBranch("卯");
+        chart.setLines(new ArrayList<>(List.of(movingUseGod)));
+
+        RuleEvaluationResult result = ruleEngineService.evaluateResult(chart);
+
+        assertTrue(result.getHits().stream().anyMatch(hit -> "TIMING_SIGNAL".equals(hit.getRuleCode())));
+        assertTrue(result.getTags().contains("应期信号"));
+        RuleHit timingHit = result.getHits().stream().filter(hit -> "TIMING_SIGNAL".equals(hit.getRuleCode())).findFirst().orElseThrow();
+        assertEquals("SHORT_TERM", timingHit.getEvidence().get("timingBucket"));
+    }
+
+    @Test
+    void shouldApplyConfiguredShenShaRules() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new com.yishou.liuyao.rule.advanced.ShenShaRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot chart = new ChartSnapshot();
+        chart.setUseGod("妻财");
+        chart.setRiChen("甲子");
+        chart.setExt(new LinkedHashMap<>());
+        chart.getExt().put("useGod", "妻财");
+        chart.getExt().put("useGodLineIndex", 1);
+        chart.setLines(new ArrayList<>(List.of(
+                buildUseGodLine(1, false, "土", "土", "丑"),
+                buildLine(2, "兄弟", true, "木", "木", "寅"),
+                buildLine(3, "官鬼", false, "金", "金", "酉")
+        )));
+        chart.setShenShaHits(new com.yishou.liuyao.divination.service.ShenShaResolver().resolve(chart.getRiChen(), chart.getLines()));
+
+        RuleEvaluationResult result = ruleEngineService.evaluateResult(chart);
+
+        assertTrue(result.getHits().stream().anyMatch(hit -> "SHEN_SHA".equals(hit.getRuleCode())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R205".equals(hit.getRuleId())));
+        assertTrue(result.getHits().stream().anyMatch(hit -> "R206".equals(hit.getRuleId())));
+        assertTrue(result.getTags().contains("贵人助力"));
+        assertTrue(result.getTags().contains("驿马动"));
+    }
+
+    @Test
+    void shouldApplyExpandedShenShaRulesByQuestionType() {
+        RuleDefinitionConfigLoader loader = new RuleDefinitionConfigLoader(new ObjectMapper());
+        RuleEngineService ruleEngineService = new RuleEngineService(List.of(
+                new com.yishou.liuyao.rule.advanced.ShenShaRule()
+        ), loader, new RuleMatcher(), new RuleReasoningService());
+
+        ChartSnapshot examChart = new ChartSnapshot();
+        examChart.setQuestionCategory("考试");
+        examChart.setUseGod("妻财");
+        examChart.setRiChen("甲子");
+        examChart.setExt(new LinkedHashMap<>());
+        examChart.getExt().put("useGod", "妻财");
+        examChart.getExt().put("useGodLineIndex", 1);
+        examChart.setLines(new ArrayList<>(List.of(
+                buildUseGodLine(1, false, "火", "火", "巳"),
+                buildLine(2, "兄弟", false, "水", "水", "子")
+        )));
+        examChart.setShenShaHits(new com.yishou.liuyao.divination.service.ShenShaResolver().resolve(examChart.getRiChen(), examChart.getLines()));
+        RuleEvaluationResult examResult = ruleEngineService.evaluateResult(examChart);
+        assertTrue(examResult.getHits().stream().anyMatch(hit -> "R208".equals(hit.getRuleId())));
+        assertTrue(examResult.getTags().contains("文昌助学"));
+
+        ChartSnapshot workChart = new ChartSnapshot();
+        workChart.setQuestionCategory("工作");
+        workChart.setUseGod("妻财");
+        workChart.setRiChen("甲子");
+        workChart.setExt(new LinkedHashMap<>());
+        workChart.getExt().put("useGod", "妻财");
+        workChart.getExt().put("useGodLineIndex", 1);
+        workChart.setLines(new ArrayList<>(List.of(
+                buildUseGodLine(1, false, "水", "水", "子"),
+                buildLine(2, "兄弟", false, "木", "木", "寅")
+        )));
+        workChart.setShenShaHits(new com.yishou.liuyao.divination.service.ShenShaResolver().resolve(workChart.getRiChen(), workChart.getLines()));
+        RuleEvaluationResult workResult = ruleEngineService.evaluateResult(workChart);
+        assertTrue(workResult.getHits().stream().anyMatch(hit -> "R209".equals(hit.getRuleId())));
+        assertTrue(workResult.getTags().contains("将星得位"));
+
+        ChartSnapshot travelRiskChart = new ChartSnapshot();
+        travelRiskChart.setQuestionCategory("出行");
+        travelRiskChart.setUseGod("妻财");
+        travelRiskChart.setRiChen("甲子");
+        travelRiskChart.setExt(new LinkedHashMap<>());
+        travelRiskChart.getExt().put("useGod", "妻财");
+        travelRiskChart.getExt().put("useGodLineIndex", 1);
+        travelRiskChart.setLines(new ArrayList<>(List.of(
+                buildUseGodLine(1, false, "土", "土", "丑"),
+                buildLine(2, "兄弟", true, "火", "火", "午")
+        )));
+        travelRiskChart.setShenShaHits(new com.yishou.liuyao.divination.service.ShenShaResolver().resolve(travelRiskChart.getRiChen(), travelRiskChart.getLines()));
+        RuleEvaluationResult travelRiskResult = ruleEngineService.evaluateResult(travelRiskChart);
+        assertTrue(travelRiskResult.getHits().stream().anyMatch(hit -> "R211".equals(hit.getRuleId())));
+        assertTrue(travelRiskResult.getTags().contains("谨防波折"));
+    }
+
     private LineInfo buildShiLine(int index, boolean moving, String wuXing, String changeWuXing) {
         return buildShiLine(index, moving, wuXing, changeWuXing, null);
     }
@@ -456,6 +689,17 @@ class RuleEngineRealChartRegressionTest {
         line.setWuXing(wuXing);
         line.setChangeWuXing(changeWuXing);
         line.setBranch(branch);
+        return line;
+    }
+
+    private LineInfo buildMovingLine(int index, String branch, String changeBranch) {
+        LineInfo line = new LineInfo();
+        line.setIndex(index);
+        line.setMoving(true);
+        line.setBranch(branch);
+        line.setChangeBranch(changeBranch);
+        line.setWuXing(com.yishou.liuyao.divination.service.WuXingSupport.branchToWuXing(branch));
+        line.setChangeWuXing(com.yishou.liuyao.divination.service.WuXingSupport.branchToWuXing(changeBranch));
         return line;
     }
 }

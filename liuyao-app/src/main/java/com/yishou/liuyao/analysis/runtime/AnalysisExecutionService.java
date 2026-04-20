@@ -16,8 +16,10 @@ import com.yishou.liuyao.divination.domain.LineInfo;
 import com.yishou.liuyao.divination.dto.DivinationAnalyzeRequest;
 import com.yishou.liuyao.divination.dto.ChartSnapshotDTO;
 import com.yishou.liuyao.divination.dto.LineInfoDTO;
+import com.yishou.liuyao.divination.dto.ShenShaHitDTO;
 import com.yishou.liuyao.divination.mapper.DivinationMapper;
 import com.yishou.liuyao.divination.service.ChartBuilderService;
+import com.yishou.liuyao.divination.domain.ShenShaHit;
 import com.yishou.liuyao.evidence.dto.EvidenceHit;
 import com.yishou.liuyao.evidence.dto.EvidenceSelectionResult;
 import com.yishou.liuyao.evidence.service.CitationValidationResult;
@@ -358,6 +360,12 @@ public class AnalysisExecutionService {
         dto.setMainLowerTrigram(chartSnapshot.getMainLowerTrigram());
         dto.setChangedUpperTrigram(chartSnapshot.getChangedUpperTrigram());
         dto.setChangedLowerTrigram(chartSnapshot.getChangedLowerTrigram());
+        dto.setMutualHexagram(chartSnapshot.getMutualHexagram());
+        dto.setMutualHexagramCode(chartSnapshot.getMutualHexagramCode());
+        dto.setOppositeHexagram(chartSnapshot.getOppositeHexagram());
+        dto.setOppositeHexagramCode(chartSnapshot.getOppositeHexagramCode());
+        dto.setReversedHexagram(chartSnapshot.getReversedHexagram());
+        dto.setReversedHexagramCode(chartSnapshot.getReversedHexagramCode());
         dto.setPalace(chartSnapshot.getPalace());
         dto.setPalaceWuXing(chartSnapshot.getPalaceWuXing());
         dto.setShi(chartSnapshot.getShi());
@@ -368,7 +376,21 @@ public class AnalysisExecutionService {
         dto.setSnapshotVersion(chartSnapshot.getSnapshotVersion());
         dto.setCalendarVersion(chartSnapshot.getCalendarVersion());
         dto.setKongWang(chartSnapshot.getKongWang());
+        dto.setShenShaHits(chartSnapshot.getShenShaHits().stream().map(this::toShenShaHitDto).toList());
         dto.setLines(chartSnapshot.getLines().stream().map(this::toLineInfoDto).toList());
+        return dto;
+    }
+
+    private ShenShaHitDTO toShenShaHitDto(ShenShaHit shenShaHit) {
+        ShenShaHitDTO dto = new ShenShaHitDTO();
+        dto.setCode(shenShaHit.getCode());
+        dto.setName(shenShaHit.getName());
+        dto.setScope(shenShaHit.getScope());
+        dto.setBranch(shenShaHit.getBranch());
+        dto.setMatchedBy(shenShaHit.getMatchedBy());
+        dto.setSummary(shenShaHit.getSummary());
+        dto.setLineIndexes(shenShaHit.getLineIndexes());
+        dto.setEvidence(shenShaHit.getEvidence());
         return dto;
     }
 

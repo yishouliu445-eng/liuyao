@@ -2,6 +2,7 @@ package com.yishou.liuyao.analysis.service;
 
 import com.yishou.liuyao.divination.domain.ChartSnapshot;
 import com.yishou.liuyao.divination.domain.LineInfo;
+import com.yishou.liuyao.divination.domain.ShenShaHit;
 import com.yishou.liuyao.rule.RuleHit;
 import org.springframework.stereotype.Component;
 
@@ -137,6 +138,11 @@ public class ContextWindowBuilder {
           .append("（").append(nullSafe(chart.getPalace())).append("宫，")
           .append(nullSafe(chart.getPalaceWuXing())).append("）\n");
         sb.append("变卦：").append(nullSafe(chart.getChangedHexagram())).append("\n");
+        if (chart.getMutualHexagram() != null || chart.getOppositeHexagram() != null || chart.getReversedHexagram() != null) {
+            sb.append("互卦：").append(nullSafe(chart.getMutualHexagram()))
+              .append("，错卦：").append(nullSafe(chart.getOppositeHexagram()))
+              .append("，综卦：").append(nullSafe(chart.getReversedHexagram())).append("\n");
+        }
         sb.append("世爻：第").append(nullSafe(chart.getShi())).append("爻，")
           .append("应爻：第").append(nullSafe(chart.getYing())).append("爻\n");
         sb.append("日辰：").append(nullSafe(chart.getRiChen())).append("，")
@@ -145,6 +151,9 @@ public class ContextWindowBuilder {
             sb.append("旬空：").append(String.join("、", chart.getKongWang())).append("\n");
         }
         sb.append("用神：").append(nullSafe(chart.getUseGod())).append("\n");
+        if (chart.getShenShaHits() != null && !chart.getShenShaHits().isEmpty()) {
+            sb.append("神煞：").append(renderShenShaSummary(chart.getShenShaHits())).append("\n");
+        }
         sb.append("\n爻位详情：\n");
         if (chart.getLines() != null) {
             for (LineInfo line : chart.getLines()) {
@@ -164,6 +173,17 @@ public class ContextWindowBuilder {
         }
         sb.append("</chart_data>");
         return sb.toString();
+    }
+
+    private String renderShenShaSummary(List<ShenShaHit> shenShaHits) {
+        List<String> parts = new ArrayList<>();
+        for (ShenShaHit hit : shenShaHits) {
+            String lineSummary = hit.getLineIndexes() == null || hit.getLineIndexes().isEmpty()
+                    ? "未落爻"
+                    : "第" + hit.getLineIndexes().stream().map(String::valueOf).collect(java.util.stream.Collectors.joining("、")) + "爻";
+            parts.add(nullSafe(hit.getName()) + "(" + nullSafe(hit.getBranch()) + "," + lineSummary + ")");
+        }
+        return String.join("；", parts);
     }
 
     private String buildRuleSection(List<RuleHit> ruleHits, int effectiveScore, String resultLevel) {

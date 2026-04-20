@@ -7,9 +7,11 @@ import com.yishou.liuyao.rule.batch.UseGodLineLocator;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UseGodLineLocatorTest {
@@ -92,6 +94,25 @@ class UseGodLineLocatorTest {
 
         assertEquals(1, lines.size());
         assertEquals(6, lines.get(0).getIndex());
+    }
+
+    @Test
+    void shouldExposeExplicitSelectionStatesWhenScoringMultipleCandidates() {
+        ChartSnapshot chartSnapshot = buildBaseChart();
+        chartSnapshot.setLines(List.of(
+                line(2, "官鬼", false, false, false, "申"),
+                line(4, "官鬼", true, false, false, "酉"),
+                line(6, "兄弟", false, false, true, "亥")
+        ));
+
+        UseGodLineLocator.SelectionResult selection = UseGodLineLocator.locate(chartSnapshot, UseGodType.GUAN_GUI);
+
+        assertEquals(4, selection.selectedLineIndex());
+        assertEquals("SCORING", selection.selectionStrategy());
+        Map<String, Object> detail = selection.scoreDetails().get(0);
+        assertInstanceOf(List.class, detail.get("stateFlags"));
+        assertTrue(((List<?>) detail.get("stateFlags")).contains("动"));
+        assertTrue(((List<?>) detail.get("stateFlags")).contains("近世"));
     }
 
     private ChartSnapshot buildBaseChart() {

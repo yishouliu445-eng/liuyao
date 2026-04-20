@@ -1,0 +1,117 @@
+<h2>A2 首页详细设计</h2>
+<p class="subtitle">这一屏只确认首页首屏结构。核心目标：像专业六爻工具，同时带一点东方仪式感。</p>
+
+<div class="mockup">
+  <div class="mockup-header">Desktop 首屏</div>
+  <div class="mockup-body">
+    <div style="display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:start;">
+      <div style="border:1px solid rgba(212,175,55,.18);border-radius:22px;padding:22px;background:linear-gradient(180deg, rgba(20,18,16,.96), rgba(12,12,14,.98)); box-shadow: inset 0 1px 0 rgba(255,255,255,.04);">
+        <div class="label">起卦入口</div>
+        <h3 style="margin:8px 0 8px;font-size:30px;">所问之事，先定其意</h3>
+        <p style="margin:0 0 16px;color:#a8a29e;line-height:1.7;">
+          写下你此刻真正想问的问题，系统会先识别方向，再按六爻流程起卦解读。
+        </p>
+
+        <div style="height:74px;border:1px solid rgba(212,175,55,.16);border-radius:18px;background:rgba(255,255,255,.02);padding:16px;margin-bottom:14px;color:#8f8a82;">
+          例如：这段感情还有没有继续发展的机会？
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(212,175,55,.14);border-radius:16px;padding:12px 14px;margin-bottom:14px;background:rgba(214,173,55,.05);">
+          <div>
+            <div class="label">问题方向</div>
+            <div style="font-size:15px;margin-top:4px;">系统识别为：感情</div>
+          </div>
+          <div style="font-size:13px;color:#a8a29e;">可改，用于帮助系统更快聚焦</div>
+        </div>
+
+        <div style="border:1px solid rgba(212,175,55,.18);border-radius:18px;padding:16px;margin-bottom:14px;background:rgba(255,255,255,.015);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div class="label">六爻排盘</div>
+            <div style="font-size:12px;color:#a8a29e;">点击切换阴阳，长按设动爻</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;">
+            <div class="placeholder" style="height:78px;">初爻</div>
+            <div class="placeholder" style="height:78px;">二爻</div>
+            <div class="placeholder" style="height:78px;">三爻</div>
+            <div class="placeholder" style="height:78px;">四爻</div>
+            <div class="placeholder" style="height:78px;">五爻</div>
+            <div class="placeholder" style="height:78px;">上爻</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+          <div class="placeholder" style="height:54px;">起卦时间</div>
+          <div class="placeholder" style="height:54px;">起卦方式</div>
+        </div>
+
+        <button class="mock-button" style="width:100%;height:56px;font-size:18px;">开始起卦</button>
+      </div>
+
+      <div style="display:grid;gap:12px;">
+        <div style="border:1px solid rgba(212,175,55,.14);border-radius:18px;padding:16px;background:rgba(255,255,255,.018);">
+          <div class="label">建立信任</div>
+          <h3 style="margin:8px 0 6px;">依六爻流程起卦</h3>
+          <p style="margin:0;color:#a8a29e;line-height:1.7;">支持问题识别、多轮追问、案例留痕与应验反馈。</p>
+        </div>
+
+        <div style="border:1px solid rgba(212,175,55,.14);border-radius:18px;padding:16px;background:rgba(255,255,255,.018);">
+          <div class="label">仪式元素</div>
+          <p style="margin:8px 0 0;color:#a8a29e;line-height:1.7;">
+            用极淡的卦线、干支、纸墨纹理做背景，不出现人物、符咒、山水大图。
+          </p>
+        </div>
+
+        <div style="border:1px solid rgba(212,175,55,.14);border-radius:18px;padding:16px;background:rgba(255,255,255,.018);">
+          <div class="label">辅助入口</div>
+          <p style="margin:8px 0 0;color:#a8a29e;line-height:1.7;">
+            历史、日历、案例放到次级区域，不与“开始起卦”抢首屏重心。
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>信息层级</h3>
+  <div class="options" data-multiselect>
+    <div class="option" data-choice="question-first" onclick="toggleSelect(this)">
+      <div class="letter">1</div>
+      <div class="content">
+        <h3>先写问题</h3>
+        <p>让真实问题成为最上层输入，而不是先选分类。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="intent-second" onclick="toggleSelect(this)">
+      <div class="letter">2</div>
+      <div class="content">
+        <h3>再给方向</h3>
+        <p>方向来自系统识别，用户可改，但默认不强迫用户先选。</p>
+      </div>
+    </div>
+    <div class="option" data-choice="lines-main" onclick="toggleSelect(this)">
+      <div class="letter">3</div>
+      <div class="content">
+        <h3>六爻做主角</h3>
+        <p>首页最大识别点是排盘区，而不是标签组。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mobile 思路</h3>
+  <div class="mockup">
+    <div class="mockup-header">手机端顺序</div>
+    <div class="mockup-body">
+      <div style="width:280px;margin:0 auto;border:1px solid rgba(212,175,55,.18);border-radius:24px;padding:14px;background:rgba(15,15,18,.96);">
+        <div class="label">首屏</div>
+        <div class="placeholder" style="height:70px;margin:8px 0;">问题输入</div>
+        <div class="placeholder" style="height:50px;margin:8px 0;">系统识别方向</div>
+        <div class="placeholder" style="height:118px;margin:8px 0;">六爻操作区</div>
+        <div class="placeholder" style="height:48px;margin:8px 0;">起卦时间</div>
+        <button class="mock-button" style="width:100%;margin-top:8px;">开始起卦</button>
+      </div>
+    </div>
+  </div>
+</div>

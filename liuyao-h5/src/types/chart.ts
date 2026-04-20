@@ -15,6 +15,18 @@ export interface LineInfoDTO {
   ying: boolean;          // 应爻
 }
 
+/** 神煞命中 */
+export interface ShenShaHitDTO {
+  code: string;
+  name: string;
+  scope: string;
+  branch: string;
+  matchedBy: string;
+  summary: string;
+  lineIndexes: number[];
+  evidence: Record<string, unknown>;
+}
+
 /** 卦象快照 */
 export interface ChartSnapshotDTO {
   question: string;
@@ -29,6 +41,12 @@ export interface ChartSnapshotDTO {
   mainLowerTrigram: string;
   changedUpperTrigram: string;
   changedLowerTrigram: string;
+  mutualHexagram: string;
+  mutualHexagramCode: string;
+  oppositeHexagram: string;
+  oppositeHexagramCode: string;
+  reversedHexagram: string;
+  reversedHexagramCode: string;
   palace: string;
   palaceWuXing: string;
   shi: number;
@@ -39,5 +57,6 @@ export interface ChartSnapshotDTO {
   snapshotVersion: string;
   calendarVersion: string;
   kongWang: string[];
+  shenShaHits: ShenShaHitDTO[];
   lines: LineInfoDTO[];
 }

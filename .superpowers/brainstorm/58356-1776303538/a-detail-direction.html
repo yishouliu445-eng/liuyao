@@ -1,0 +1,93 @@
+<h2>A 方案细化</h2>
+<p class="subtitle">结构已固定为“工具优先”。现在只确认气质：更偏专业工具，还是多一点东方仪式感。</p>
+
+<div class="split">
+  <div class="mockup" data-choice="tool" onclick="toggleSelect(this)">
+    <div class="mockup-header">A1. 专业工具感</div>
+    <div class="mockup-body">
+      <div class="label">推荐默认方向</div>
+      <h3 style="margin:8px 0 10px;">先问问题，再排六爻</h3>
+      <p style="margin:0 0 12px;color:#9ca3af;">强调效率、准确、可信，不刻意做玄学氛围。</p>
+      <div class="mock-input" style="margin-bottom:10px;">例如：这段感情还有没有复合机会？</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;">
+        <div class="placeholder">初爻</div>
+        <div class="placeholder">二爻</div>
+        <div class="placeholder">三爻</div>
+        <div class="placeholder">四爻</div>
+        <div class="placeholder">五爻</div>
+        <div class="placeholder">上爻</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div class="placeholder" style="flex:1;">问题方向（可选）</div>
+        <div class="placeholder" style="flex:1;">起卦时间</div>
+      </div>
+      <button class="mock-button" style="width:100%;">开始起卦</button>
+      <div style="margin-top:10px;font-size:12px;color:#9ca3af;">系统将先识别问题意图；若与你选择的方向冲突，会在提交前确认。</div>
+    </div>
+  </div>
+
+  <div class="mockup" data-choice="ritual" onclick="toggleSelect(this)">
+    <div class="mockup-header">A2. 工具内含仪式感</div>
+    <div class="mockup-body">
+      <div class="label">东方氛围更浓</div>
+      <h3 style="margin:8px 0 10px;">所问之事，先定其意</h3>
+      <p style="margin:0 0 12px;color:#9ca3af;">保留工具结构，但增加卦象纹理、干支提示和更克制的仪式语言。</p>
+      <div class="placeholder" style="height:72px;margin-bottom:10px;">淡化卦象 / 干支 / 纸墨纹理</div>
+      <div class="mock-input" style="margin-bottom:10px;">请写下你此刻所占之事</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;">
+        <div class="placeholder">初爻</div>
+        <div class="placeholder">二爻</div>
+        <div class="placeholder">三爻</div>
+        <div class="placeholder">四爻</div>
+        <div class="placeholder">五爻</div>
+        <div class="placeholder">上爻</div>
+      </div>
+      <button class="mock-button" style="width:100%;">起卦入局</button>
+      <div style="margin-top:10px;font-size:12px;color:#9ca3af;">问题方向仍为可选补充项，不主导断卦结果。</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>首页详细结构</h3>
+  <div class="mockup">
+    <div class="mockup-header">首屏信息层级</div>
+    <div class="mockup-body">
+      <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:16px;">
+        <div>
+          <div class="label">左侧主工作区</div>
+          <div class="placeholder" style="height:46px;margin:8px 0;">问题输入框</div>
+          <div class="placeholder" style="height:54px;margin:8px 0;">系统自动识别的问题方向 + 可手动改</div>
+          <div class="placeholder" style="height:120px;margin:8px 0;">六爻操作区（首屏主角）</div>
+          <div style="display:flex;gap:8px;margin:8px 0;">
+            <div class="placeholder" style="flex:1;">起卦时间</div>
+            <div class="placeholder" style="flex:1;">起卦方式</div>
+          </div>
+          <button class="mock-button" style="width:100%;margin-top:8px;">开始起卦</button>
+        </div>
+        <div>
+          <div class="label">右侧辅助信息</div>
+          <div class="placeholder" style="height:70px;margin:8px 0;">一句建立信任的说明</div>
+          <div class="placeholder" style="height:70px;margin:8px 0;">起卦说明：点击切换阴阳，长按设动爻</div>
+          <div class="placeholder" style="height:70px;margin:8px 0;">常见问题示例</div>
+          <div class="placeholder" style="height:70px;margin:8px 0;">历史 / 案例 / 应验入口</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>“问题分类”改造为纠偏机制</h3>
+  <div class="mockup">
+    <div class="mockup-header">提交前冲突确认</div>
+    <div class="mockup-body">
+      <div class="placeholder" style="margin-bottom:10px;">用户输入：我和前任还有没有机会复合？</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <div class="placeholder" style="flex:1;">用户手选：出行</div>
+        <div class="placeholder" style="flex:1;">系统识别：感情（高置信度）</div>
+      </div>
+      <div class="placeholder" style="height:84px;">轻确认弹层：你选择的是“出行”，但问题更像“感情”，是否按“感情”解读？</div>
+    </div>
+  </div>
+</div>

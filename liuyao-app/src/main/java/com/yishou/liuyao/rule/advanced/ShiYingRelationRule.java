@@ -67,6 +67,9 @@ public class ShiYingRelationRule implements Rule {
         evidence.put("shiWuXing", shiWuXing);
         evidence.put("yingWuXing", yingWuXing);
         evidence.put("relation", resolveRelation(shiWuXing, yingWuXing));
+        evidence.put("distance", Math.abs(shi.getIndex() - ying.getIndex()));
+        evidence.put("shiMoving", Boolean.TRUE.equals(shi.getIsMoving()));
+        evidence.put("yingMoving", Boolean.TRUE.equals(ying.getIsMoving()));
 
         hit.setHit(true);
         hit.setImpactLevel("MEDIUM");
