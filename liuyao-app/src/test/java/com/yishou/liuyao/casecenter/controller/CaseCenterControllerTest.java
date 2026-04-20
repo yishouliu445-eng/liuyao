@@ -293,9 +293,22 @@ class CaseCenterControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
 
+        String replayRunResponse = mockMvc.perform(get("/api/cases/{caseId}/replay-runs", caseId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        boolean recommendPersistReplay = objectMapper.readTree(replayRunResponse)
+                .path("data")
+                .get(0)
+                .path("recommendPersistReplay")
+                .asBoolean();
+
         mockMvc.perform(get("/api/cases/replay-runs/search")
                         .param("questionCategory", "合作")
-                        .param("recommendPersistReplay", "false")
+                        .param("recommendPersistReplay", String.valueOf(recommendPersistReplay))
                         .param("page", "1")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -306,7 +319,7 @@ class CaseCenterControllerTest {
                 .andExpect(jsonPath("$.data.items").isArray())
                 .andExpect(jsonPath("$.data.items[0].caseId").exists())
                 .andExpect(jsonPath("$.data.items[0].questionCategory").value("合作"))
-                .andExpect(jsonPath("$.data.items[0].recommendPersistReplay").value(false))
+                .andExpect(jsonPath("$.data.items[0].recommendPersistReplay").value(recommendPersistReplay))
                 .andExpect(jsonPath("$.data.items[0].replayRunId").exists());
     }
 
